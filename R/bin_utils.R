@@ -19,6 +19,32 @@ get_chr_arm_bins <- function(genome = 'hg38') {
   return(bins)
 }
 
+#' Get tiled bins
+#'
+#' @param bs_genome A BSgenome object
+#' @param tilewidth Bin size
+#' @param select_chrs Vector of chromosomes to include
+#'
+#' @return A GRanges object of bins
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
+#' }
+get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
+  stopifnot(class(bs_genome) %in% "BSgenome")
+
+  if (is.null(select_chrs)) {
+    select_chrs <- paste("chr", c(1:22, "X"), sep = "")
+  }
+
+  bins <- GenomicRanges::tileGenome(BSgenome::seqinfo(bs_genome), tilewidth = tilewidth, cut.last.tile.in.chrom = TRUE)
+  bins <- add_gc_freq(bs_genome, bins)
+  return(bins)
+}
+
+
 #' Get genome cytobands
 #'
 #' @param genome Genome version (hg38 or hg19)
@@ -51,7 +77,8 @@ get_cytobands <- function(genome = 'hg38') {
 #' @export
 #'
 add_gc_freq <- function(bs_genome, bins) {
-  freqs <- Biostrings::alphabetFrequency(Biostrings::getSeq(genome, bins))
+  stopifnot(class(bs_genome) %in% "BSgenome")
+  freqs <- BSgenome::alphabetFrequency(BSgenome::getSeq(bs_genome, bins))
   bins$gc <- (freqs[,'C'] + freqs[,'G'])/rowSums(freqs)
   return(bins)
 }
