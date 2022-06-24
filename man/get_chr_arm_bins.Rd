@@ -4,10 +4,14 @@
 \alias{get_chr_arm_bins}
 \title{Get chromosome arm bins}
 \usage{
-get_chr_arm_bins(genome = "hg38")
+get_chr_arm_bins(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 }
 \arguments{
 \item{genome}{Genome version ('hg38', 'hg19')}
+
+\item{calc_gc}{Logical: Whether or not to calculate GC content per bin}
+
+\item{bs_genome}{BSgenome object. Must be passed if \code{calc_gc} is set to \code{TRUE}}
 }
 \value{
 A GRanges object of chromosome arm bins

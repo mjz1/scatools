@@ -141,13 +141,15 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
 #' Get chromosome arm bins
 #'
 #' @param genome Genome version ('hg38', 'hg19')
+#' @param calc_gc Logical: Whether or not to calculate GC content per bin
+#' @param bs_genome BSgenome object. Must be passed if `calc_gc` is set to `TRUE`
 #'
 #' @return A GRanges object of chromosome arm bins
 #' @export
 #'
 #' @examples
 #' bins <- get_chr_arm_bins("hg38")
-get_chr_arm_bins <- function(genome = "hg38") {
+get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL) {
   bins <- get_cytobands() %>%
     dplyr::group_by(CHROM, arm, genome) %>%
     dplyr::summarise(
@@ -156,6 +158,16 @@ get_chr_arm_bins <- function(genome = "hg38") {
     ) %>%
     dplyr::mutate(bin_id = paste(CHROM, start, end, sep = "_")) %>%
     GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
+
+  if (calc_gc) {
+    if (is.null(bs_genome)) {
+      stop("To calculate GC content you must pass a BSgenome object")
+    }
+    stopifnot(class(bs_genome) %in% "BSgenome")
+
+    bins <- add_gc_freq(bins = bins, bs_genome = bs_genome)
+  }
+
   return(bins)
 }
 
