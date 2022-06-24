@@ -2,6 +2,8 @@
 
 export("%>%")
 export(add_gc_freq)
+export(bin_frags)
+export(bin_frags_chr)
 export(get_chr_arm_bins)
 export(get_cytobands)
 export(get_tiled_bins)

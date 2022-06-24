@@ -16,5 +16,5 @@ Dataframe of genome cytobands
 Get genome cytobands
 }
 \examples{
-hg38_cyto <- get_cytobands('hg38')
+hg38_cyto <- get_cytobands("hg38")
 }

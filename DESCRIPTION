@@ -1,21 +1,29 @@
 Package: scatools
-Title: What the Package Does (One Line, Title Case)
+Title: scATAC tools and utilities
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    person("Matthew", "Zatzman", , "matthew.zatzman@gmail.com", role = c("aut", "cre"))
+Description: A collection of useful code for handling scATAC data. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
 Imports: 
+    ArchR,
+    BiocParallel,
     Biostrings,
     BSgenome,
     dplyr,
     GenomicRanges,
+    gtools,
+    IRanges,
     magrittr,
-    vroom
+    Matrix,
+    R.utils,
+    S4Vectors,
+    utils,
+    vroom,
+    withr
 URL: https://github.com/mjz1/scatools
 BugReports: https://github.com/mjz1/scatools/issues
 Suggests: 

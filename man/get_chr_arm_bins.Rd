@@ -16,5 +16,5 @@ A GRanges object of chromosome arm bins
 Get chromosome arm bins
 }
 \examples{
-bins <- get_chr_arm_bins('hg38')
+bins <- get_chr_arm_bins("hg38")
 }
