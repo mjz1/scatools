@@ -10,8 +10,13 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
 Imports: 
+    Biostrings,
     dplyr,
+    GenomicRanges,
     magrittr,
     vroom
 URL: https://github.com/mjz1/scatools
 BugReports: https://github.com/mjz1/scatools/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
