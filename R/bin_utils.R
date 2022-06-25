@@ -1,6 +1,6 @@
 #' Bin fragments from ArrowFile
 #'
-#' Parallel enabled depth counting of read fragments in given genomic bins
+#' Parallel enabled depth counting of read fragments in given genomic bins from `ArchR` processed ArrowFiles
 #'
 #' @param ArrowFile ArrowFile
 #' @param bins Bins GRanges object
@@ -19,7 +19,7 @@ bin_frags <- function(ArrowFile, bins, outfile = NULL, ncores = 1, BPPARAM = Bio
   message("Counting fragments in ", length(bins), " bins using ", ncores, " cores")
 
   result <- do.call("rbind", BiocParallel::bplapply(
-    X = seqlevels(bins),
+    X = levels(BSgenome::seqnames(bins)),
     FUN = bin_frags_chr,
     bins = bins,
     ArrowFile = ArrowFile,
@@ -63,7 +63,9 @@ bin_frags <- function(ArrowFile, bins, outfile = NULL, ncores = 1, BPPARAM = Bio
 #' dp_mat <- bin_frags_chr("chr1", get_chr_arm_bins("hg38"), ArrowFile)
 #' }
 bin_frags_chr <- function(chr, bins, ArrowFile) {
-  requireNamespace("ArchR", quietly = TRUE)
+  if (!requireNamespace("ArchR", quietly = TRUE)) {
+    stop("Package \"ArchR\" must be installed to use this function.")
+  }
 
   stopifnot(length(chr) == 1)
   stopifnot(class(bins) %in% "GRanges")
@@ -72,16 +74,28 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
   # Fix for parallel HDF5 access (if this function is passed to parallel loop)
   # We scope only to this function
   withr::local_envvar(c("HDF5_USE_FILE_LOCKING" = FALSE, "RHDF5_USE_FILE_LOCKING" = FALSE))
-  Sys.getenv(c("HDF5_USE_FILE_LOCKING", "RHDF5_USE_FILE_LOCKING"))
 
   # Export needed functions
-  .getFragsFromArrow <- utils::getFromNamespace(".getFragsFromArrow", "ArchR")
-  .availableCells <- utils::getFromNamespace(".availableCells", "ArchR")
+  # .getFragsFromArrow <- utils::getFromNamespace(".getFragsFromArrow", "ArchR")
+  # .availableCells <- utils::getFromNamespace(".availableCells", "ArchR")
+  # h5closeAll <- utils::getFromNamespace("h5closeAll", "rhdf5")
 
-  cellNames <- .availableCells(ArrowFile)
 
-  # Read in Fragments
-  fragments <- .getFragsFromArrow(ArrowFile, chr = chr, out = "GRanges", cellNames = cellNames)
+  # Load ArchR package temporarily to execute the following two commands
+  # This is required as ArchR has depends from rhdf5 and other packages that it does not properly reference using '::'
+  # Side effect is that the ArchR namespace remains attached afterwards (ie all the packages it depends on)
+  withr::with_package(package = "ArchR", {
+
+    # Export needed functions
+    .getFragsFromArrow <- utils::getFromNamespace(".getFragsFromArrow", "ArchR")
+    .availableCells <- utils::getFromNamespace(".availableCells", "ArchR")
+
+    # Get cells
+    cellNames <- .availableCells(ArrowFile)
+
+    # Read in Fragments
+    fragments <- .getFragsFromArrow(ArrowFile, chr = chr, out = "GRanges", cellNames = cellNames)
+  })
 
   # TODO: Remove fragments in blacklist regions?
 
@@ -235,6 +249,7 @@ get_cytobands <- function(genome = "hg38") {
 #'
 add_gc_freq <- function(bs_genome, bins) {
   stopifnot(class(bs_genome) %in% "BSgenome")
+  message("Computing GC content...")
   freqs <- BSgenome::alphabetFrequency(BSgenome::getSeq(bs_genome, bins))
   bins$gc <- (freqs[, "C"] + freqs[, "G"]) / rowSums(freqs)
   return(bins)

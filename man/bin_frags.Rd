@@ -30,5 +30,5 @@ bin_frags(
 Binned depth sparse matrix
 }
 \description{
-Parallel enabled depth counting of read fragments in given genomic bins
+Parallel enabled depth counting of read fragments in given genomic bins from \code{ArchR} processed ArrowFiles
 }
