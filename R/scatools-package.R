@@ -3,6 +3,9 @@
 
 utils::globalVariables("where")
 
+
+#' @import SingleCellExperiment
+
 ## usethis namespace: start
 #' @importFrom methods as
 #' @importFrom utils read.table
