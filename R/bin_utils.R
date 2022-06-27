@@ -169,8 +169,8 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
   bins <- get_cytobands() %>%
     dplyr::group_by(CHROM, arm, genome) %>%
     dplyr::summarise(
-      start = min(start),
-      end = max(end)
+      "start" = min(start),
+      "end" = max(end)
     ) %>%
     dplyr::mutate(bin_id = paste(CHROM, start, end, sep = "_")) %>%
     GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
@@ -228,14 +228,12 @@ get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
 #' hg38_cyto <- get_cytobands("hg38")
 get_cytobands <- function(genome = "hg38") {
   cyto_url <- paste0("http://hgdownload.cse.ucsc.edu/goldenpath/", genome, "/database/cytoBand.txt.gz")
-  cyto <- vroom::vroom("http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/cytoBand.txt.gz",
-    col_names = c("CHROM", "start", "end", "cytoband", "unsure")
-  ) %>%
+  cyto <- readr::read_delim(file = "http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/cytoBand.txt.gz", col_names = c("CHROM", "start", "end", "cytoband", "unsure"), show_col_types = FALSE) %>%
     dplyr::filter(!is.na(cytoband)) %>%
-    dplyr::mutate(across(where(is.character), as.factor),
-      start = start + 1,
-      arm = factor(substr(cytoband, 0, 1)),
-      genome = genome
+    dplyr::mutate(dplyr::across(where(is.character), as.factor),
+      "start" = start + 1,
+      "arm" = factor(substr(cytoband, 0, 1)),
+      "genome" = genome
     )
   return(cyto)
 }
