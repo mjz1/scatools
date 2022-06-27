@@ -81,21 +81,23 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
   # h5closeAll <- utils::getFromNamespace("h5closeAll", "rhdf5")
 
 
-  # Load ArchR package temporarily to execute the following two commands
+  # Load ArchR package temporarily (if not loaded) to execute the following commands
   # This is required as ArchR has depends from rhdf5 and other packages that it does not properly reference using '::'
   # Side effect is that the ArchR namespace remains attached afterwards (ie all the packages it depends on)
-  withr::with_package(package = "ArchR", {
+  if (!"ArchR" %in% .packages()) {
+    withr::local_package(package = "ArchR")
+  }
 
-    # Export needed functions
-    .getFragsFromArrow <- utils::getFromNamespace(".getFragsFromArrow", "ArchR")
-    .availableCells <- utils::getFromNamespace(".availableCells", "ArchR")
+  # Export needed functions
+  .getFragsFromArrow <- utils::getFromNamespace(".getFragsFromArrow", "ArchR")
+  .availableCells <- utils::getFromNamespace(".availableCells", "ArchR")
 
-    # Get cells
-    cellNames <- .availableCells(ArrowFile)
+  # Get cells
+  cellNames <- .availableCells(ArrowFile)
 
-    # Read in Fragments
-    fragments <- .getFragsFromArrow(ArrowFile, chr = chr, out = "GRanges", cellNames = cellNames)
-  })
+  # Read in Fragments
+  fragments <- .getFragsFromArrow(ArrowFile, chr = chr, out = "GRanges", cellNames = cellNames)
+
 
   # TODO: Remove fragments in blacklist regions?
 
@@ -110,8 +112,8 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
     query = GRanges(
       seqnames = chr,
       IRanges::IRanges(
-        start = start(fragments),
-        end = start(fragments)
+        start = GenomicRanges::start(fragments),
+        end = GenomicRanges::start(fragments)
       )
     )
   )
@@ -120,8 +122,8 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
     query = GenomicRanges::GRanges(
       seqnames = chr,
       IRanges::IRanges(
-        start = end(fragments),
-        end = end(fragments)
+        start = GenomicRanges::end(fragments),
+        end = GenomicRanges::end(fragments)
       )
     )
   )

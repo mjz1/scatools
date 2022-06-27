@@ -15,17 +15,21 @@ Imports:
     BSgenome,
     dplyr,
     GenomicRanges,
-    gtools,
     IRanges,
     magrittr,
     Matrix,
+    methods,
     R.utils,
     S4Vectors,
+    tidyr,
     utils,
     vroom,
     withr
 URL: https://github.com/mjz1/scatools
 BugReports: https://github.com/mjz1/scatools/issues
 Suggests: 
+    gtools,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Depends: 
+    SingleCellExperiment
