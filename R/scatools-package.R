@@ -1,6 +1,8 @@
 #' @keywords internal
 "_PACKAGE"
 
+utils::globalVariables("where")
+
 ## usethis namespace: start
 #' @importFrom methods as
 #' @importFrom utils read.table
