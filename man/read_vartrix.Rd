@@ -4,9 +4,11 @@
 \alias{read_vartrix}
 \title{Read Vatrix Data}
 \usage{
-read_vartrix(mtx_ref, mtx_alt, barcodes, variants)
+read_vartrix(dir_path = NULL, mtx_ref, mtx_alt, barcodes, variants)
 }
 \arguments{
+\item{dir_path}{Path to \code{Vartrix} outputs directory}
+
 \item{mtx_ref}{Path to reference allele \code{.mtx} file}
 
 \item{mtx_alt}{Path to alternate allele \code{.mtx} file}
@@ -20,4 +22,7 @@ A \code{SingleCellExperiment} object
 }
 \description{
 Reads in \code{Vartix} scSNP pileups. Assumes Vartrix is run in \verb{-s coverage} mode, outputting barcodes and variants table.
+}
+\details{
+If no \code{dir_path} is provided, then user must provide individual file paths for each file.
 }
