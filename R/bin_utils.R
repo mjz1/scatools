@@ -174,7 +174,7 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
     ) %>%
     dplyr::mutate("bin_id" = paste(CHROM, start, end, sep = "_")) %>%
     GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = T)
-  bins$width <- IRanges::width(bins)
+  bins$binwidth <- IRanges::width(bins)
 
   if (calc_gc) {
     if (is.null(bs_genome)) {
@@ -212,7 +212,7 @@ get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
     tilewidth = tilewidth,
     cut.last.tile.in.chrom = TRUE
   )
-  bins$width <- IRanges::width(bins)
+  bins$binwidth <- IRanges::width(bins)
 
   bins <- add_gc_freq(bs_genome, bins)
   return(bins)
