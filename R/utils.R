@@ -56,3 +56,20 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
   }
   return(sce)
 }
+
+
+#' Get factor indices
+#'
+#' @param f a factor
+#'
+#' @return a named list of indices of each factor level
+#' @export
+#'
+get_f_idx <- function(f) {
+  f <- as.factor(f)
+  l <- lapply(seq_along(levels(f)), FUN = function(i) {
+    which(f == levels(f)[i])
+  })
+  names(l) <- levels(f)
+  return(l)
+}
