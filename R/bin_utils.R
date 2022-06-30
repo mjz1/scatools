@@ -4,14 +4,14 @@
 #'
 #' @param ArrowFile ArrowFile
 #' @param bins Bins GRanges object
-#' @param outfile Optional: Path to write output `.mtx` file
+#' @param outdir Optional: Directory to write the `.mtx`, `barcodes`, and `bins` files
 #' @param ncores Number of cores to use
 #' @param BPPARAM Options to `BPPARAM` to enable multithreading
 #' @param ... Additional arguments passed to `bplapply`
 #'
 #' @return Binned depth sparse matrix
 #' @export
-bin_frags <- function(ArrowFile, bins, outfile = NULL, ncores = 1, BPPARAM = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), ...) {
+bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), ...) {
   requireNamespace("BiocParallel")
 
   stopifnot(class(bins) %in% "GRanges")
@@ -23,24 +23,15 @@ bin_frags <- function(ArrowFile, bins, outfile = NULL, ncores = 1, BPPARAM = Bio
     FUN = bin_frags_chr,
     bins = bins,
     ArrowFile = ArrowFile,
-    BPPARAM = BPPARAM
+    BPPARAM = bpparams
   ))
 
-  if (!is.null(outfile)) {
-    cat("Writing to ", paste0(outfile, ".gz"), "\n")
-    Matrix::writeMM(obj = result, file = outfile)
-    R.utils::gzip(outfile, overwrite = TRUE, remove = TRUE)
+  if (!is.null(outdir)) {
+    cat("Writing to", outdir, "\n")
+    dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
-    # Save barcodes
-    write.table(
-      file = file.path(dirname(outfile), "barcodes.tsv"),
-      x = colnames(result), quote = FALSE, row.names = FALSE
-    )
-    # Save bins
-    write.table(
-      file = file.path(dirname(outfile), "bins.tsv"),
-      x = rownames(result), quote = FALSE, row.names = FALSE
-    )
+    # TODO: The dropletutils import messes up bplapply above somehow...
+    DropletUtils::write10xCounts(path = outdir, x = result, barcodes = colnames(result), gene.id = rownames(result), version = "3", overwrite = TRUE, gene.type = "Bin Counts")
   }
 
   return(result)
