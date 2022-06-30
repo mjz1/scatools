@@ -184,6 +184,7 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 
     bins <- add_gc_freq(bins = bins, bs_genome = bs_genome)
   }
+  bins <- sort(bins)
 
   return(bins)
 }
@@ -215,6 +216,7 @@ get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
   bins$binwidth <- IRanges::width(bins)
 
   bins <- add_gc_freq(bs_genome, bins)
+  bins <- sort(bins)
   return(bins)
 }
 
