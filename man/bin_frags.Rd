@@ -7,9 +7,9 @@
 bin_frags(
   ArrowFile,
   bins,
-  outfile = NULL,
+  outdir = NULL,
   ncores = 1,
-  BPPARAM = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
+  bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
   ...
 )
 }
@@ -18,13 +18,13 @@ bin_frags(
 
 \item{bins}{Bins GRanges object}
 
-\item{outfile}{Optional: Path to write output \code{.mtx} file}
+\item{outdir}{Optional: Directory to write the \code{.mtx}, \code{barcodes}, and \code{bins} files}
 
 \item{ncores}{Number of cores to use}
 
-\item{BPPARAM}{Options to \code{BPPARAM} to enable multithreading}
-
 \item{...}{Additional arguments passed to \code{bplapply}}
+
+\item{BPPARAM}{Options to \code{BPPARAM} to enable multithreading}
 }
 \value{
 Binned depth sparse matrix
