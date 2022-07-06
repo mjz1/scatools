@@ -1,17 +1,20 @@
+# Need function to define bins in cells as ideal or valid
+
 #' Modal regression GC Correction
 #'
 #' @param counts Vector of counts in bins
 #' @param gc Vector of GC content in bins
 #' @param bin_ids Bin ids
 #' @param lowess_frac The smoother span. See [stats::lowess()] for more details
-#' @param q A tuple of quantile bounds to compute over
+#' @param q A tuple of quantile bounds to compute quantile regressions over read counts
+#' @param g GC quantiles over which to integrate regression curves
 #' @param full_return Return each individual quantile curve in the return df (default: FALSE)
 #'
 #' @return A dataframe with the modal quantile and GC corrected counts
 #' @export
 #'
 #' @examples
-modal_quantile_regression <- function(counts, gc, bin_ids = seq_along(counts), lowess_frac = 0.2, q = c(0.1, 0.9), full_return = FALSE) {
+modal_quantile_regression <- function(counts, gc, bin_ids = seq_along(counts), lowess_frac = 0.2, q = c(0.1, 0.9), g = c(0.1, 0.9), full_return = FALSE) {
 
   if (length(counts) != length(gc)) {
     stop("Length of counts and gc vectors are not identical")
@@ -53,8 +56,8 @@ modal_quantile_regression <- function(counts, gc, bin_ids = seq_along(counts), l
   colnames(poly2_quantile_params) <- quantile_names # rename columns
 
   # integration and mode selection
-  gc_min = quantile(df_regression$gc, q[1])
-  gc_max = quantile(df_regression$gc, q[2])
+  gc_min = quantile(df_regression$gc, g[1])
+  gc_max = quantile(df_regression$gc, g[2])
 
   poly2_quantile_integration <- c(0, apply(X = poly2_quantile_params, MARGIN = 2, FUN = function(params) {
     poly2 = polynom::polynomial(params)
@@ -81,6 +84,10 @@ modal_quantile_regression <- function(counts, gc, bin_ids = seq_along(counts), l
   df_regression <- dplyr::left_join(df_regression_all, df_regression, by = c("reads", "gc", "bin_ids"))
 
   # Do we want to reassign NAs as zeros?
+  df_regression[is.na(df_regression$modal_corrected),'modal_corrected'] <- 0
+
+  # What about below zero values...?
+  df_regression[(df_regression$modal_corrected < 0),'modal_corrected'] <- 0
 
   if (full_return) {
     return(df_regression)
@@ -89,5 +96,4 @@ modal_quantile_regression <- function(counts, gc, bin_ids = seq_along(counts), l
     return(df_regression[,which(!colnames(df_regression) %in% quantile_names)])
   }
 
-  }
-
+}
