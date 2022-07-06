@@ -20,6 +20,8 @@ Imports:
     magrittr,
     Matrix,
     methods,
+    polynom,
+    quantreg,
     R.utils,
     readr,
     S4Vectors,
