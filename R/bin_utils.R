@@ -289,7 +289,7 @@ get_cytobands <- function(genome = "hg38") {
 #' @param bs_genome BSGenome object
 #' @param bins GRanges bins object
 #'
-#' @return GC frequency per bin
+#' @return GRanges bin object with GC and N frequency per bin
 #' @export
 #'
 add_gc_freq <- function(bs_genome, bins) {

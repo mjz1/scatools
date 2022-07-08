@@ -126,6 +126,8 @@ gc_cor_modal <- function(counts, gc, bin_ids = seq_along(counts), lowess_frac = 
 #' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
 #' @param ... Additional arguments to be passed to GC correction methods or [BiocParallel::bplapply()]
 #'
+#' @return Sparse matrix of corrected counts
+#'
 #' @export
 perform_gc_cor <- function(mat, gc, method = c("modal", "copykit", "loess"), ...) {
   gc <- as.vector(gc)

@@ -12,7 +12,7 @@ add_gc_freq(bs_genome, bins)
 \item{bins}{GRanges bins object}
 }
 \value{
-GC frequency per bin
+GRanges bin object with GC and N frequency per bin
 }
 \description{
 Add GC frequency

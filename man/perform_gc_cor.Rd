@@ -15,6 +15,9 @@ perform_gc_cor(mat, gc, method = c("modal", "copykit", "loess"), ...)
 
 \item{...}{Additional arguments to be passed to GC correction methods or \code{\link[BiocParallel:bplapply]{BiocParallel::bplapply()}}}
 }
+\value{
+Sparse matrix of corrected counts
+}
 \description{
 Performs GC correction using \code{\link[BiocParallel:bplapply]{BiocParallel::bplapply()}} over a matrix of cell counts
 }
