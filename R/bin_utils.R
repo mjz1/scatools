@@ -254,7 +254,7 @@ get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
   )
   bins$binwidth <- IRanges::width(bins)
 
-  bins$bin_id = paste(seqnames(bins), start(bins), end(bins), sep = "_")
+  bins$bin_id <- paste(seqnames(bins), start(bins), end(bins), sep = "_")
 
   bins <- add_gc_freq(bs_genome, bins)
   bins <- sort(bins)
@@ -304,6 +304,59 @@ add_gc_freq <- function(bs_genome, bins) {
   return(bins)
 }
 
+#' Get ideal bin matrix
+#'
+#' Given a matrix of bin counts, bin gc and N frequency, and filtering parameters, return a boolean matrix flagging ideal bins
+#'
+#'
+#' @param mat Count matrix
+#' @param ncores number of cores for parallel evaluation (requires [parallel] package)
+#'
+#' @inherit is_ideal_bin
+#' @export
+#'
+get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1) {
+  if (requireNamespace("pbmcapply")) {
+    res <- do.call(
+      "cbind",
+      pbmcapply::pbmclapply(X = seq_len(ncol(mat)), mc.cores = ncores, FUN = function(i) {
+        is_ideal_bin(
+          counts = as.vector(mat[, i]),
+          gc = gc,
+          n_freq = n_freq,
+          map = map,
+          min_reads = min_reads,
+          max_N_freq = max_N_freq,
+          reads_outlier = reads_outlier,
+          gc_outlier = gc_outlier,
+          min_map = min_map
+        )
+      })
+    )
+  } else {
+    warning("No parallel backend detected. Ideal mat computation may be slow", call. = FALSE)
+    res <- do.call(
+      "cbind",
+      lapply(X = seq_len(ncol(mat)), FUN = function(i) {
+        is_ideal_bin(
+          counts = mat[, i],
+          gc = gc,
+          n_freq = n_freq,
+          map = map,
+          min_reads = min_reads,
+          max_N_freq = max_N_freq,
+          reads_outlier = reads_outlier,
+          gc_outlier = gc_outlier,
+          min_map = min_map
+        )
+      })
+    )
+  }
+
+  colnames(res) <- colnames(mat)
+  rownames(res) <- rownames(mat)
+  return(res)
+}
 
 #' Flag ideal bins
 #'
@@ -326,7 +379,7 @@ is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, max_N_freq = 0.
   # Currently we use a placeholder for mappability
 
   # First identify valid bins
-  valid <- is_valid_bin(counts, n_freq, min_reads, min_N_freq)
+  valid <- is_valid_bin(counts = counts, n_freq = n_freq, min_reads = min_reads, max_N_freq = max_N_freq)
 
   # Subset for the valid counts/bins in computing quantiles
   # Remove high read outliers
