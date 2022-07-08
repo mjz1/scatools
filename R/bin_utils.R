@@ -37,12 +37,11 @@ bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode
   # Invisible return
   if (return_mat) {
     # or bind and then return
-    res <- do.call('rbind', matlist)
+    res <- do.call("rbind", matlist)
     return(res)
   } else {
     return(invisible(NULL))
   }
-
 }
 
 
@@ -78,7 +77,7 @@ bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = Bio
     cat("Writing to", outdir, "\n")
     dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
-    # TODO: The dropletutils import messes up bplapply above somehow...
+    # Write output using dropletutils
     DropletUtils::write10xCounts(path = outdir, x = result, barcodes = colnames(result), gene.id = rownames(result), version = "3", overwrite = TRUE, gene.type = "Bin Counts")
   }
 

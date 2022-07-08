@@ -4,7 +4,7 @@
 \alias{get_tiled_bins}
 \title{Get tiled bins}
 \usage{
-get_tiled_bins(bs_genome, tilewidth = 500000, select_chrs = NULL)
+get_tiled_bins(bs_genome, tilewidth = 5e+05, select_chrs = NULL)
 }
 \arguments{
 \item{bs_genome}{A BSgenome object}
