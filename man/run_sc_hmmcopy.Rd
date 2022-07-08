@@ -10,7 +10,7 @@ run_sc_hmmcopy(
   end,
   counts,
   reads,
-  param,
+  param = sc_hmm_params(),
   cell_id,
   multipliers = 1:6,
   verbose = FALSE,

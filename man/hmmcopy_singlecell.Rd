@@ -10,7 +10,7 @@ hmmcopy_singlecell(
   end,
   counts,
   reads,
-  param,
+  param = sc_hmm_params(),
   cell_id,
   multiplier = 1,
   verbose = FALSE,

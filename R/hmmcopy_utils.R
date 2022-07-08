@@ -24,7 +24,7 @@
 #'
 #' @export
 #'
-hmmcopy_singlecell <- function(chr, start, end, counts, reads, param, cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
+hmmcopy_singlecell <- function(chr, start, end, counts, reads, param = sc_hmm_params(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
 
   # In the original function, copy, cor_gc, and modal_corrected columns are all the same
 
@@ -158,7 +158,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, param, cell_id, m
 #'
 #' @export
 #'
-run_sc_hmmcopy <- function(chr, start, end, counts, reads, param, cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, mult_res = c("best", "all")) {
+run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, mult_res = c("best", "all")) {
   # check integer multipliers
   if (!all(multipliers %% 1 == 0) | any(multipliers < 0)) {
     stop("Multipliers must be positive integers")
@@ -267,4 +267,57 @@ format_parameter_table <- function(samp.segmented, new.params) {
   )
 
   return(df.params)
+}
+
+#' Single Cell HMMcopy parameters
+#'
+#' Function to generate the parameter matrix for [HMMcopy::HMMsegment()]. Set-up with default values for single-cell analysis.
+#'
+#' @param e Probability of extending a segment, increase to lengthen segments, decrase to shorten segments. Range: (0, 1)
+#' @param strength Strength of initial `e` suggestion, reducing allows e to change, increasing makes e undefinable. Range: [0, Inf)
+#' @param mu Suggested median for copy numbers in state, change to readjust classification of states. Range: (-Inf, Inf)
+#' @param lambda Suggested precision (inversed variance) for copy numbers in state, increase to reduce overlap between states. Range: [0, Inf)
+#' @param nu Suggested degree of freedom between states, increase to reduce overlap between states. Range: [0, Inf)
+#' @param kappa Suggested distribution of states. Should sum to 1. Must be same length as `mu`.
+#' @param m Optimal value for mu, difference from corresponding mu value determines elasticity of the mu value. i.e. Set to identical value as mu if you don't want mu to move much.
+#' @param eta Mobility of mu, increase to allow more movement. Range: [0, Inf)
+#' @param gamma Prior shape on lambda, gamma distribution. Effects flexibility of lambda.
+#' @param S Prior scale on lambda, gamma distribution. Effects flexibility of lambda.
+#'
+#' @inherit HMMcopy::HMMsegment details
+#'
+#' @return A data frame of parameters for [HMMcopy::HMMsegment()]
+#' @export
+#'
+#' @examples
+#' param <- sc_hmm_params()
+sc_hmm_params <- function(e = (1 - 1e-6),
+                          strength = 1000,
+                          mu = 0:11,
+                          lambda = 20,
+                          nu = 2.1,
+                          kappa = c(100, 100, 700, 100, 25, 25, 25, 25, 25, 25, 25, 25),
+                          m = mu,
+                          eta = 50000,
+                          gamma = 3,
+                          S = 1
+                          ) {
+
+  if (length(mu) != length(kappa)) {
+    stop("kappa and mu must be the same length")
+  }
+
+  param <- data.frame(
+    strength = strength,
+    e = e,
+    mu = mu,
+    lambda = lambda,
+    nu = nu,
+    kappa = kappa,
+    m = m,
+    eta = eta,
+    gamma = gamma,
+    S = S
+  )
+  return(param)
 }
