@@ -135,10 +135,10 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, param = sc_hmm_pa
   df.params <- format_parameter_table(segmented_2, param)
 
   # add cellid
-  df.params$cell_id <- cell_id
-  bincounts$cell_id <- cell_id
-  modal_seg$cell_id <- cell_id
-  mstats$cell_id <- cell_id
+  df.params <- cbind(cell_id, df.params)
+  bincounts <- cbind(cell_id, bincounts)
+  modal_seg <- cbind(cell_id, modal_seg)
+  mstats <- cbind(cell_id, mstats)
 
   hmmresult <- list(bincounts = bincounts, modal_seg = modal_seg, mstats = mstats, df_params = df.params)
 
@@ -192,6 +192,8 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params
   seg.best <- do.call("rbind", lapply(names(hmm_results), FUN = function(multiplier) {
     hmm_results[[multiplier]]$mstats
   }))
+
+  seg.best <- bind_sublist(hmm_results, sublist = "mstats")
 
   # scaledpenalty from original code is scaled_halfiness
   seg.best$red <- FALSE
