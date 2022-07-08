@@ -27,6 +27,8 @@ Imports:
     readr,
     reshape2,
     S4Vectors,
+    scuttle,
+    stringr,
     tidyr,
     tidyselect,
     utils,

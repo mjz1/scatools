@@ -254,6 +254,8 @@ get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
   )
   bins$binwidth <- IRanges::width(bins)
 
+  bins$bin_id = paste(seqnames(bins), start(bins), end(bins), sep = "_")
+
   bins <- add_gc_freq(bs_genome, bins)
   bins <- sort(bins)
   return(bins)
