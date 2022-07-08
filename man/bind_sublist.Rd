@@ -50,10 +50,10 @@ toplist <- list(
   )
 )
 
-bind_sublist(toplist, sublist = 1, what = "rbind", .add_id = T)
+bind_sublist(toplist, sublist = 1, what = "rbind", .add_id = TRUE)
 
-bind_sublist(toplist, sublist = "result2", what = "rbind", .add_id = T)
+bind_sublist(toplist, sublist = "result2", what = "rbind", .add_id = TRUE)
 
-bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = F)
+bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = FALSE)
 
 }

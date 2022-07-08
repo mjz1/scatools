@@ -11,7 +11,10 @@
 #'
 #' @examples
 #' \dontrun{
-#' sce <- get_snp_counts(sce, variables = c("all", "Sample", "Condition"), target_assays = c("ref", "alt"))
+#' sce <- get_snp_counts(sce,
+#'   variables = c("all", "Sample", "Condition"),
+#'   target_assays = c("ref", "alt")
+#' )
 #' }
 get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt")) {
   stopifnot(class(sce) %in% c("SingleCellExperiment"))
@@ -110,11 +113,11 @@ get_f_idx <- function(f) {
 #'   )
 #' )
 #'
-#' bind_sublist(toplist, sublist = 1, what = "rbind", .add_id = T)
+#' bind_sublist(toplist, sublist = 1, what = "rbind", .add_id = TRUE)
 #'
-#' bind_sublist(toplist, sublist = "result2", what = "rbind", .add_id = T)
+#' bind_sublist(toplist, sublist = "result2", what = "rbind", .add_id = TRUE)
 #'
-#' bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = F)
+#' bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = FALSE)
 #'
 bind_sublist <- function(toplist, sublist, what = c("rbind"), .add_id = FALSE, .id_name = "id") {
   what <- match.arg(what)

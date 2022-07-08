@@ -5,7 +5,7 @@
 #' @param chr Vector of chromosomes
 #' @param start Vector of bin start positions
 #' @param end Vector of bin end positions
-#' @param counts Vector of bin corrected counts. These should ideally be GC corrected counts from [modal_quantile_regression()]
+#' @param counts Vector of bin corrected counts. These should ideally be GC corrected counts from [gc_cor_modal()]
 #' @param reads A vector of raw read counts per bin
 #' @param param A matrix of parameter values in columns for each state in rows. See [HMMcopy::HMMsegment()] for more information.
 #' @param cell_id Cell id
@@ -303,9 +303,7 @@ sc_hmm_params <- function(e = (1 - 1e-6),
                           m = mu,
                           eta = 50000,
                           gamma = 3,
-                          S = 1
-                          ) {
-
+                          S = 1) {
   if (length(mu) != length(kappa)) {
     stop("kappa and mu must be the same length")
   }
