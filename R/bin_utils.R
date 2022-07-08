@@ -303,3 +303,51 @@ add_gc_freq <- function(bs_genome, bins) {
 
   return(bins)
 }
+
+
+#' Flag ideal bins
+#'
+#' `is_ideal_bin` will apply a set of bin-wise filters, based on high count outliers, high or low gc outliers, minimum read counts, minimum mappability, or maximum allowable frequency of N bases per bin.
+#'
+#' @param counts Vector of bin counts for single cell
+#' @param gc Vector of gc content
+#' @param n_freq Vector of bin N frequency (proportion of N bases in a bin)
+#' @param map Vector of bin mappability
+#' @param min_reads Minimum number of reads to consider a bin
+#' @param min_N_freq Minimum frequency of N bases to consider a bin. Range (0, 1)
+#' @param reads_outlier Flag bins with reads in the top quantile given by this value. Range (0, 1)
+#' @param gc_outlier Flag bins with GC content in the top and bottom quantule given by this value. Range (0, 1)
+#' @param min_map Minimum allowable mappability score for a bin. Range (0, 1)
+#'
+#' @return A logical vector of same length as input identifying which bins in a given cell meet the filtering criteria
+#' @export
+#'
+is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, min_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
+  # Currently we use a placeholder for mappability
+
+  # First identify valid bins
+  valid <- is_valid_bin(counts, n_freq, min_reads, min_N_freq)
+
+  # Subset for the valid counts/bins in computing quantiles
+  # Remove high read outliers
+  read_range <- quantile(counts[valid], probs = c(0, 1 - reads_outlier))
+
+  # Remove outlier GC bins on both sides
+  gc_range <- quantile(gc[valid], probs = c(gc_outlier, 1 - gc_outlier))
+
+  # Is ideal if meeting all the following criteria
+  ideal <- valid &
+    (map > min_map) &
+    (counts < read_range[2]) &
+    (counts >= read_range[1]) &
+    (gc < gc_range[2]) &
+    (gc > gc_range[1])
+
+  return(ideal)
+}
+
+
+is_valid_bin <- function(counts, n_freq, min_reads = 0, min_N_freq = 0.05) {
+  # Only valid if having both min reads and min n_freq
+  counts > min_reads & n_freq >= n_freq
+}
