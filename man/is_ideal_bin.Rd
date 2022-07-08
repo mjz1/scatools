@@ -10,7 +10,7 @@ is_ideal_bin(
   n_freq,
   map,
   min_reads = 0,
-  min_N_freq = 0.05,
+  max_N_freq = 0.05,
   reads_outlier = 0.01,
   gc_outlier = 0.001,
   min_map = 0.9
@@ -27,7 +27,7 @@ is_ideal_bin(
 
 \item{min_reads}{Minimum number of reads to consider a bin}
 
-\item{min_N_freq}{Minimum frequency of N bases to consider a bin. Range (0, 1)}
+\item{max_N_freq}{Maximum allowable frequency of N bases to consider a bin. Range (0, 1)}
 
 \item{reads_outlier}{Flag bins with reads in the top quantile given by this value. Range (0, 1)}
 

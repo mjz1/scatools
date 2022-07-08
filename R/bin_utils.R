@@ -314,7 +314,7 @@ add_gc_freq <- function(bs_genome, bins) {
 #' @param n_freq Vector of bin N frequency (proportion of N bases in a bin)
 #' @param map Vector of bin mappability
 #' @param min_reads Minimum number of reads to consider a bin
-#' @param min_N_freq Minimum frequency of N bases to consider a bin. Range (0, 1)
+#' @param max_N_freq Maximum allowable frequency of N bases to consider a bin. Range (0, 1)
 #' @param reads_outlier Flag bins with reads in the top quantile given by this value. Range (0, 1)
 #' @param gc_outlier Flag bins with GC content in the top and bottom quantule given by this value. Range (0, 1)
 #' @param min_map Minimum allowable mappability score for a bin. Range (0, 1)
@@ -322,7 +322,7 @@ add_gc_freq <- function(bs_genome, bins) {
 #' @return A logical vector of same length as input identifying which bins in a given cell meet the filtering criteria
 #' @export
 #'
-is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, min_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
+is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
   # Currently we use a placeholder for mappability
 
   # First identify valid bins
@@ -347,7 +347,7 @@ is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, min_N_freq = 0.
 }
 
 
-is_valid_bin <- function(counts, n_freq, min_reads = 0, min_N_freq = 0.05) {
+is_valid_bin <- function(counts, n_freq, min_reads = 0, max_N_freq = 0.05) {
   # Only valid if having both min reads and min n_freq
-  counts > min_reads & n_freq >= n_freq
+  counts > min_reads & n_freq <= max_N_freq
 }
