@@ -186,10 +186,10 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params
     )
     return(res)
   })
-  names(hmm_results) <- multipliers
+  names(hmm_results) <- paste0("m", multipliers)
 
   # Gather the summary statistics from each multiplier
-  seg.best <- do.call("rbind", lapply(multipliers, FUN = function(multiplier) {
+  seg.best <- do.call("rbind", lapply(names(hmm_results), FUN = function(multiplier) {
     hmm_results[[multiplier]]$mstats
   }))
 
@@ -202,17 +202,18 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params
     pick <- pick[1]
   }
 
-
   hmm_results["best"] <- pick
 
   message("Best ploidy: ", pick)
 
+  pick_m <- paste0("m", pick)
+
   if (mult_res == "best") {
     res <- list(
-      bincounts = hmm_results[[pick]]$bincounts,
-      modal_seg = hmm_results[[pick]]$modal_seg,
-      mstats = hmm_results[[pick]]$mstats,
-      df_params = hmm_results[[pick]]$df_params
+      bincounts = hmm_results[[pick_m]]$bincounts,
+      modal_seg = hmm_results[[pick_m]]$modal_seg,
+      mstats = hmm_results[[pick_m]]$mstats,
+      df_params = hmm_results[[pick_m]]$df_params
     )
     return(res)
   }
