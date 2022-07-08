@@ -1,3 +1,51 @@
+#' Bin atac fragments
+#'
+#' Convenience wrapper to bin fragments of a given size and save them as `.mtx` files
+#'
+#' @inherit bin_frags
+#'
+#' @param ArrowFiles List or vector of ArrowFile paths
+#' @param bin_name Name of the bins (e.g. `'10Mb'`, `'500Kb'`, `'chr_arm'`). If not provided is automatically detected based on binwidth.
+#' @param overwrite Logical. Overwrite previously existing results (default = FALSE)
+#' @param return_mat Logical. Return the binned depth matrix (default = FALSE)
+#' @param ... Additional parameters passed to `bplapply`
+#'
+#' @return If `return_mat=TRUE`, returns a sparse binned depth matrix. Otherwise returns `NULL`
+#'
+#' @export
+bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode(width(bins))), ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), overwrite = FALSE, return_mat = FALSE, ...) {
+  # TODO: optional outdir if we don't want to save
+
+  stopifnot(class(bins) %in% "GRanges")
+
+  # Compute fragments per bins and combine
+  matlist <- lapply(X = seq_along(ArrowFiles), FUN = function(i) {
+    sample_name <- names(ArrowFiles[i])
+    ArrowFile <- ArrowFiles[i]
+    sample_outdir <- file.path(outdir, bin_name, sample_name)
+
+    # Only bin frags if not done already
+    if (!file.exists(file.path(sample_outdir, "matrix.mtx.gz")) | overwrite) {
+      message("Computing fragments for ", sample_name)
+      tmp <- bin_frags(ArrowFile = ArrowFile, bins = bins, outdir = sample_outdir, ncores = ncores, ...)
+      return(tmp)
+    } else {
+      message("Fragments files already found for ", sample_name)
+    }
+  })
+
+  # Invisible return
+  if (return_mat) {
+    # or bind and then return
+    res <- do.call('rbind', matlist)
+    return(res)
+  } else {
+    return(invisible(NULL))
+  }
+
+}
+
+
 #' Bin fragments from ArrowFile
 #'
 #' Parallel enabled depth counting of read fragments in given genomic bins from `ArchR` processed ArrowFiles

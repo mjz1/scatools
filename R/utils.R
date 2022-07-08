@@ -139,3 +139,17 @@ bind_sublist <- function(toplist, sublist, what = c("rbind"), .add_id = FALSE, .
 
   return(res)
 }
+
+#' @export
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+#' @export
+prettyMb = function(x, places = 3) {
+  power <- pmin(6, floor(log(abs(x), 1000)))
+  units <- c("B", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb")[power+1]
+  x <- x/(1000^power)
+  paste(prettyNum(signif(x,places)), units, sep = "")
+}
