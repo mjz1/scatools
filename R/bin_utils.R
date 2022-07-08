@@ -297,5 +297,9 @@ add_gc_freq <- function(bs_genome, bins) {
   message("Computing GC content...")
   freqs <- BSgenome::alphabetFrequency(BSgenome::getSeq(bs_genome, bins))
   bins$gc <- (freqs[, "C"] + freqs[, "G"]) / rowSums(freqs)
+
+  # Add N frequency
+  bins$n_freq <- (freqs[, "N"]) / rowSums(freqs)
+
   return(bins)
 }
