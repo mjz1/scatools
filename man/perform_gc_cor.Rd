@@ -4,7 +4,13 @@
 \alias{perform_gc_cor}
 \title{Perform GC Correction}
 \usage{
-perform_gc_cor(mat, gc, method = c("modal", "copykit", "loess"), ...)
+perform_gc_cor(
+  mat,
+  gc,
+  method = c("modal", "copykit", "loess"),
+  ncores = 1,
+  ...
+)
 }
 \arguments{
 \item{mat}{Count matrix for GC correction}
@@ -13,14 +19,16 @@ perform_gc_cor(mat, gc, method = c("modal", "copykit", "loess"), ...)
 
 \item{method}{Specifies the type of GC correction to perform. One of \verb{'modal', 'copykit', or 'loess'}}
 
-\item{...}{Additional arguments to be passed to GC correction methods or \code{\link[BiocParallel:bplapply]{BiocParallel::bplapply()}}}
+\item{ncores}{Number of cores to use if parallel backend is available}
+
+\item{...}{Additional arguments to be passed to GC correction methods...}
 }
 \value{
 Sparse matrix of corrected counts
 }
 \description{
-Performs GC correction using \code{\link[BiocParallel:bplapply]{BiocParallel::bplapply()}} over a matrix of cell counts
+Performs GC correction using over a matrix of cell counts
 }
 \details{
-Note: If using \code{modal} must pass \code{results="counts"} as an argument.
+Note: If using \code{modal} must pass \code{results="counts"} as an argument. Uses \link{pbmcapply} for parallelization.
 }

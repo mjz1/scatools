@@ -4,7 +4,67 @@
 # https://bismap.hoffmanlab.org/
 #
 
-# Need function to define bins in cells as ideal or valid
+#' Perform GC Correction
+#'
+#' Performs GC correction using over a matrix of cell counts
+#'
+#' Note: If using `modal` must pass `results="counts"` as an argument. Uses [pbmcapply] for parallelization.
+#'
+#' @param mat Count matrix for GC correction
+#' @param gc GC corresponding to bins (rows) in the matrix
+#' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
+#' @param ncores Number of cores to use if parallel backend is available
+#' @param ... Additional arguments to be passed to GC correction methods...
+#'
+#' @return Sparse matrix of corrected counts
+#'
+#' @export
+perform_gc_cor <- function(mat, gc, method = c("modal", "copykit", "loess"), ncores = 1, ...) {
+  gc <- as.vector(gc)
+
+  method <- match.arg(method)
+
+  # If method is modal we must force result="counts" in the dot expansion
+  # Not sure how to do this so just warn and exit
+  if (method == "modal") {
+    # Check for results="counts"
+    dots <- list(...)
+
+    if (dots["results"] != "counts") {
+      stop("If using modal GC correction you must pass results='counts' as an argument")
+    }
+    # Ideally we would simply append this option to the dots
+    # automatically but not sure how to dynamically alter the dots
+    #   dots$result = "counts"
+    #   (...) = dots
+  }
+
+  # Functions switch
+  FUN <- switch(method,
+    "modal" = get("gc_cor_modal"),
+    "copykit" = get("gc_cor_copykit"),
+    "loess" = get("gc_cor_loess")
+  )
+
+  # Parallel apply over the matrix
+  if (requireNamespace("pbmcapply", quietly = TRUE)) {
+    counts_gc_list <- pbmcapply::pbmclapply(X = seq_len(ncol(mat)), mc.cores = ncores, FUN = function(i) {
+      FUN(gc, counts = as.vector(mat[, i]), ...)
+    })
+  } else {
+    warning("No parallel backend used. GC correction may be slow.", call. = FALSE)
+    counts_gc_list <- lapply(X = seq_len(ncol(mat)), FUN = function(i) {
+      FUN(gc, counts = as.vector(mat[, i]), ...)
+    })
+  }
+
+  corrected <- as(do.call("cbind", counts_gc_list), "dgCMatrix")
+  colnames(corrected) <- colnames(mat)
+  rownames(corrected) <- rownames(mat)
+  return(corrected)
+}
+
+
 
 #' Modal regression GC Correction for single cell data
 #'
@@ -112,59 +172,6 @@ gc_cor_modal <- function(counts, gc, bin_ids = seq_along(counts), lowess_frac = 
   }
 }
 
-
-
-
-#' Perform GC Correction
-#'
-#' Performs GC correction using [BiocParallel::bplapply()] over a matrix of cell counts
-#'
-#' Note: If using `modal` must pass `results="counts"` as an argument.
-#'
-#' @param mat Count matrix for GC correction
-#' @param gc GC corresponding to bins (rows) in the matrix
-#' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
-#' @param ... Additional arguments to be passed to GC correction methods or [BiocParallel::bplapply()]
-#'
-#' @return Sparse matrix of corrected counts
-#'
-#' @export
-perform_gc_cor <- function(mat, gc, method = c("modal", "copykit", "loess"), ...) {
-  gc <- as.vector(gc)
-
-  method <- match.arg(method)
-
-  # If method is modal we must force result="counts" in the dot expansion
-  # Not sure how to do this so just warn and exit
-  if (method == "modal") {
-    # Check for results="counts"
-    dots <- list(...)
-
-    if (dots["results"] != "counts") {
-      stop("If using modal GC correction you must pass results='counts' as an argument")
-    }
-    # Ideally we would simply append this option to the dots
-    # automatically but not sure how to dynamically alter the dots
-    #   dots$result = "counts"
-    #   (...) = dots
-  }
-
-  # Functions switch
-  FUN <- switch(method,
-    "modal" = get("gc_cor_modal"),
-    "copykit" = get("gc_cor_copykit"),
-    "loess" = get("gc_cor_loess")
-  )
-
-  # Parallel apply over the matrix
-  counts_gc_list <- suppressMessages(BiocParallel::bplapply(X = seq_len(ncol(mat)), FUN = function(i) {
-    FUN(gc, counts = as.vector(mat[, i]), ...)
-  }))
-  corrected <- as(do.call("cbind", counts_gc_list), "dgCMatrix")
-  colnames(corrected) <- colnames(mat)
-  rownames(corrected) <- rownames(mat)
-  return(corrected)
-}
 
 # Copykit method of GC correction (Really https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3378858/) -- this ref also suggests a different model which corrects GC based on fragment length which may be better for atac data?
 gc_cor_copykit <- function(counts, gc, span = 0.05) {
