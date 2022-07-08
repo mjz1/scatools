@@ -26,7 +26,7 @@ run_sc_hmmcopy(
 
 \item{end}{Vector of bin end positions}
 
-\item{counts}{Vector of bin corrected counts. These should ideally be GC corrected counts from \code{\link[=modal_quantile_regression]{modal_quantile_regression()}}}
+\item{counts}{Vector of bin corrected counts. These should ideally be GC corrected counts from \code{\link[=gc_cor_modal]{gc_cor_modal()}}}
 
 \item{reads}{A vector of raw read counts per bin}
 
