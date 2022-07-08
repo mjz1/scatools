@@ -6,7 +6,7 @@
 #' @param bins Bins GRanges object
 #' @param outdir Optional: Directory to write the `.mtx`, `barcodes`, and `bins` files
 #' @param ncores Number of cores to use
-#' @param BPPARAM Options to `BPPARAM` to enable multithreading
+#' @param bpparams Options to `BPPARAM` to enable multithreading
 #' @param ... Additional arguments passed to `bplapply`
 #'
 #' @return Binned depth sparse matrix
@@ -77,6 +77,7 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
   # Side effect is that the ArchR namespace remains attached afterwards (ie all the packages it depends on)
   if (!"ArchR" %in% .packages()) {
     withr::local_package(package = "ArchR")
+    ArchR::addArchRThreads(1)
   }
 
   # Export needed functions

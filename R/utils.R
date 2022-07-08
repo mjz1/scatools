@@ -1,6 +1,6 @@
 #' get_snp_counts
 #'
-#' Count ref and alt snps in sce.
+#' Computes per feature counts across the dataset. Equivalent to pseudobulk summarization.
 #'
 #' @param sce `SingleCellExperiment` object with one or more assays
 #' @param variables Factors upon which to split the counts. Defaults to `'all'` which counts across entire dataset
@@ -42,8 +42,8 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
       if (variable == "all") {
         dat <- data.frame("all" = as.integer(rowSums(assay(sce, target))))
       } else {
-        dat <- sapply(levels(sce[[variable]]), FUN = function(x) {
-          idx <- which(sce[[variable]] == x)
+        dat <- sapply(levels(sce[[variable]]), FUN = function(X) {
+          idx <- which(sce[[variable]] == X)
           as.integer(rowSums(assay(sce[, idx], target)))
         })
       }

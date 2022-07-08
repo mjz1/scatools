@@ -22,9 +22,9 @@ bin_frags(
 
 \item{ncores}{Number of cores to use}
 
-\item{...}{Additional arguments passed to \code{bplapply}}
+\item{bpparams}{Options to \code{BPPARAM} to enable multithreading}
 
-\item{BPPARAM}{Options to \code{BPPARAM} to enable multithreading}
+\item{...}{Additional arguments passed to \code{bplapply}}
 }
 \value{
 Binned depth sparse matrix
