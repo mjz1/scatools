@@ -73,3 +73,66 @@ get_f_idx <- function(f) {
   names(l) <- levels(f)
   return(l)
 }
+
+#' Bind sublists within lists
+#'
+#' Helper function for lists of lists, where the top level list is over multiple samples, and the sublists are results that are identical across samples that one wishes to bind
+#'
+#' @param toplist List of lists of `rbind`able data
+#' @param sublist Name or index of sublist
+#' @param what Specify either `cbind` or `rbind` (Currently only rbind implemented)
+#' @param .add_id Add identifiers to each data entry prior to merging. Based on list names if available. (default=FALSE)
+#' @param .id_name Name of the id column if added
+#'
+#' @export
+#'
+#' @examples
+#' toplist <- list(
+#'   sample_1 = list(
+#'     result1 = data.frame(
+#'       a = c(1, 2, 3),
+#'       b = c("X", "Y", "Z")
+#'     ),
+#'     result2 = data.frame(
+#'       height = 180,
+#'       weight = 75
+#'     )
+#'   ),
+#'   sample_2 = list(
+#'     result1 = data.frame(
+#'       a = c(6, 5, 4),
+#'       b = c("A", "B", "C")
+#'     ),
+#'     result2 = data.frame(
+#'       height = 155,
+#'       weight = 60
+#'     )
+#'   )
+#' )
+#'
+#' bind_sublist(toplist, sublist = 1, what = "rbind", .add_id = T)
+#'
+#' bind_sublist(toplist, sublist = "result2", what = "rbind", .add_id = T)
+#'
+#' bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = F)
+#'
+bind_sublist <- function(toplist, sublist, what = c("rbind"), .add_id = FALSE, .id_name = "id") {
+  what <- match.arg(what)
+
+  if (is.null(names(toplist))) {
+    names(toplist) <- 1:length(toplist)
+  }
+
+  res <- do.call(what, lapply(names(toplist), FUN = function(name) {
+    dat <- toplist[[name]][[sublist]]
+
+    if (.add_id) {
+      dat <- cbind(id = name, dat)
+      colnames(dat)[1] <- .id_name
+    }
+
+    return(dat)
+  }))
+
+  return(res)
+}
