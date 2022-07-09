@@ -11,7 +11,7 @@ gc_cor_modal(
   lowess_frac = 0.2,
   q = c(0.1, 0.9),
   g = c(0.1, 0.9),
-  results = c("default", "counts", "full")
+  results = c("counts", "default", "full")
 )
 }
 \arguments{

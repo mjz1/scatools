@@ -21,7 +21,7 @@ perform_gc_cor(
 
 \item{ncores}{Number of cores to use if parallel backend is available}
 
-\item{...}{Additional arguments to be passed to GC correction methods...}
+\item{...}{Additional arguments to be passed to GC correction methods}
 }
 \value{
 Sparse matrix of corrected counts

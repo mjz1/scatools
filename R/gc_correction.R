@@ -14,7 +14,7 @@
 #' @param gc GC corresponding to bins (rows) in the matrix
 #' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
 #' @param ncores Number of cores to use if parallel backend is available
-#' @param ... Additional arguments to be passed to GC correction methods...
+#' @param ... Additional arguments to be passed to GC correction methods
 #'
 #' @return Sparse matrix of corrected counts
 #'
@@ -24,20 +24,20 @@ perform_gc_cor <- function(mat, gc, method = c("modal", "copykit", "loess"), nco
 
   method <- match.arg(method)
 
-  # If method is modal we must force result="counts" in the dot expansion
-  # Not sure how to do this so just warn and exit
-  if (method == "modal") {
-    # Check for results="counts"
-    dots <- list(...)
-
-    if (dots["results"] != "counts") {
-      stop("If using modal GC correction you must pass results='counts' as an argument")
-    }
-    # Ideally we would simply append this option to the dots
-    # automatically but not sure how to dynamically alter the dots
-    #   dots$result = "counts"
-    #   (...) = dots
-  }
+  # # If method is modal we must force result="counts" in the dot expansion
+  # # Not sure how to do this so just warn and exit
+  # if (method == "modal") {
+  #   # Check for results="counts"
+  #   dots <- list(...)
+  #
+  #   if (dots["results"] != "counts") {
+  #     stop("If using modal GC correction you must pass results='counts' as an argument")
+  #   }
+  #   # Ideally we would simply append this option to the dots
+  #   # automatically but not sure how to dynamically alter the dots
+  #   #   dots$result = "counts"
+  #   #   (...) = dots
+  # }
 
   # Functions switch
   FUN <- switch(method,
@@ -85,7 +85,7 @@ perform_gc_cor <- function(mat, gc, method = c("modal", "copykit", "loess"), nco
 #'
 #' @export
 #'
-gc_cor_modal <- function(counts, gc, bin_ids = seq_along(counts), lowess_frac = 0.2, q = c(0.1, 0.9), g = c(0.1, 0.9), results = c("default", "counts", "full")) {
+gc_cor_modal <- function(counts, gc, bin_ids = seq_along(counts), lowess_frac = 0.2, q = c(0.1, 0.9), g = c(0.1, 0.9), results = c("counts", "default", "full")) {
   if (length(counts) != length(gc)) {
     stop("Length of counts and gc vectors are not identical")
   }
