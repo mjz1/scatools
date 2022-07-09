@@ -11,6 +11,7 @@ load_atac_bins(
   BPPARAM = bpparam(),
   gc = NULL,
   n_freq = NULL,
+  gc_cor_method = NULL,
   map = 1,
   min_reads = 1,
   max_N_freq = 0.05,
@@ -30,11 +31,13 @@ load_atac_bins(
 
 \item{bins}{Optional: GRanges bins object}
 
-\item{BPPARAM}{Options to pass to \code{bplapply} for data loading. Provides minor speedup if many samples}
+\item{BPPARAM}{Options to pass to \code{bplapply} for data loading. Provides minor speedup if loading many samples}
 
 \item{gc}{Vector of gc content}
 
 \item{n_freq}{Vector of bin N frequency (proportion of N bases in a bin)}
+
+\item{gc_cor_method}{Optional: Method to use for GC correction. One of \code{modal}, \code{copykit}, \code{loess}.}
 
 \item{map}{Vector of bin mappability}
 

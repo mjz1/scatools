@@ -8,7 +8,7 @@
 #'
 #' Performs GC correction using over a matrix of cell counts
 #'
-#' Note: If using `modal` must pass `results="counts"` as an argument. Uses [pbmcapply] for parallelization.
+#' Note: If using `modal` must pass `results="counts"` as an argument. Uses [pbmcapply::pbmclapply()] for parallelization.
 #'
 #' @param mat Count matrix for GC correction
 #' @param gc GC corresponding to bins (rows) in the matrix

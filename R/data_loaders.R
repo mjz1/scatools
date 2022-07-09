@@ -5,8 +5,9 @@
 #' @param directory Folder containing samples
 #' @param ArchR_Proj Optional: ArchR project with matching cells and metadata
 #' @param bins Optional: GRanges bins object
-#' @param BPPARAM Options to pass to `bplapply` for data loading. Provides minor speedup if many samples
+#' @param BPPARAM Options to pass to `bplapply` for data loading. Provides minor speedup if loading many samples
 #' @param flag_ideal Logical. Whether or not to flag ideal bins for each cell. Can be slow if not parallelized. See [get_ideal_mat()] for more information.
+#' @param gc_cor_method Optional: Method to use for GC correction. One of `modal`, `copykit`, `loess`.
 #' @param save_to File path in which to save the final output. Note: Will still return the sce object for downstream analysis.
 #' @param save_as NOT IMPLEMENTED YET. Select file formats to save the object. Can provide multiple values
 #'
@@ -15,7 +16,23 @@
 #' @return A `SingleCellExperiment` object.
 #' @export
 #'
-load_atac_bins <- function(directory, ArchR_Proj = NULL, bins = NULL, BPPARAM = bpparam(), gc = NULL, n_freq = NULL, map = 1, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, flag_ideal = TRUE, save_to = NULL, save_as = c("sce", "adata", "seurat")) {
+load_atac_bins <- function(directory,
+                           ArchR_Proj = NULL,
+                           bins = NULL,
+                           BPPARAM = bpparam(),
+                           gc = NULL,
+                           n_freq = NULL,
+                           gc_cor_method = NULL,
+                           map = 1,
+                           min_reads = 1,
+                           max_N_freq = 0.05,
+                           reads_outlier = 0.01,
+                           gc_outlier = 0.001,
+                           min_map = 0.9,
+                           ncores = 1,
+                           flag_ideal = TRUE,
+                           save_to = NULL,
+                           save_as = c("sce", "adata", "seurat")) {
   sample_names <- dir(directory)
   samples <- dir(directory, full.names = TRUE)
 
@@ -104,6 +121,23 @@ load_atac_bins <- function(directory, ArchR_Proj = NULL, bins = NULL, BPPARAM = 
 
   message("Computing library size factors")
   sce <- scuttle::computeLibraryFactors(sce)
+
+  if (!is.null(gc_cor_method)) {
+    if (!gc_cor_method %in% c("modal", "copykit", "loess")) {
+      stop("gc_cor_method method must be one of 'modal', 'copykit', or 'loess'")
+    }
+    if (is.null(gc)) {
+      stop("To perform GC correction must provide either bins with gc data, or gc data")
+    }
+
+    message("Performing GC correction using ", ncores, " with method: ", gc_cor_method)
+    assay_name <- paste0("counts_gc_", gc_cor_method)
+    assay(sce, assay_name) <- perform_gc_cor(mat = assay(sce, "counts_permb"),
+                                             gc = gc,
+                                             method = gc_cor_method,
+                                             ncores = ncores)
+    metadata(sce)$gc_cor_method <- gc_cor_method
+  }
 
   cat("\n")
   print(sce)

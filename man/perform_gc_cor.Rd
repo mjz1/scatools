@@ -30,5 +30,5 @@ Sparse matrix of corrected counts
 Performs GC correction using over a matrix of cell counts
 }
 \details{
-Note: If using \code{modal} must pass \code{results="counts"} as an argument. Uses \link{pbmcapply} for parallelization.
+Note: If using \code{modal} must pass \code{results="counts"} as an argument. Uses \code{\link[pbmcapply:pbmclapply]{pbmcapply::pbmclapply()}} for parallelization.
 }
