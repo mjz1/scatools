@@ -122,23 +122,37 @@ load_atac_bins <- function(directory,
   message("Computing library size factors")
   sce <- scuttle::computeLibraryFactors(sce)
 
+  # GC CORRECTION
   if (!is.null(gc_cor_method)) {
     if (!gc_cor_method %in% c("modal", "copykit", "loess")) {
-      stop("gc_cor_method method must be one of 'modal', 'copykit', or 'loess'")
+      warning("Not performing GC correction:\n\tgc_cor_method method must be one of 'modal', 'copykit', or 'loess'")
+      break
     }
     if (is.null(gc)) {
-      stop("To perform GC correction must provide either bins with gc data, or gc data")
+      warning("Not performing GC correction:\n\tNo GC data in passed bins or function call")
+      break
     }
 
-    message("Performing GC correction using ", ncores, " with method: ", gc_cor_method)
+    message("Performing GC correction using ", ncores, " threads. Method: ", gc_cor_method)
     assay_name <- paste0("counts_gc_", gc_cor_method)
+
+    # Check if valid bins exists and pass correctly
+    if ("valid_bins" %in% names(assays(sce))) {
+      valid_mat <- assay(sce, 'valid_bins')
+    } else {
+      valid_mat <- NULL
+    }
+
     assay(sce, assay_name) <- perform_gc_cor(mat = assay(sce, "counts_permb"),
                                              gc = gc,
+                                             valid_mat = valid_mat,
                                              method = gc_cor_method,
                                              ncores = ncores)
     metadata(sce)$gc_cor_method <- gc_cor_method
   }
 
+
+  # PRINT N SAVE
   cat("\n")
   print(sce)
 

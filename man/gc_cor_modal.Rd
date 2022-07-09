@@ -7,6 +7,7 @@
 gc_cor_modal(
   counts,
   gc,
+  valid = rep(TRUE, length(counts)),
   bin_ids = seq_along(counts),
   lowess_frac = 0.2,
   q = c(0.1, 0.9),
@@ -18,6 +19,8 @@ gc_cor_modal(
 \item{counts}{Vector of counts in bins}
 
 \item{gc}{Vector of GC content in bins}
+
+\item{valid}{Vector of values corresponding to valid bins. If none provided defaults to all TRUE}
 
 \item{bin_ids}{Bin ids}
 

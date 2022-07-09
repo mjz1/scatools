@@ -7,6 +7,7 @@
 perform_gc_cor(
   mat,
   gc,
+  valid_mat = NULL,
   method = c("modal", "copykit", "loess"),
   ncores = 1,
   ...
@@ -16,6 +17,8 @@ perform_gc_cor(
 \item{mat}{Count matrix for GC correction}
 
 \item{gc}{GC corresponding to bins (rows) in the matrix}
+
+\item{valid_mat}{Matrix of TRUE/FALSE for valid bins. If none provided defaults to all TRUE}
 
 \item{method}{Specifies the type of GC correction to perform. One of \verb{'modal', 'copykit', or 'loess'}}
 
