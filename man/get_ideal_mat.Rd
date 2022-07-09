@@ -39,7 +39,7 @@ get_ideal_mat(
 \item{ncores}{number of cores for parallel evaluation (requires \link{parallel} package)}
 }
 \value{
-A logical vector of same length as input identifying which bins in a given cell meet the filtering criteria
+A dataframe of two columns meet the \code{valid} or \code{ideal} criteria
 }
 \description{
 Given a matrix of bin counts, bin gc and N frequency, and filtering parameters, return a boolean matrix flagging ideal bins

@@ -353,9 +353,15 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
     )
   }
 
-  colnames(res) <- colnames(mat)
-  rownames(res) <- rownames(mat)
-  return(res)
+  # Sort of silly but works for now to return both matrices
+  ideal_mat <- res[,grep("ideal", colnames(res))]
+  colnames(ideal_mat) <- colnames(mat)
+  rownames(ideal_mat) <- rownames(mat)
+  valid_mat <- res[,grep("valid", colnames(res))]
+  colnames(valid_mat) <- colnames(mat)
+  rownames(valid_mat) <- rownames(mat)
+
+  return(list(ideal = ideal_mat, valid = valid_mat))
 }
 
 #' Flag ideal bins
@@ -372,7 +378,7 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
 #' @param gc_outlier Flag bins with GC content in the top and bottom quantule given by this value. Range (0, 1)
 #' @param min_map Minimum allowable mappability score for a bin. Range (0, 1)
 #'
-#' @return A logical vector of same length as input identifying which bins in a given cell meet the filtering criteria
+#' @return A dataframe of two columns meet the `valid` or `ideal` criteria
 #' @export
 #'
 is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
@@ -396,7 +402,7 @@ is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, max_N_freq = 0.
     (gc < gc_range[2]) &
     (gc > gc_range[1])
 
-  return(ideal)
+  return(data.frame(ideal = ideal, valid = valid))
 }
 
 

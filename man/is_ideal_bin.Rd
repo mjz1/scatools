@@ -36,7 +36,7 @@ is_ideal_bin(
 \item{min_map}{Minimum allowable mappability score for a bin. Range (0, 1)}
 }
 \value{
-A logical vector of same length as input identifying which bins in a given cell meet the filtering criteria
+A dataframe of two columns meet the \code{valid} or \code{ideal} criteria
 }
 \description{
 \code{is_ideal_bin} will apply a set of bin-wise filters, based on high count outliers, high or low gc outliers, minimum read counts, minimum mappability, or maximum allowable frequency of N bases per bin.

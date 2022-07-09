@@ -84,7 +84,8 @@ load_atac_bins <- function(directory, ArchR_Proj = NULL, bins = NULL, BPPARAM = 
   # Add valid and ideal information to mirror HMMcopy's QC
   if (flag_ideal) {
     message("Flagging ideal bins using ", ncores, " threads")
-    assay(sce, "ideal_bins") <- get_ideal_mat(
+
+    id_val_mats <- get_ideal_mat(
       mat = assay(sce, "counts_permb"),
       gc = gc,
       n_freq = n_freq,
@@ -96,6 +97,9 @@ load_atac_bins <- function(directory, ArchR_Proj = NULL, bins = NULL, BPPARAM = 
       min_map = min_map,
       ncores = ncores
     )
+
+    assay(sce, "ideal_bins") <- id_val_mats$ideal
+    assay(sce, "valid_bins") <- id_val_mats$valid
   }
 
   message("Computing library size factors")
