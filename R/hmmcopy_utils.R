@@ -337,6 +337,34 @@ sc_hmm_params <- function(e = (1 - 1e-6),
   return(param)
 }
 
+
+#' Grab HMM results from returned list
+#'
+#' Helper function to parse large list of HMM results
+#'
+#' Note: Parallel currently disabled as it seems slower than single core
+#'
+#' @param hmm_results hmm results in multilist format
+#' @param grab What to grab ("best")
+#' @param ncores number of cores for parallelization
+#'
+#' @return A list of each cells best result\
+#' @export
+#'
+grab_hmm_res <- function(hmm_results, grab = "best", ncores = 1) {
+  if (requireNamespace("pbmcapply", quietly = TRUE) & TRUE==1) {
+    pbmcapply::pbmclapply(hmm_results, mc.cores = ncores, function(cell_hmm) {
+      pick <- cell_hmm[[grab]]
+      res <- cell_hmm[[pick]]
+    })
+  } else {
+    lapply(hmm_results, function(cell_hmm) {
+      pick <- cell_hmm[[grab]]
+      res <- cell_hmm[[pick]]
+    })
+  }
+}
+
 # Should autogenerate based on test data within package on build...
 .mstats_cols <- function() {
   c("cell_id", "multiplier", "MSRSI_non_integerness", "MBRSI_dispersion_non_integerness",
