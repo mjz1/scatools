@@ -10,6 +10,7 @@ hmmcopy_singlecell(
   end,
   counts,
   reads,
+  ideal = rep(TRUE, length(counts)),
   param = sc_hmm_params(),
   cell_id,
   multiplier = 1,
@@ -28,6 +29,8 @@ hmmcopy_singlecell(
 \item{counts}{Vector of bin corrected counts. These should ideally be GC corrected counts from \code{\link[=gc_cor_modal]{gc_cor_modal()}}}
 
 \item{reads}{A vector of raw read counts per bin}
+
+\item{ideal}{A logical vector indicating which bins are ideal for analysis. See \code{\link[=is_ideal_bin]{is_ideal_bin()}}}
 
 \item{param}{A matrix of parameter values in columns for each state in rows. See \code{\link[HMMcopy:HMMsegment]{HMMcopy::HMMsegment()}} for more information.}
 

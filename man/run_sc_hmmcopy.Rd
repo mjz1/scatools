@@ -10,13 +10,14 @@ run_sc_hmmcopy(
   end,
   counts,
   reads,
+  ideal = rep(TRUE, length(counts)),
   param = sc_hmm_params(),
   cell_id,
   multipliers = 1:6,
   verbose = FALSE,
   maxiter = 200,
   n_cutoff = NULL,
-  mult_res = c("best", "all")
+  return = c("best", "all")
 )
 }
 \arguments{
@@ -30,6 +31,8 @@ run_sc_hmmcopy(
 
 \item{reads}{A vector of raw read counts per bin}
 
+\item{ideal}{A logical vector indicating which bins are ideal for analysis. See \code{\link[=is_ideal_bin]{is_ideal_bin()}}}
+
 \item{param}{A matrix of parameter values in columns for each state in rows. See \code{\link[HMMcopy:HMMsegment]{HMMcopy::HMMsegment()}} for more information.}
 
 \item{cell_id}{Cell id}
@@ -42,7 +45,7 @@ run_sc_hmmcopy(
 
 \item{n_cutoff}{Cutoff for the number of bins in a given state for calculating the \code{true_multiplier} value. Defaults to 5\% of bins.}
 
-\item{mult_res}{a character. One of \code{best} or \code{all} to either return the result for the best ploidy only, or a list of results for all ploidies}
+\item{return}{a character. One of \code{best} or \code{all} to either return the result for the best ploidy only, or a list of results for all ploidies}
 }
 \value{
 A list with the following objects:

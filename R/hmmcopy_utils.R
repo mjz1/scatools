@@ -7,6 +7,7 @@
 #' @param end Vector of bin end positions
 #' @param counts Vector of bin corrected counts. These should ideally be GC corrected counts from [gc_cor_modal()]
 #' @param reads A vector of raw read counts per bin
+#' @param ideal A logical vector indicating which bins are ideal for analysis. See [is_ideal_bin()]
 #' @param param A matrix of parameter values in columns for each state in rows. See [HMMcopy::HMMsegment()] for more information.
 #' @param cell_id Cell id
 #' @param multiplier Ploidy multiplier
@@ -24,123 +25,135 @@
 #'
 #' @export
 #'
-hmmcopy_singlecell <- function(chr, start, end, counts, reads, param = sc_hmm_params(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
+hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = sc_hmm_params(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
 
   # In the original function, copy, cor_gc, and modal_corrected columns are all the same
 
   # Format the bincount data into a table
-  bincounts <- data.frame(chr, start, end, reads, counts, multiplier)
+  bincounts <- data.frame(chr, start, end, reads, counts, ideal, multiplier)
 
   # Adjust the counts by the ploidy multiplier
   bincounts$copy <- bincounts$counts * multiplier
 
-  # Run HMMcopy
-  segmented <- HMMcopy::HMMsegment(bincounts, param = param, verbose = verbose, maxiter = maxiter)
+  bincounts$copy[!bincounts$ideal] <- NA
 
-  bincounts$state <- segmented$state - 1 # Why we subtract 1?
+  if (all(is.na(bincounts$copy))){
+    warning("No count data. Unable to segment.")
+    hmmresult <- list(bincounts = bincounts, modal_seg = NA, mstats = .dummy_mstats(cell_id), df_params = NA)
+    # TODO: See how this is handled in later merging
+  } else {
+    # Run HMMcopy
+    segmented <- HMMcopy::HMMsegment(bincounts, param = param, verbose = verbose, maxiter = maxiter)
 
-  # TWEAK
-  # Trying to understand what this is doing -- we do an initial segmentation above, ... and adjust the copy values
-  # Get median values per state
-  meds <- bincounts %>%
-    dplyr::group_by(state) %>%
-    dplyr::summarize(median = median(copy, na.rm = TRUE), n = n()) %>%
-    dplyr::mutate(fix = state / median)
+    bincounts$state <- segmented$state - 1 # Why we subtract 1?
 
-  # Do we need to do this ordering
-  # meds <- meds[order(meds$n, decreasing = TRUE), ]
+    # TWEAK
+    # Trying to understand what this is doing -- we do an initial segmentation above, ... and adjust the copy values
+    # Get median values per state
+    meds <- bincounts %>%
+      dplyr::filter(ideal == TRUE) %>%
+      dplyr::group_by(state) %>%
+      dplyr::summarize(median = median(copy, na.rm = TRUE), n = n()) %>%
+      dplyr::mutate(fix = state / median)
 
-  # Original cutoff was 200 for 500kb bins (of which there are 6073 which is about 3.3% of bins)
-  if (is.null(n_cutoff)) {
-    n_cutoff <- round(0.05 * sum(meds$n))
+    # Do we need to do this ordering
+    # meds <- meds[order(meds$n, decreasing = TRUE), ]
+
+    # Original cutoff was 200 for 500kb bins (of which there are 6073 which is about 3.3% of bins)
+    if (is.null(n_cutoff)) {
+      n_cutoff <- round(0.05 * sum(meds$n))
+    }
+
+    true_multiplier <- multiplier * mean(dplyr::filter(meds, n > n_cutoff)$fix, na.rm = TRUE)
+
+    # Store the original copy value and states
+    bincounts$copy_orig <- bincounts$copy
+    bincounts$state_orig <- bincounts$state
+
+    # Adjust the counts
+    bincounts$copy <- bincounts$copy_orig * true_multiplier
+
+    segmented_2 <- HMMcopy::HMMsegment(bincounts, param, verbose = verbose, maxiter = maxiter)
+
+    # BASED 0 STATE
+    bincounts$state <- segmented_2$state - 1
+
+    modal_seg <- segmented_2$segs
+    modal_seg$multiplier <- multiplier
+    modal_seg$state <- as.numeric(as.character(modal_seg$state)) - 1
+
+    # Sample stats
+    stats <- modal_seg %>%
+      dplyr::group_by(multiplier) %>%
+      dplyr::summarise(MSRSI_non_integerness = median(abs(median - state), na.rm = TRUE))
+
+    # add the seg means to the individual bins
+    # TODO: Check for correct ordering
+    rleseg <- rle(paste0(bincounts$chr, ":", bincounts$state))
+    bincounts$median <- rep(modal_seg$median, rleseg$lengths)
+
+    bincounts$halfiness <- -log2(abs(pmin(abs(bincounts$median - bincounts$state), 0.499) - 0.5)) - 1
+
+    stats2 <- bincounts %>%
+      dplyr::filter(ideal == TRUE) %>%
+      dplyr::group_by(multiplier) %>%
+      dplyr::summarise(
+        MBRSI_dispersion_non_integerness = median(abs(copy - state), na.rm = TRUE),
+        MBRSM_dispersion = median(abs(copy - median), na.rm = TRUE),
+        autocorrelation_hmmcopy = tail(acf(copy_orig, 1, na.action = na.pass, type = "correlation", plot = FALSE)$acf, 1),
+        cv_hmmcopy = sd(copy_orig, na.rm = TRUE) / mean(copy_orig, na.rm = TRUE),
+        empty_bins_hmmcopy = sum(reads == 0, na.rm = TRUE),
+        mad_hmmcopy = mad(copy_orig, constant = 1, na.rm = TRUE),
+        mean_hmmcopy_reads_per_bin = mean(reads, na.rm = TRUE),
+        median_hmmcopy_reads_per_bin = median(reads, na.rm = TRUE),
+        std_hmmcopy_reads_per_bin = sd(reads, na.rm = TRUE),
+        total_mapped_reads_hmmcopy = sum(reads, na.rm = TRUE),
+        total_halfiness = sum(halfiness, na.rm = TRUE),
+        scaled_halfiness = sum(halfiness / (state + 1), na.rm = TRUE)
+      )
+
+    stats3 <- bincounts %>%
+      dplyr::filter(ideal == TRUE) %>%
+      dplyr::group_by(state, multiplier) %>%
+      dplyr::summarise(
+        state_mads = mad(copy_orig, constant = 1, na.rm = TRUE),
+        state_vars = var(copy, na.rm = TRUE)
+      )
+
+    stats4 <- stats3 %>%
+      dplyr::group_by(multiplier) %>%
+      dplyr::summarise(
+        mean_state_mads = mean(state_mads, na.rm = TRUE),
+        mean_state_vars = mean(state_vars, na.rm = TRUE)
+      )
+
+    mstats <- merge(merge(stats, stats2), stats4)
+    neumad <- subset(stats3, state == 2)$state_mads
+    mstats$mad_neutral_state <- ifelse(length(neumad) == 1, neumad, NA)
+
+    mstats$breakpoints <- nrow(modal_seg) - length(unique(modal_seg$chr))
+    mstats$mean_copy <- mean(dplyr::filter(bincounts, ideal == TRUE)$copy, na.rm = TRUE)
+    mstats$state_mode <- getmode(dplyr::filter(bincounts, ideal == TRUE)$state)
+    mstats$log_likelihood <- tail(segmented_2$loglik, 1)
+    mstats$true_multiplier <- true_multiplier
+
+    # HAPLOID POISON
+    ones <- dplyr::filter(bincounts, ideal == TRUE)$state == 1
+    if (sum(ones) / length(ones) > 0.7) {
+      mstats$scaled_halfiness <- Inf
+    }
+
+    df.params <- format_parameter_table(segmented_2, param)
+
+    # add cellid
+    df.params <- cbind(cell_id, df.params)
+    bincounts <- cbind(cell_id, bincounts)
+    modal_seg <- cbind(cell_id, modal_seg)
+    mstats <- cbind(cell_id, mstats)
+
+    hmmresult <- list(bincounts = bincounts, modal_seg = modal_seg, mstats = mstats, df_params = df.params)
+
   }
-
-  true_multiplier <- multiplier * mean(dplyr::filter(meds, n > n_cutoff)$fix, na.rm = TRUE)
-
-  # Store the original copy value and states
-  bincounts$copy_orig <- bincounts$copy
-  bincounts$state_orig <- bincounts$state
-
-  # Adjust the counts
-  bincounts$copy <- bincounts$copy_orig * true_multiplier
-
-  segmented_2 <- HMMcopy::HMMsegment(bincounts, param, verbose = verbose, maxiter = maxiter)
-
-  # BASED 0 STATE
-  bincounts$state <- segmented_2$state - 1
-
-  modal_seg <- segmented_2$segs
-  modal_seg$multiplier <- multiplier
-  modal_seg$state <- as.numeric(as.character(modal_seg$state)) - 1
-
-  # Sample stats
-  stats <- modal_seg %>%
-    dplyr::group_by(multiplier) %>%
-    dplyr::summarise(MSRSI_non_integerness = median(abs(median - state), na.rm = TRUE))
-
-  # add the seg means to the individual bins
-  # TODO: Check for correct ordering
-  rleseg <- rle(paste0(bincounts$chr, ":", bincounts$state))
-  bincounts$median <- rep(modal_seg$median, rleseg$lengths)
-
-  bincounts$halfiness <- -log2(abs(pmin(abs(bincounts$median - bincounts$state), 0.499) - 0.5)) - 1
-
-  stats2 <- bincounts %>%
-    dplyr::group_by(multiplier) %>%
-    dplyr::summarise(
-      MBRSI_dispersion_non_integerness = median(abs(copy - state), na.rm = TRUE),
-      MBRSM_dispersion = median(abs(copy - median), na.rm = TRUE),
-      autocorrelation_hmmcopy = tail(acf(copy_orig, 1, na.action = na.pass, type = "correlation", plot = FALSE)$acf, 1),
-      cv_hmmcopy = sd(copy_orig, na.rm = TRUE) / mean(copy_orig, na.rm = TRUE),
-      empty_bins_hmmcopy = sum(reads == 0, na.rm = TRUE),
-      mad_hmmcopy = mad(copy_orig, constant = 1, na.rm = TRUE),
-      mean_hmmcopy_reads_per_bin = mean(reads, na.rm = TRUE),
-      median_hmmcopy_reads_per_bin = median(reads, na.rm = TRUE),
-      std_hmmcopy_reads_per_bin = sd(reads, na.rm = TRUE),
-      total_mapped_reads_hmmcopy = sum(reads, na.rm = TRUE),
-      total_halfiness = sum(halfiness, na.rm = TRUE),
-      scaled_halfiness = sum(halfiness / (state + 1), na.rm = TRUE)
-    )
-
-  stats3 <- bincounts %>%
-    dplyr::group_by(state, multiplier) %>%
-    dplyr::summarise(
-      state_mads = mad(copy_orig, constant = 1, na.rm = TRUE),
-      state_vars = var(copy, na.rm = TRUE)
-    )
-
-  stats4 <- stats3 %>%
-    dplyr::group_by(multiplier) %>%
-    dplyr::summarise(
-      mean_state_mads = mean(state_mads, na.rm = TRUE),
-      mean_state_vars = mean(state_vars, na.rm = TRUE)
-    )
-
-  mstats <- merge(merge(stats, stats2), stats4)
-  neumad <- subset(stats3, state == 2)$state_mads
-  mstats$mad_neutral_state <- ifelse(length(neumad) == 1, neumad, NA)
-
-  mstats$breakpoints <- nrow(modal_seg) - length(unique(modal_seg$chr))
-  mstats$mean_copy <- mean(bincounts$copy, na.rm = TRUE)
-  mstats$state_mode <- as.numeric(names(tail(sort(table(bincounts$state)), 1)))
-  mstats$log_likelihood <- tail(segmented_2$loglik, 1)
-  mstats$true_multiplier <- true_multiplier
-
-  # HAPLOID POISON
-  ones <- bincounts$state == 1
-  if (sum(ones) / length(ones) > 0.7) {
-    mstats$scaled_halfiness <- Inf
-  }
-
-  df.params <- format_parameter_table(segmented_2, param)
-
-  # add cellid
-  df.params <- cbind(cell_id, df.params)
-  bincounts <- cbind(cell_id, bincounts)
-  modal_seg <- cbind(cell_id, modal_seg)
-  mstats <- cbind(cell_id, mstats)
-
-  hmmresult <- list(bincounts = bincounts, modal_seg = modal_seg, mstats = mstats, df_params = df.params)
 
   return(hmmresult)
 }
@@ -154,17 +167,17 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, param = sc_hmm_pa
 #' @inherit hmmcopy_singlecell
 #'
 #' @param multipliers Positive integer list of ploidy multipliers to test
-#' @param mult_res a character. One of `best` or `all` to either return the result for the best ploidy only, or a list of results for all ploidies
+#' @param return a character. One of `best` or `all` to either return the result for the best ploidy only, or a list of results for all ploidies
 #'
 #' @export
 #'
-run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, mult_res = c("best", "all")) {
+run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = sc_hmm_params(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, return = c("best", "all")) {
   # check integer multipliers
   if (!all(multipliers %% 1 == 0) | any(multipliers < 0)) {
     stop("Multipliers must be positive integers")
   }
 
-  mult_res <- match.arg(mult_res)
+  return <- match.arg(return)
 
   # Run the HMM for each multiplier state and compile the results into a list
   hmm_results <- lapply(multipliers, FUN = function(multiplier) {
@@ -177,6 +190,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params
       end = end,
       counts = counts,
       reads = reads,
+      ideal = ideal,
       param = param,
       cell_id = cell_id,
       multiplier = multiplier,
@@ -195,22 +209,34 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params
 
   seg.best <- bind_sublist(hmm_results, sublist = "mstats")
 
-  # scaledpenalty from original code is scaled_halfiness
-  seg.best$red <- FALSE
-  seg.best$red[which(seg.best$scaled_halfiness == min(seg.best$scaled_halfiness))] <- TRUE
+  # Catch error cases when not enough ideal bins to segment
+  if (all(is.na(seg.best$multiplier))) {
+    # This will ensure mstats keeps track of failed cells
+    pick  = "fail"
+    hmm_results <- list("fail" = hmm_results[1]) # Just to reduce on space usage only need one
+    hmm_results["best"] <- pick
+    message("Best ploidy: ", pick)
+    pick_m <- pick
+  } else {
+    # scaledpenalty from original code is scaled_halfiness
+    seg.best$red <- FALSE
+    seg.best$red[which(seg.best$scaled_halfiness == min(seg.best$scaled_halfiness))] <- TRUE
 
-  pick <- dplyr::filter(seg.best, red)$multiplier
-  if (length(pick) > 1) {
-    pick <- pick[1]
+    pick <- dplyr::filter(seg.best, red)$multiplier
+    if (length(pick) > 1) {
+      pick <- pick[1]
+    }
+
+    hmm_results["best"] <- pick
+
+    message("Best ploidy: ", pick)
+
+    pick_m <- paste0("m", pick)
   }
 
-  hmm_results["best"] <- pick
 
-  message("Best ploidy: ", pick)
 
-  pick_m <- paste0("m", pick)
-
-  if (mult_res == "best") {
+  if (return == "best") {
     res <- list(
       bincounts = hmm_results[[pick_m]]$bincounts,
       modal_seg = hmm_results[[pick_m]]$modal_seg,
@@ -220,21 +246,9 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, param = sc_hmm_params
     return(res)
   }
 
-  if (mult_res == "all") {
+  if (return == "all") {
     return(hmm_results)
   }
-
-  # auto_ploidy.reads <- hmm_results[[pick]]$bincounts
-  # write.table(auto_ploidy.reads, sep = ",", quote = FALSE, row.names = FALSE, file = file.path(auto_output, "reads.csv"))
-
-  # auto_ploidy.segs <- hmm_results[[pick]]$modal_seg
-  # write.table(auto_ploidy.segs, sep = ",", quote = FALSE, row.names = FALSE, file = file.path(auto_output, "segs.csv"))
-
-  # auto_ploidy.metrics <- hmm_results[[pick]]$mstats
-  # write.table(auto_ploidy.metrics, sep = ",", quote = FALSE, row.names = FALSE, file = file.path(auto_output, "metrics.csv"))
-
-  # auto_ploidy.params <- hmm_results[[pick]]$df_params
-  # write.table(auto_ploidy.params, sep = ",", quote = FALSE, row.names = FALSE, file = file.path(auto_output, "params.csv"))
 }
 
 
@@ -321,4 +335,23 @@ sc_hmm_params <- function(e = (1 - 1e-6),
     S = S
   )
   return(param)
+}
+
+# Should autogenerate based on test data within package on build...
+.mstats_cols <- function() {
+  c("cell_id", "multiplier", "MSRSI_non_integerness", "MBRSI_dispersion_non_integerness",
+    "MBRSM_dispersion", "autocorrelation_hmmcopy", "cv_hmmcopy",
+    "empty_bins_hmmcopy", "mad_hmmcopy", "mean_hmmcopy_reads_per_bin",
+    "median_hmmcopy_reads_per_bin", "std_hmmcopy_reads_per_bin",
+    "total_mapped_reads_hmmcopy", "total_halfiness", "scaled_halfiness",
+    "mean_state_mads", "mean_state_vars", "mad_neutral_state", "breakpoints",
+    "mean_copy", "state_mode", "log_likelihood", "true_multiplier"
+  )
+}
+
+.dummy_mstats <- function(cell_id) {
+  x <- data.frame(t(rep(NA, length(.mstats_cols()))))
+  colnames(x) <- .mstats_cols()
+  x$cell_id <- cell_id
+  return(x)
 }
