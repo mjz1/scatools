@@ -100,12 +100,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
   quantile_names <- paste0("q", quantiles * 100)
 
   if (nrow(df_regression) < 10) {
-    warning("Not enough data points for modal GC regression", call. = FALSE)
-    # Prepare for NA table
-    df_regression[quantile_names] <- NA
-    df_regression["modal_quantile"] <- NA
-    df_regression["modal_curve"] <- NA
-    df_regression["modal_corrected"] <- NA
+    df_regression <- .gc_warn_error(df_regression)
   } else {
     # Fit second order polynormial quantile regression
     poly2_quantile_model <- quantreg::rq(reads ~ gc + I(gc^2), tau = quantiles, data = df_regression)
@@ -116,7 +111,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
     colnames(poly_quantile_predict) <- quantile_names # rename columns
 
     # Bind to our data
-    df_regression <- cbind.data.frame(df_regression, poly_quantile_predict)
+    df_regression <- dplyr::bind_cols(df_regression, poly_quantile_predict)
 
     poly2_quantile_params <- as.data.frame(poly2_quantile_model$coefficients)
     colnames(poly2_quantile_params) <- quantile_names # rename columns
@@ -137,14 +132,20 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
     df_dist <- data.frame(quantiles = quantiles, quantile_names = quantile_names, distances = distances)
     dist_max <- quantile(df_dist$distances, 0.95)
     df_dist_filter <- df_dist[df_dist$distances < dist_max, ]
-    df_dist_filter$lowess <- lowess(y = df_dist_filter$distances, x = df_dist_filter$quantiles, f = lowess_frac, delta = 0)$y
 
-    modal_quantile <- df_dist_filter[which.min(df_dist_filter$lowess), 2]
+    # Error catch when df_dist_filter is empty
+    if (nrow(df_dist_filter) == 0) {
+      df_regression = .gc_warn_error(df_regression)
+    } else {
+      df_dist_filter$lowess <- lowess(y = df_dist_filter$distances, x = df_dist_filter$quantiles, f = lowess_frac, delta = 0)$y
 
-    # add values to table
-    df_regression["modal_quantile"] <- modal_quantile
-    df_regression["modal_curve"] <- df_regression[modal_quantile]
-    df_regression["modal_corrected"] <- df_regression["reads"] / df_regression[modal_quantile]
+      modal_quantile <- df_dist_filter[which.min(df_dist_filter$lowess), 2]
+
+      # add values to table
+      df_regression["modal_quantile"] <- modal_quantile
+      df_regression["modal_curve"] <- df_regression[modal_quantile]
+      df_regression["modal_corrected"] <- df_regression["reads"] / df_regression[modal_quantile]
+    }
   }
 
 
@@ -169,6 +170,16 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
   }
 }
 
+# Warning for modal regression
+.gc_warn_error <- function(df_regression) {
+  warning("Not enough data points for modal GC regression", call. = FALSE)
+  # Prepare for NA table
+  df_regression[quantile_names] <- NA
+  df_regression["modal_quantile"] <- NA
+  df_regression["modal_curve"] <- NA
+  df_regression["modal_corrected"] <- NA
+  return(df_regression)
+}
 
 # Copykit method of GC correction (Really https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3378858/) -- this ref also suggests a different model which corrects GC based on fragment length which may be better for atac data?
 gc_cor_copykit <- function(counts, gc, span = 0.05) {
