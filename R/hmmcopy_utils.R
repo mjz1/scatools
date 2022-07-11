@@ -213,7 +213,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
   if (all(is.na(seg.best$multiplier))) {
     # This will ensure mstats keeps track of failed cells
     pick  = "fail"
-    hmm_results <- list("fail" = hmm_results[1]) # Just to reduce on space usage only need one
+    hmm_results <- list("fail" = hmm_results[[1]]) # Just to reduce on space usage only need one
     hmm_results["best"] <- pick
     message("Best ploidy: ", pick)
     pick_m <- pick
