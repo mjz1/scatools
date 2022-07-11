@@ -11,7 +11,7 @@ hmmcopy_singlecell(
   counts,
   reads,
   ideal = rep(TRUE, length(counts)),
-  param = sc_hmm_params(),
+  param = params_sc_hmm(),
   cell_id,
   multiplier = 1,
   verbose = FALSE,

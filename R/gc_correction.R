@@ -50,7 +50,7 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
     })
   }
 
-  corrected <- as(do.call("cbind", counts_gc_list), "dgCMatrix")
+  corrected <- do.call("cbind", counts_gc_list)
   colnames(corrected) <- colnames(mat)
   rownames(corrected) <- rownames(mat)
   return(corrected)

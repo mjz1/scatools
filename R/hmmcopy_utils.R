@@ -25,12 +25,7 @@
 #'
 #' @export
 #'
-hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = sc_hmm_params(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
-
-  # In the original function, copy, cor_gc, and modal_corrected columns are all the same
-  counts <- as.vector(counts)
-  reads <- as.vector(reads)
-  ideal <- as.vector(ideal)
+hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = params_sc_hmm(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
 
   # Format the bincount data into a table
   bincounts <- data.frame(chr, start, end, reads, counts, ideal, multiplier)
@@ -76,12 +71,12 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
     # Adjust the counts
     bincounts$copy <- bincounts$copy_orig * true_multiplier
 
-    segmented_2 <- HMMcopy::HMMsegment(bincounts, param, verbose = verbose, maxiter = maxiter)
+    resegmented <- HMMcopy::HMMsegment(bincounts, param, verbose = verbose, maxiter = maxiter)
 
     # BASED 0 STATE
-    bincounts$state <- segmented_2$state - 1
+    bincounts$state <- resegmented$state - 1
 
-    modal_seg <- segmented_2$segs
+    modal_seg <- resegmented$segs
     modal_seg$multiplier <- multiplier
     modal_seg$state <- as.numeric(as.character(modal_seg$state)) - 1
 
@@ -137,7 +132,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
     mstats$breakpoints <- nrow(modal_seg) - length(unique(modal_seg$chr))
     mstats$mean_copy <- mean(dplyr::filter(bincounts, ideal == TRUE)$copy, na.rm = TRUE)
     mstats$state_mode <- getmode(dplyr::filter(bincounts, ideal == TRUE)$state)
-    mstats$log_likelihood <- tail(segmented_2$loglik, 1)
+    mstats$log_likelihood <- tail(resegmented$loglik, 1)
     mstats$true_multiplier <- true_multiplier
 
     # HAPLOID POISON
@@ -146,13 +141,23 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
       mstats$scaled_halfiness <- Inf
     }
 
-    df.params <- format_parameter_table(segmented_2, param)
+    df.params <- format_parameter_table(resegmented, param)
 
     # add cellid
-    df.params <- cbind(cell_id, df.params)
-    bincounts <- cbind(cell_id, bincounts)
-    modal_seg <- cbind(cell_id, modal_seg)
-    mstats <- cbind(cell_id, mstats)
+    df.params <- cbind(cell_id = as.factor(cell_id), df.params)
+    bincounts <- cbind(cell_id = as.factor(cell_id), bincounts)
+    modal_seg <- cbind(cell_id = as.factor(cell_id), modal_seg)
+    mstats <- cbind(cell_id = as.factor(cell_id), mstats)
+
+    # Memory savings here
+    bincounts$chr <- as.factor(bincounts$chr)
+    bincounts$state <- as.integer(bincounts$state)
+    bincounts$state_orig <- as.integer(bincounts$state_orig)
+    modal_seg$chr <- as.factor(modal_seg$chr)
+    modal_seg$state <- as.integer(modal_seg$state)
+    df.params$state <- as.integer(df.params$state)
+    df.params$parameter <- as.factor(df.params$parameter)
+
 
     hmmresult <- list(bincounts = bincounts, modal_seg = modal_seg, mstats = mstats, df_params = df.params)
 
@@ -174,7 +179,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
 #'
 #' @export
 #'
-run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = sc_hmm_params(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, return = c("best", "all")) {
+run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = params_sc_hmm(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, return = c("best", "all")) {
   # check integer multipliers
   if (!all(multipliers %% 1 == 0) | any(multipliers < 0)) {
     stop("Multipliers must be positive integers")
@@ -286,6 +291,8 @@ format_parameter_table <- function(samp.segmented, new.params) {
     loglik, nus
   )
 
+  df.params$parameter <- as.factor(df.params$parameter)
+
   return(df.params)
 }
 
@@ -310,8 +317,8 @@ format_parameter_table <- function(samp.segmented, new.params) {
 #' @export
 #'
 #' @examples
-#' param <- sc_hmm_params()
-sc_hmm_params <- function(e = (1 - 1e-6),
+#' param <- params_sc_hmm()
+params_sc_hmm <- function(e = (1 - 1e-6),
                           strength = 1000,
                           mu = 0:11,
                           lambda = 20,

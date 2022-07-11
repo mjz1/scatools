@@ -11,7 +11,7 @@ run_sc_hmmcopy(
   counts,
   reads,
   ideal = rep(TRUE, length(counts)),
-  param = sc_hmm_params(),
+  param = params_sc_hmm(),
   cell_id,
   multipliers = 1:6,
   verbose = FALSE,
