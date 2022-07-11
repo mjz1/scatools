@@ -361,7 +361,7 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
   colnames(valid_mat) <- colnames(mat)
   rownames(valid_mat) <- rownames(mat)
 
-  return(list(ideal = ideal_mat, valid = valid_mat))
+  return(list(ideal = as.matrix(ideal_mat), valid = as.matrix(valid_mat)))
 }
 
 #' Flag ideal bins
