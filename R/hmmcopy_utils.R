@@ -33,6 +33,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
   # Adjust the counts by the ploidy multiplier
   bincounts$copy <- bincounts$counts * multiplier
 
+  # For the initial fit we do not include the ideal bins (this is to parallel the original codes intention)
   bincounts$copy[!bincounts$ideal] <- NA
 
   if (all(is.na(bincounts$copy))){
@@ -65,7 +66,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
     true_multiplier <- multiplier * mean(dplyr::filter(meds, n > n_cutoff)$fix, na.rm = TRUE)
 
     # Store the original copy value and states
-    bincounts$copy_orig <- bincounts$copy
+    bincounts$copy_orig <- bincounts$counts # as with the original code, now reinclude the non-ideal bins in the refit
     bincounts$state_orig <- bincounts$state
 
     # Adjust the counts
