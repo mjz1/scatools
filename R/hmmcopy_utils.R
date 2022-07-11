@@ -28,7 +28,13 @@
 hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = params_sc_hmm(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
 
   # Format the bincount data into a table
-  bincounts <- data.frame(chr, start, end, reads, counts, ideal, multiplier)
+  bincounts <- data.frame(chr = as.factor(chr),
+                          start = as.vector(start),
+                          end = as.vector(end),
+                          reads = as.vector(reads),
+                          counts = as.vector(counts),
+                          ideal = as.vector(ideal),
+                          multiplier)
 
   # Adjust the counts by the ploidy multiplier
   bincounts$copy <- bincounts$counts * multiplier
