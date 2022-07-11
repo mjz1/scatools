@@ -28,6 +28,9 @@
 hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = sc_hmm_params(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
 
   # In the original function, copy, cor_gc, and modal_corrected columns are all the same
+  counts <- as.vector(counts)
+  reads <- as.vector(reads)
+  ideal <- as.vector(ideal)
 
   # Format the bincount data into a table
   bincounts <- data.frame(chr, start, end, reads, counts, ideal, multiplier)
