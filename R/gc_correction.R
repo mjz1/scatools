@@ -100,7 +100,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
   quantile_names <- paste0("q", quantiles * 100)
 
   if (nrow(df_regression) < 10) {
-    df_regression <- .gc_warn_error(df_regression)
+    df_regression <- .gc_warn_error(df_regression, quantile_names)
   } else {
     # Fit second order polynormial quantile regression
     poly2_quantile_model <- quantreg::rq(reads ~ gc + I(gc^2), tau = quantiles, data = df_regression)
@@ -135,7 +135,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
 
     # Error catch when df_dist_filter is empty
     if (nrow(df_dist_filter) == 0) {
-      df_regression = .gc_warn_error(df_regression)
+      df_regression = .gc_warn_error(df_regression, quantile_names)
     } else {
       df_dist_filter$lowess <- lowess(y = df_dist_filter$distances, x = df_dist_filter$quantiles, f = lowess_frac, delta = 0)$y
 
@@ -171,7 +171,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
 }
 
 # Warning for modal regression
-.gc_warn_error <- function(df_regression) {
+.gc_warn_error <- function(df_regression, quantile_names) {
   warning("Not enough data points for modal GC regression", call. = FALSE)
   # Prepare for NA table
   df_regression[quantile_names] <- NA
