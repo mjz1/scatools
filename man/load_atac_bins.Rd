@@ -8,19 +8,10 @@ load_atac_bins(
   directory,
   ArchR_Proj = NULL,
   bins = NULL,
-  BPPARAM = bpparam(),
-  gc = NULL,
-  n_freq = NULL,
-  gc_cor_method = NULL,
-  map = 1,
-  min_reads = 1,
-  max_N_freq = 0.05,
-  reads_outlier = 0.01,
-  gc_outlier = 0.001,
-  min_map = 0.9,
+  BPPARAM = BiocParallel::bpparam(),
   ncores = 1,
-  flag_ideal = TRUE,
   save_to = NULL,
+  verbose = FALSE,
   save_as = c("sce", "adata", "seurat")
 )
 }
@@ -33,29 +24,11 @@ load_atac_bins(
 
 \item{BPPARAM}{Options to pass to \code{bplapply} for data loading. Provides minor speedup if loading many samples}
 
-\item{gc}{Vector of gc content}
-
-\item{n_freq}{Vector of bin N frequency (proportion of N bases in a bin)}
-
-\item{gc_cor_method}{Optional: Method to use for GC correction. One of \code{modal}, \code{copykit}, \code{loess}.}
-
-\item{map}{Vector of bin mappability}
-
-\item{min_reads}{Minimum number of reads to consider a bin}
-
-\item{max_N_freq}{Maximum allowable frequency of N bases to consider a bin. Range (0, 1)}
-
-\item{reads_outlier}{Flag bins with reads in the top quantile given by this value. Range (0, 1)}
-
-\item{gc_outlier}{Flag bins with GC content in the top and bottom quantule given by this value. Range (0, 1)}
-
-\item{min_map}{Minimum allowable mappability score for a bin. Range (0, 1)}
-
-\item{ncores}{number of cores for parallel evaluation (requires \link{parallel} package)}
-
-\item{flag_ideal}{Logical. Whether or not to flag ideal bins for each cell. Can be slow if not parallelized. See \code{\link[=get_ideal_mat]{get_ideal_mat()}} for more information.}
+\item{ncores}{number of cores for parallel evaluation (requires \link{pbmcapply} package)}
 
 \item{save_to}{File path in which to save the final output. Note: Will still return the sce object for downstream analysis.}
+
+\item{verbose}{Message verbosity (TRUE/FALSE)}
 
 \item{save_as}{NOT IMPLEMENTED YET. Select file formats to save the object. Can provide multiple values}
 }

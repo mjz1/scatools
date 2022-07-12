@@ -6,10 +6,9 @@
 #' @param ArchR_Proj Optional: ArchR project with matching cells and metadata
 #' @param bins Optional: GRanges bins object
 #' @param BPPARAM Options to pass to `bplapply` for data loading. Provides minor speedup if loading many samples
-#' @param flag_ideal Logical. Whether or not to flag ideal bins for each cell. Can be slow if not parallelized. See [get_ideal_mat()] for more information.
-#' @param gc_cor_method Optional: Method to use for GC correction. One of `modal`, `copykit`, `loess`.
 #' @param save_to File path in which to save the final output. Note: Will still return the sce object for downstream analysis.
 #' @param save_as NOT IMPLEMENTED YET. Select file formats to save the object. Can provide multiple values
+#' @param verbose Message verbosity (TRUE/FALSE)
 #'
 #' @inheritParams get_ideal_mat
 #'
@@ -19,24 +18,18 @@
 load_atac_bins <- function(directory,
                            ArchR_Proj = NULL,
                            bins = NULL,
-                           BPPARAM = bpparam(),
-                           gc = NULL,
-                           n_freq = NULL,
-                           gc_cor_method = NULL,
-                           map = 1,
-                           min_reads = 1,
-                           max_N_freq = 0.05,
-                           reads_outlier = 0.01,
-                           gc_outlier = 0.001,
-                           min_map = 0.9,
+                           BPPARAM = BiocParallel::bpparam(),
                            ncores = 1,
-                           flag_ideal = TRUE,
                            save_to = NULL,
+                           verbose = FALSE,
                            save_as = c("sce", "adata", "seurat")) {
+  # Get sample names and directories
   sample_names <- dir(directory)
   samples <- dir(directory, full.names = TRUE)
 
-  message("Loading bin counts")
+  if (verbose) {
+    message("Loading bin counts")
+  }
   sce <- DropletUtils::read10xCounts(samples = samples, sample.names = sample_names, col.names = TRUE, BPPARAM = BPPARAM)
 
   # Save raw counts in a seperate slot
@@ -47,7 +40,9 @@ load_atac_bins <- function(directory,
 
   # Additional processing if matching ArchR project is provided
   if (!is.null(ArchR_Proj)) {
-    message("ArchR project provided. Merging cell metadata")
+    if (verbose) {
+      message("ArchR project provided. Merging cell metadata")
+    }
     # Filter down these cells to match the ArchR project (and in correct order)
     sce <- sce[, match(rownames(ArchR_Proj@cellColData), colnames(sce))]
 
@@ -76,94 +71,27 @@ load_atac_bins <- function(directory,
     # rowRanges(sce)$chr_arm <- with(rowRanges(sce), interaction(seqnames, arm, sep = "", lex.order = T))
   }
 
-  # Throw error if row names are not matching
-  stopifnot(all(rownames(sce) == rowData(sce)$ID))
-
-
-  message("Performing bin-length normalization. Storing as assay(sce, 'counts_permb')")
-  # Bin length normalize upfront
-  # Mainly necessary for our chr arm analysis where bins are variable in size
-  # This is effectively an reads per Megabase (RPBMb) calculation. For reminder: https://www.rna-seqblog.com/rpkm-fpkm-and-tpm-clearly-explained/
-
-  # Add binwidth if not provided
-  if (is.null(rowData(sce)$binwidth)) {
-    spl <- stringr::str_split(rowData(sce)$ID, "_", simplify = T)
-    rowData(sce)$binwidth <- as.numeric(spl[, 3]) - as.numeric(spl[, 2]) + 1
+  if (verbose) {
+    message("Adding cellwise and binwise QC metrics")
   }
-
-  assay(sce, "counts_permb") <- round(assay(sce, "raw_counts") / (rowData(sce)$binwidth / 1e6), 2)
-
-  # Perform initial QC
-  message("Adding cellwise and binwise QC metrics")
   sce <- scuttle::addPerCellQCMetrics(sce)
   sce <- scuttle::addPerFeatureQCMetrics(sce, subsets = get_f_idx(sce$Sample))
 
-  # Add valid and ideal information to mirror HMMcopy's QC
-  if (flag_ideal) {
-    message("Flagging ideal bins using ", ncores, " threads")
+  # Throw error if row names are not matching
+  stopifnot(all(rownames(sce) == rowData(sce)$ID))
 
-    id_val_mats <- get_ideal_mat(
-      mat = assay(sce, "counts_permb"),
-      gc = gc,
-      n_freq = n_freq,
-      map = map,
-      min_reads = min_reads,
-      max_N_freq = max_N_freq,
-      reads_outlier = reads_outlier,
-      gc_outlier = gc_outlier,
-      min_map = min_map,
-      ncores = ncores
-    )
-
-    assay(sce, "ideal_bins") <- id_val_mats$ideal
-    assay(sce, "valid_bins") <- id_val_mats$valid
+  if (verbose) {
+    cat("\n")
+    print(sce)
   }
-
-  message("Computing library size factors")
-  sce <- scuttle::computeLibraryFactors(sce)
-
-  # GC CORRECTION
-  if (!is.null(gc_cor_method)) {
-    if (!gc_cor_method %in% c("modal", "copykit", "loess")) {
-      warning("Not performing GC correction:\n\tgc_cor_method method must be one of 'modal', 'copykit', or 'loess'")
-      break
-    }
-    if (is.null(gc)) {
-      warning("Not performing GC correction:\n\tNo GC data in passed bins or function call")
-      break
-    }
-
-    message("Performing GC correction using ", ncores, " threads. Method: ", gc_cor_method)
-    assay_name <- paste0("counts_gc_", gc_cor_method)
-
-    # Check if valid bins exists and pass correctly
-    if ("valid_bins" %in% names(assays(sce))) {
-      valid_mat <- assay(sce, 'valid_bins')
-    } else {
-      valid_mat <- NULL
-    }
-
-    assay(sce, assay_name) <- perform_gc_cor(mat = assay(sce, "counts_permb"),
-                                             gc = gc,
-                                             valid_mat = valid_mat,
-                                             method = gc_cor_method,
-                                             ncores = ncores)
-    metadata(sce)$gc_cor_method <- gc_cor_method
-  }
-
-
-  # PRINT N SAVE
-  cat("\n")
-  print(sce)
 
   if (!is.null(save_to)) {
-    dir.create(dirname(save_to), recursive = TRUE, showWarnings = FALSE)
-    cat("\nSaving sce object to ", '"', save_to, '"', "\n", sep = "")
-    save(sce, file = save_to)
+    .save_to(object = sce, save_to = save_to, verbose = verbose)
   }
 
   return(sce)
 }
+
 
 
 #' Read Vatrix Data

@@ -61,6 +61,14 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
 }
 
 
+.save_to <- function(object, save_to = "./", verbose = TRUE) {
+  dir.create(dirname(save_to), recursive = TRUE, showWarnings = FALSE)
+  if (verbose) {
+    cat("\nSaving to ", '"', save_to, '"', "\n", sep = "")
+  }
+  save(object, file = save_to)
+}
+
 #' Get factor indices
 #'
 #' @param f a factor
