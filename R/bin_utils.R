@@ -364,6 +364,33 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
   return(list(ideal = as.matrix(ideal_mat), valid = as.matrix(valid_mat)))
 }
 
+
+#' Length normalize counts
+#'
+#' By default this procedure will only impact counts in the bins that are variable length (for example tail ends of chromosomes).
+#'
+#' @param sce SCE object
+#' @param assay_name Name of assay to normalize
+#' @param binwidth Bin width
+#' @param by_factor Multiplication factor for counts
+#' @param verbose Print verbose (TRUE/FALSE)
+#'
+#' @return An sce object with counts length normalized in `assay(sce, 'counts_permb')`
+#' @export
+#'
+length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenNorm", binwidth, by_factor = getmode(binwidth), verbose = FALSE) {
+  if (verbose) {
+    message("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
+  }
+
+  # Bin length normalize upfront
+  # Mainly necessary for our chr arm analysis where bins are variable in size
+  # This is effectively an reads per Megabase (RPBMb) calculation. For reminder: https://www.rna-seqblog.com/rpkm-fpkm-and-tpm-clearly-explained/
+
+  assay(sce, assay_to) <- assay(sce, assay_name) / binwidth * by_factor
+
+  return(sce)
+}
 #' Flag ideal bins
 #'
 #' `is_ideal_bin` will apply a set of bin-wise filters, based on high count outliers, high or low gc outliers, minimum read counts, minimum mappability, or maximum allowable frequency of N bases per bin.
