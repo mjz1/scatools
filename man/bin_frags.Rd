@@ -10,6 +10,7 @@ bin_frags(
   outdir = NULL,
   ncores = 1,
   bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
+  verbose = FALSE,
   ...
 )
 }
@@ -23,6 +24,8 @@ bin_frags(
 \item{ncores}{Number of cores to use}
 
 \item{bpparams}{Options to \code{BPPARAM} to enable multithreading}
+
+\item{verbose}{Logical. Message verbosity}
 
 \item{...}{Additional arguments passed to \code{bplapply}}
 }

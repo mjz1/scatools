@@ -54,16 +54,17 @@ bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode
 #' @param outdir Optional: Directory to write the `.mtx`, `barcodes`, and `bins` files
 #' @param ncores Number of cores to use
 #' @param bpparams Options to `BPPARAM` to enable multithreading
+#' @param verbose Logical. Message verbosity
 #' @param ... Additional arguments passed to `bplapply`
 #'
 #' @return Binned depth sparse matrix
 #' @export
-bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), ...) {
+bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), verbose = FALSE, ...) {
   requireNamespace("BiocParallel")
 
   stopifnot(class(bins) %in% "GRanges")
 
-  message("Counting fragments in ", length(bins), " bins using ", ncores, " cores")
+  if (verbose) {message("Counting fragments in ", length(bins), " bins using ", ncores, " cores")}
 
   result <- do.call("rbind", BiocParallel::bplapply(
     X = levels(BSgenome::seqnames(bins)),
