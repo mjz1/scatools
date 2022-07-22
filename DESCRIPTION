@@ -18,6 +18,7 @@ Imports:
     GenomicRanges,
     HMMcopy,
     IRanges,
+    logger,
     magrittr,
     Matrix,
     methods,

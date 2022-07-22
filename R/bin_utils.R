@@ -26,11 +26,11 @@ bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode
 
     # Only bin frags if not done already
     if (!file.exists(file.path(sample_outdir, "matrix.mtx.gz")) | overwrite) {
-      message("Computing fragments for ", sample_name)
+      logger::log_info("Computing fragments for ", sample_name)
       tmp <- bin_frags(ArrowFile = ArrowFile, bins = bins, outdir = sample_outdir, ncores = ncores, ...)
       return(tmp)
     } else {
-      message("Fragments files already found for ", sample_name)
+      logger::log_info("Fragments files already found for ", sample_name)
     }
   })
 
@@ -64,7 +64,7 @@ bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = Bio
 
   stopifnot(class(bins) %in% "GRanges")
 
-  if (verbose) {message("Counting fragments in ", length(bins), " bins using ", ncores, " cores")}
+  if (verbose) {logger::log_info("Counting fragments in {length(bins)} bins using {ncores} cores")}
 
   result <- do.call("rbind", BiocParallel::bplapply(
     X = levels(BSgenome::seqnames(bins)),
@@ -295,7 +295,7 @@ get_cytobands <- function(genome = "hg38") {
 #'
 add_gc_freq <- function(bs_genome, bins) {
   stopifnot(class(bs_genome) %in% "BSgenome")
-  message("Computing GC content...")
+  logger::log_info("Computing GC content...")
   freqs <- BSgenome::alphabetFrequency(BSgenome::getSeq(bs_genome, bins))
   bins$gc <- (freqs[, "C"] + freqs[, "G"]) / rowSums(freqs)
 
@@ -318,7 +318,7 @@ add_gc_freq <- function(bs_genome, bins) {
 #' @export
 #'
 get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
-  if (verbose) {message("Computing ideal bins using ", ncores, " threads")}
+  if (verbose) {logger::log_info("Computing ideal bins in {ncol(mat)} cells using {ncores} threads")}
   if (requireNamespace("pbmcapply")) {
     res <- do.call(
       "cbind",
@@ -337,7 +337,7 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
       })
     )
   } else {
-    warning("No parallel backend detected. Ideal mat computation may be slow", call. = FALSE)
+    logger::log_warn("No parallel backend detected. Ideal mat computation may be slow", call. = FALSE)
     res <- do.call(
       "cbind",
       lapply(X = seq_len(ncol(mat)), FUN = function(i) {
@@ -355,6 +355,8 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
       })
     )
   }
+
+  if (verbose) {logger::log_success("Computing ideal bins completed!")}
 
   # Sort of silly but works for now to return both matrices
   ideal_mat <- res[, grep("ideal", colnames(res))]
@@ -383,7 +385,7 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
 #'
 length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenNorm", binwidth, by_factor = getmode(binwidth), verbose = FALSE) {
   if (verbose) {
-    message("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
+    logger::log_info("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
   }
 
   # Bin length normalize upfront

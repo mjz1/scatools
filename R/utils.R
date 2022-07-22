@@ -23,7 +23,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
     # Check that all assays are present
     if (!all(target_assays %in% names(assays(sce)))) {
       missing_assays <- target_assays[which(!target_assays %in% names(assays(sce)))]
-      warning("Missing assay(", missing_assays, ") from input sce.")
+      logger::log_warn("Missing assay(", missing_assays, ") from input sce.")
       target_assays <- target_assays[which(target_assays %in% names(assays(sce)))]
     }
   } else {
@@ -36,7 +36,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
     # If variable is not 'all' and also missing, warn and skip
     if (!is.null(variable)) {
       if (is.null(sce[[variable]]) & (variable != "all")) {
-        warning("Missing variable '", variable, "' from input colData.")
+        logger::log_warn("Missing variable '", variable, "' from input colData.")
         next
       }
     }
@@ -64,7 +64,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
 .save_to <- function(object, save_to = "./", verbose = TRUE) {
   dir.create(dirname(save_to), recursive = TRUE, showWarnings = FALSE)
   if (verbose) {
-    cat("\nSaving to ", '"', save_to, '"', "\n", sep = "")
+    logger::log_info("Saving to \"{save_to}\"")
   }
   save(object, file = save_to)
 }

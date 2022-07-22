@@ -198,7 +198,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
   # Run the HMM for each multiplier state and compile the results into a list
   hmm_results <- lapply(multipliers, FUN = function(multiplier) {
     if (verbose) {
-      message("Running single cell HMMcopy for multiplier: ", multiplier)
+      logger::log_info("Running single cell HMMcopy for multiplier: ", multiplier)
     }
     res <- hmmcopy_singlecell(
       chr = chr,
@@ -231,7 +231,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
     pick <- "fail"
     hmm_results <- list("fail" = hmm_results[[1]]) # Just to reduce on space usage only need one
     hmm_results["best"] <- pick
-    message("Best ploidy: ", pick)
+    logger::log_info("Best ploidy: ", pick)
     pick_m <- pick
   } else {
     # scaledpenalty from original code is scaled_halfiness
@@ -245,7 +245,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
 
     hmm_results["best"] <- pick
 
-    message("Best ploidy: ", pick)
+    logger::log_info("Best ploidy: ", pick)
 
     pick_m <- paste0("m", pick)
   }

@@ -27,7 +27,7 @@ load_atac_bins <- function(directory,
   samples <- dir(directory, full.names = TRUE)
 
   if (verbose) {
-    message("Loading bin counts")
+    logger::log_info("Loading bin counts")
   }
   sce <- DropletUtils::read10xCounts(samples = samples, sample.names = sample_names, col.names = TRUE, BPPARAM = BPPARAM)
 
@@ -40,7 +40,7 @@ load_atac_bins <- function(directory,
   # Additional processing if matching ArchR project is provided
   if (!is.null(ArchR_Proj)) {
     if (verbose) {
-      message("ArchR project provided. Merging cell metadata")
+      logger::log_info("ArchR project provided. Merging cell metadata")
     }
     # Filter down these cells to match the ArchR project (and in correct order)
     sce <- sce[, match(rownames(ArchR_Proj@cellColData), colnames(sce))]
@@ -71,7 +71,7 @@ load_atac_bins <- function(directory,
   }
 
   if (verbose) {
-    message("Adding cellwise and binwise QC metrics")
+    logger::log_info("Adding cellwise and binwise QC metrics")
   }
   sce <- scuttle::addPerCellQCMetrics(sce)
   sce <- scuttle::addPerFeatureQCMetrics(sce, subsets = get_f_idx(sce$Sample))
@@ -79,14 +79,11 @@ load_atac_bins <- function(directory,
   # Throw error if row names are not matching
   stopifnot(all(rownames(sce) == rowData(sce)$ID))
 
-  if (verbose) {
-    cat("\n")
-    print(sce)
-  }
-
   if (!is.null(save_to)) {
     .save_to(object = sce, save_to = save_to, verbose = verbose)
   }
+
+  if (verbose) {logger::log_success("Fragments loaded successfully!")}
 
   return(sce)
 }

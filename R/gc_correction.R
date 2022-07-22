@@ -23,7 +23,7 @@ add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method 
 
   # Check if valid bins exists and pass correctly
   if ("valid_bins" %in% names(assays(sce))) {
-    if (verbose) {message("Found valid bins in sce object")}
+    if (verbose) {logger::log_info("Found valid bins in sce object")}
     valid_mat <- assay(sce, "valid_bins")
   } else {
     warning("No valid bins matrix in sce object. Defaulting to all valid.")
@@ -64,7 +64,8 @@ add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method 
 #' @export
 perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copykit", "loess"), ncores = 1, verbose = FALSE, ...) {
   if (verbose) {
-    message("Performing GC correction using ", ncores, " threads. Method: ", method)
+    logger::log_info("Performing GC correction on {ncol(mat)} cells using {ncores} threads.")
+    logger::log_info("GC correction method: {method}")
   }
 
   # Just pass all as true if not provided
@@ -95,6 +96,11 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
       FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
     })
   }
+
+  if (verbose) {
+    logger::log_success("GC correction completed!")
+  }
+
 
   corrected <- matrix(unlist(counts_gc_list), ncol = length(counts_gc_list), byrow = FALSE)
 
