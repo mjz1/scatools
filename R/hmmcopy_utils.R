@@ -28,13 +28,15 @@
 hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = params_sc_hmm(), cell_id, multiplier = 1, verbose = FALSE, maxiter = 200, n_cutoff = NULL) {
 
   # Format the bincount data into a table
-  bincounts <- data.frame(chr = as.factor(chr),
-                          start = as.vector(start),
-                          end = as.vector(end),
-                          reads = as.vector(reads),
-                          counts = as.vector(counts),
-                          ideal = as.vector(ideal),
-                          multiplier)
+  bincounts <- data.frame(
+    chr = as.factor(chr),
+    start = as.vector(start),
+    end = as.vector(end),
+    reads = as.vector(reads),
+    counts = as.vector(counts),
+    ideal = as.vector(ideal),
+    multiplier
+  )
 
   # Adjust the counts by the ploidy multiplier
   bincounts$copy <- bincounts$counts * multiplier
@@ -42,7 +44,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
   # For the initial fit we do not include the ideal bins (this is to parallel the original codes intention)
   bincounts$copy[!bincounts$ideal] <- NA
 
-  if (all(is.na(bincounts$copy))){
+  if (all(is.na(bincounts$copy))) {
     warning("No count data. Unable to segment.")
     hmmresult <- list(bincounts = bincounts, modal_seg = NA, mstats = .dummy_mstats(cell_id), df_params = NA)
     # TODO: See how this is handled in later merging
@@ -167,7 +169,6 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
 
 
     hmmresult <- list(bincounts = bincounts, modal_seg = modal_seg, mstats = mstats, df_params = df.params)
-
   }
 
   return(hmmresult)
@@ -227,7 +228,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
   # Catch error cases when not enough ideal bins to segment
   if (all(is.na(seg.best$multiplier))) {
     # This will ensure mstats keeps track of failed cells
-    pick  = "fail"
+    pick <- "fail"
     hmm_results <- list("fail" = hmm_results[[1]]) # Just to reduce on space usage only need one
     hmm_results["best"] <- pick
     message("Best ploidy: ", pick)
@@ -369,7 +370,7 @@ params_sc_hmm <- function(e = (1 - 1e-6),
 #' @export
 #'
 grab_hmm_res <- function(hmm_results, grab = "best", ncores = 1) {
-  if (requireNamespace("pbmcapply", quietly = TRUE) & TRUE==1) {
+  if (requireNamespace("pbmcapply", quietly = TRUE) & TRUE == 1) {
     pbmcapply::pbmclapply(hmm_results, mc.cores = ncores, function(cell_hmm) {
       pick <- cell_hmm[[grab]]
       res <- cell_hmm[[pick]]
@@ -384,7 +385,8 @@ grab_hmm_res <- function(hmm_results, grab = "best", ncores = 1) {
 
 # Should autogenerate based on test data within package on build...
 .mstats_cols <- function() {
-  c("cell_id", "multiplier", "MSRSI_non_integerness", "MBRSI_dispersion_non_integerness",
+  c(
+    "cell_id", "multiplier", "MSRSI_non_integerness", "MBRSI_dispersion_non_integerness",
     "MBRSM_dispersion", "autocorrelation_hmmcopy", "cv_hmmcopy",
     "empty_bins_hmmcopy", "mad_hmmcopy", "mean_hmmcopy_reads_per_bin",
     "median_hmmcopy_reads_per_bin", "std_hmmcopy_reads_per_bin",
