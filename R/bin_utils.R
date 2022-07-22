@@ -240,7 +240,7 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 #'
 #' @examples
 #' \dontrun{
-#' bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
+#' bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
 #' }
 get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
   stopifnot(class(bs_genome) %in% "BSgenome")
@@ -305,24 +305,26 @@ add_gc_freq <- function(bs_genome, bins) {
   return(bins)
 }
 
+
 #' Get ideal bin matrix
 #'
 #' Given a matrix of bin counts, bin gc and N frequency, and filtering parameters, return a boolean matrix flagging ideal bins
 #'
 #'
-#' @param mat Count matrix
-#' @param ncores number of cores for parallel evaluation (requires [parallel] package)
+#' @param mat,sce A count matrix or SCE object depending on the function
+#' @param ncores number of cores for parallel evaluation (requires [pbmcapply] package)
 #'
 #' @inherit is_ideal_bin
 #' @export
 #'
-get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1) {
+get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
+  if (verbose) {message("Computing ideal bins using ", ncores, " threads")}
   if (requireNamespace("pbmcapply")) {
     res <- do.call(
       "cbind",
       pbmcapply::pbmclapply(X = seq_len(ncol(mat)), mc.cores = ncores, FUN = function(i) {
         is_ideal_bin(
-          counts = as.vector(mat[, i]),
+          counts = mat[, i],
           gc = gc,
           n_freq = n_freq,
           map = map,
@@ -355,10 +357,10 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
   }
 
   # Sort of silly but works for now to return both matrices
-  ideal_mat <- res[,grep("ideal", colnames(res))]
+  ideal_mat <- res[, grep("ideal", colnames(res))]
   colnames(ideal_mat) <- colnames(mat)
   rownames(ideal_mat) <- rownames(mat)
-  valid_mat <- res[,grep("valid", colnames(res))]
+  valid_mat <- res[, grep("valid", colnames(res))]
   colnames(valid_mat) <- colnames(mat)
   rownames(valid_mat) <- rownames(mat)
 
@@ -392,6 +394,33 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
 
   return(sce)
 }
+
+
+
+#' @rdname get_ideal_mat
+#'
+add_ideal_mat <- function(sce, assay_name = "counts", gc = rowData(sce)$gc, n_freq = rowData(sce)$n_freq, map = rowData(sce)$map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
+  id_val_mats <- get_ideal_mat(
+    mat = assay(sce, assay_name),
+    gc = gc,
+    n_freq = n_freq,
+    map = map,
+    min_reads = min_reads,
+    max_N_freq = max_N_freq,
+    reads_outlier = reads_outlier,
+    gc_outlier = gc_outlier,
+    min_map = min_map,
+    ncores = ncores,
+    verbose = verbose
+  )
+
+  assay(sce, "ideal_bins") <- id_val_mats$ideal
+  assay(sce, "valid_bins") <- id_val_mats$valid
+
+  return(sce)
+}
+
+
 #' Flag ideal bins
 #'
 #' `is_ideal_bin` will apply a set of bin-wise filters, based on high count outliers, high or low gc outliers, minimum read counts, minimum mappability, or maximum allowable frequency of N bases per bin.
@@ -409,8 +438,28 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
 #' @return A dataframe of two columns meet the `valid` or `ideal` criteria
 #' @export
 #'
-is_ideal_bin <- function(counts, gc, n_freq, map, min_reads = 0, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
-  # Currently we use a placeholder for mappability
+is_ideal_bin <- function(counts, gc, n_freq, map = NULL, min_reads = 0, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
+
+
+  counts <- as.vector(counts)
+  gc <- as.vector(gc)
+  n_freq <- as.vector(n_freq)
+
+  # Currently we use a placeholder for mappability. It doesn't do antyhing in the function yet
+  if (is.null(map)) {
+    map <- as.vector(rep(1, length(counts)))
+  } else {
+    map <- as.vector(map)
+  }
+
+  # Check lengths are equal and not zero
+  if (var(unlist(lapply(list(counts, gc, n_freq, map), length))) != 0) {
+    stop("counts, gc, n_freq, and map must be the same length. Check input data!")
+  }
+
+  if (length(counts) == 0){
+    stop("No data...")
+  }
 
   # First identify valid bins
   valid <- is_valid_bin(counts = counts, n_freq = n_freq, min_reads = min_reads, max_N_freq = max_N_freq)

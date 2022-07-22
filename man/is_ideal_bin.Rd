@@ -8,7 +8,7 @@ is_ideal_bin(
   counts,
   gc,
   n_freq,
-  map,
+  map = NULL,
   min_reads = 0,
   max_N_freq = 0.05,
   reads_outlier = 0.01,

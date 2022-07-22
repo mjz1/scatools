@@ -4,7 +4,7 @@
 \alias{get_tiled_bins}
 \title{Get tiled bins}
 \usage{
-get_tiled_bins(bs_genome, tilewidth = 5e+05, select_chrs = NULL)
+get_tiled_bins(bs_genome, tilewidth = 500000, select_chrs = NULL)
 }
 \arguments{
 \item{bs_genome}{A BSgenome object}
@@ -21,6 +21,6 @@ Get tiled bins
 }
 \examples{
 \dontrun{
-bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
+bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
 }
 }
