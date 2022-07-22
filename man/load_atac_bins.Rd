@@ -9,7 +9,6 @@ load_atac_bins(
   ArchR_Proj = NULL,
   bins = NULL,
   BPPARAM = BiocParallel::bpparam(),
-  ncores = 1,
   save_to = NULL,
   verbose = FALSE,
   save_as = c("sce", "adata", "seurat")
@@ -23,8 +22,6 @@ load_atac_bins(
 \item{bins}{Optional: GRanges bins object}
 
 \item{BPPARAM}{Options to pass to \code{bplapply} for data loading. Provides minor speedup if loading many samples}
-
-\item{ncores}{number of cores for parallel evaluation (requires \link{pbmcapply} package)}
 
 \item{save_to}{File path in which to save the final output. Note: Will still return the sce object for downstream analysis.}
 

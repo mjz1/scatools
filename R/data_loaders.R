@@ -19,7 +19,6 @@ load_atac_bins <- function(directory,
                            ArchR_Proj = NULL,
                            bins = NULL,
                            BPPARAM = BiocParallel::bpparam(),
-                           ncores = 1,
                            save_to = NULL,
                            verbose = FALSE,
                            save_as = c("sce", "adata", "seurat")) {
