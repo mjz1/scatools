@@ -4,6 +4,47 @@
 # https://bismap.hoffmanlab.org/
 #
 
+
+#' Add GC correction to SCE Object
+#'
+#' @param sce an SCE obkect
+#' @param assay_aname Name of assay on which to perform GC correction
+#'
+#' @inheritParams perform_gc_cor
+#'
+#' @return sce object with corrected GC count matrix in `assay(sce, 'counts_gc_[method]')`. See
+#' @export
+#'
+add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method = c("modal", "copykit", "loess"), verbose = FALSE, ncores = 1, ...) {
+
+  method <- match.arg(method)
+
+  gc_slot <- paste0("counts_gc_", method)
+
+  # Check if valid bins exists and pass correctly
+  if ("valid_bins" %in% names(assays(sce))) {
+    if (verbose) {message("Found valid bins in sce object")}
+    valid_mat <- assay(sce, "valid_bins")
+  } else {
+    warning("No valid bins matrix in sce object. Defaulting to all valid.")
+    valid_mat <- NULL
+  }
+
+  assay(sce, gc_slot) <- perform_gc_cor(
+    mat = assay(sce, assay_name),
+    gc = gc,
+    valid_mat = valid_mat,
+    method = method,
+    ncores = ncores,
+    verbose = verbose,
+    ...
+  )
+  metadata(sce)$gc_cor_method <- method
+
+  return(sce)
+}
+
+
 #' Perform GC Correction
 #'
 #' Performs GC correction using over a matrix of cell counts
@@ -15,16 +56,21 @@
 #' @param valid_mat Matrix of TRUE/FALSE for valid bins. If none provided defaults to all TRUE
 #' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
 #' @param ncores Number of cores to use if parallel backend is available
+#' @param verbose Message verbosity (TRUE/FALSE)
 #' @param ... Additional arguments to be passed to GC correction methods
 #'
 #' @return Sparse matrix of corrected counts
 #'
 #' @export
-perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copykit", "loess"), ncores = 1, ...) {
+perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copykit", "loess"), ncores = 1, verbose = FALSE, ...) {
+  if (verbose) {
+    message("Performing GC correction using ", ncores, " threads. Method: ", method)
+  }
 
   # Just pass all as true if not provided
   if (is.null(valid_mat)) {
-    valid_mat = matrix(TRUE, nrow = nrow(mat), ncol = ncol(mat), dimnames = list(rownames(mat), colnames(mat)))
+    warning("No valid bin matrix provided. Defaulting to all bins valid. Could lead to erroneous results")
+    valid_mat <- matrix(TRUE, nrow = nrow(mat), ncol = ncol(mat), dimnames = list(rownames(mat), colnames(mat)))
   }
 
   gc <- as.vector(gc)
@@ -46,7 +92,7 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
   } else {
     warning("No parallel backend used. GC correction may be slow.", call. = FALSE)
     counts_gc_list <- lapply(X = seq_len(ncol(mat)), FUN = function(i) {
-      FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[,i]), bin_ids = rownames(mat), ...)
+      FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
     })
   }
 
@@ -78,13 +124,17 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
 #'
 #' @export
 #'
-gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids = seq_along(counts), lowess_frac = 0.2, q = c(0.1, 0.9), g = c(0.1, 0.9), results = c("counts", "default", "full")) {
+gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids = names(counts), lowess_frac = 0.2, q = c(0.1, 0.9), g = c(0.1, 0.9), results = c("counts", "default", "full")) {
   if (length(counts) != length(gc)) {
     stop("Length of counts and gc vectors are not identical")
   }
 
   if (length(q) != 2 | (q[1] > q[2])) {
     stop("Must provide lower and upper quantile")
+  }
+
+  if (is.null(bin_ids)) {
+    bin_ids = seq_len(length(counts))
   }
 
   results <- match.arg(results)
@@ -135,7 +185,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
 
     # Error catch when df_dist_filter is empty
     if (nrow(df_dist_filter) == 0) {
-      df_regression = .gc_warn_error(df_regression, quantile_names)
+      df_regression <- .gc_warn_error(df_regression, quantile_names)
     } else {
       df_dist_filter$lowess <- lowess(y = df_dist_filter$distances, x = df_dist_filter$quantiles, f = lowess_frac, delta = 0)$y
 

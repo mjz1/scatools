@@ -2,6 +2,7 @@
 % Please edit documentation in R/bin_utils.R
 \name{get_ideal_mat}
 \alias{get_ideal_mat}
+\alias{add_ideal_mat}
 \title{Get ideal bin matrix}
 \usage{
 get_ideal_mat(
@@ -14,11 +15,27 @@ get_ideal_mat(
   reads_outlier = 0.01,
   gc_outlier = 0.001,
   min_map = 0.9,
-  ncores = 1
+  ncores = 1,
+  verbose = FALSE
+)
+
+add_ideal_mat(
+  sce,
+  assay_name = "counts",
+  gc = rowData(sce)$gc,
+  n_freq = rowData(sce)$n_freq,
+  map = rowData(sce)$map,
+  min_reads = 1,
+  max_N_freq = 0.05,
+  reads_outlier = 0.01,
+  gc_outlier = 0.001,
+  min_map = 0.9,
+  ncores = 1,
+  verbose = FALSE
 )
 }
 \arguments{
-\item{mat}{Count matrix}
+\item{mat, sce}{A count matrix or SCE object depending on the function}
 
 \item{gc}{Vector of gc content}
 
@@ -36,7 +53,7 @@ get_ideal_mat(
 
 \item{min_map}{Minimum allowable mappability score for a bin. Range (0, 1)}
 
-\item{ncores}{number of cores for parallel evaluation (requires \link{parallel} package)}
+\item{ncores}{number of cores for parallel evaluation (requires \link{pbmcapply} package)}
 }
 \value{
 A dataframe of two columns meet the \code{valid} or \code{ideal} criteria

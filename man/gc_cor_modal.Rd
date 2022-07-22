@@ -8,7 +8,7 @@ gc_cor_modal(
   counts,
   gc,
   valid = rep(TRUE, length(counts)),
-  bin_ids = seq_along(counts),
+  bin_ids = names(counts),
   lowess_frac = 0.2,
   q = c(0.1, 0.9),
   g = c(0.1, 0.9),

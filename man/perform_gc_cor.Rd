@@ -10,6 +10,7 @@ perform_gc_cor(
   valid_mat = NULL,
   method = c("modal", "copykit", "loess"),
   ncores = 1,
+  verbose = FALSE,
   ...
 )
 }
@@ -23,6 +24,8 @@ perform_gc_cor(
 \item{method}{Specifies the type of GC correction to perform. One of \verb{'modal', 'copykit', or 'loess'}}
 
 \item{ncores}{Number of cores to use if parallel backend is available}
+
+\item{verbose}{Message verbosity (TRUE/FALSE)}
 
 \item{...}{Additional arguments to be passed to GC correction methods}
 }
