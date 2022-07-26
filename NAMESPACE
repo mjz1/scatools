@@ -3,6 +3,7 @@
 export("%>%")
 export(add_gc_cor)
 export(add_gc_freq)
+export(add_hmmcopy)
 export(bin_atac_frags)
 export(bin_frags)
 export(bin_frags_chr)
