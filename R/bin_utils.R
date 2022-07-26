@@ -64,7 +64,9 @@ bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = Bio
 
   stopifnot(class(bins) %in% "GRanges")
 
-  if (verbose) {logger::log_info("Counting fragments in {length(bins)} bins using {ncores} cores")}
+  if (verbose) {
+    logger::log_info("Counting fragments in {length(bins)} bins using {ncores} cores")
+  }
 
   result <- do.call("rbind", BiocParallel::bplapply(
     X = levels(BSgenome::seqnames(bins)),
@@ -318,7 +320,9 @@ add_gc_freq <- function(bs_genome, bins) {
 #' @export
 #'
 get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
-  if (verbose) {logger::log_info("Computing ideal bins in {ncol(mat)} cells using {ncores} threads")}
+  if (verbose) {
+    logger::log_info("Computing ideal bins in {ncol(mat)} cells using {ncores} threads")
+  }
   if (requireNamespace("pbmcapply")) {
     res <- do.call(
       "cbind",
@@ -356,7 +360,9 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
     )
   }
 
-  if (verbose) {logger::log_success("Computing ideal bins completed!")}
+  if (verbose) {
+    logger::log_success("Computing ideal bins completed!")
+  }
 
   # Sort of silly but works for now to return both matrices
   ideal_mat <- res[, grep("ideal", colnames(res))]
@@ -441,8 +447,6 @@ add_ideal_mat <- function(sce, assay_name = "counts", gc = rowData(sce)$gc, n_fr
 #' @export
 #'
 is_ideal_bin <- function(counts, gc, n_freq, map = NULL, min_reads = 0, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
-
-
   counts <- as.vector(counts)
   gc <- as.vector(gc)
   n_freq <- as.vector(n_freq)
@@ -459,7 +463,7 @@ is_ideal_bin <- function(counts, gc, n_freq, map = NULL, min_reads = 0, max_N_fr
     stop("counts, gc, n_freq, and map must be the same length. Check input data!")
   }
 
-  if (length(counts) == 0){
+  if (length(counts) == 0) {
     stop("No data...")
   }
 

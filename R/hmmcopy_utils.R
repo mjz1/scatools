@@ -12,36 +12,43 @@
 #' data(test_sce)
 #' test_sce <- add_hmmcopy(test_sce)
 add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1) {
-
-  if (verbose) {logger::log_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")}
+  if (verbose) {
+    logger::log_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")
+  }
 
   gc_slot <- paste0("counts_gc_", sce@metadata$gc_cor_method)
 
-  if (verbose) {logger::log_info("GC slot: {gc_slot}")}
+  if (verbose) {
+    logger::log_info("GC slot: {gc_slot}")
+  }
 
 
   # Get the matrices we need
   count_mat <- SummarizedExperiment::assay(sce, gc_slot)
-  reads_mat <- SummarizedExperiment::assay(sce, 'raw_counts')
-  ideal_mat <- SummarizedExperiment::assay(sce, 'ideal_bins')
+  reads_mat <- SummarizedExperiment::assay(sce, "raw_counts")
+  ideal_mat <- SummarizedExperiment::assay(sce, "ideal_bins")
 
-  chr = as.factor(seqnames(rowRanges(sce)))
-  start = BiocGenerics::start(rowRanges(sce))
-  end = BiocGenerics::end(rowRanges(sce))
+  chr <- as.factor(seqnames(rowRanges(sce)))
+  start <- BiocGenerics::start(rowRanges(sce))
+  end <- BiocGenerics::end(rowRanges(sce))
 
   hmm_results <- pbmcapply::pbmclapply(X = seq_len(ncol(count_mat)), mc.cores = ncores, FUN = function(i) {
-    res <- suppressMessages(run_sc_hmmcopy(chr = chr,
-                                           start = start,
-                                           end = end,
-                                           counts = count_mat[,i],
-                                           reads = reads_mat[,i],
-                                           ideal = ideal_mat[,i],
-                                           cell_id = colnames(count_mat)[i],
-                                           return = "all"))
+    res <- suppressMessages(run_sc_hmmcopy(
+      chr = chr,
+      start = start,
+      end = end,
+      counts = count_mat[, i],
+      reads = reads_mat[, i],
+      ideal = ideal_mat[, i],
+      cell_id = colnames(count_mat)[i],
+      return = "all"
+    ))
     return(res)
   })
 
-  if (verbose) {logger::log_success("HMMcopy completed!")}
+  if (verbose) {
+    logger::log_success("HMMcopy completed!")
+  }
   names(hmm_results) <- colnames(sce)
 
 
@@ -49,41 +56,48 @@ add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1) {
   # Save point
   # save(hmm_results, file = hmm_file)
 
-  if (verbose) {logger::log_info("Grabbing best HMMcopy results")}
+  if (verbose) {
+    logger::log_info("Grabbing best HMMcopy results")
+  }
   hmm_results_best <- grab_hmm_res(hmm_results, ncores = 1)
 
-  if (verbose) {logger::log_info("Adding HMMcopy metadata to sce")}
+  if (verbose) {
+    logger::log_info("Adding HMMcopy metadata to sce")
+  }
   hmm_metadata <- bind_sublist(hmm_results_best, "mstats")
   if (!all(hmm_metadata$cell_id == rownames(colData(sce)))) {
     logger::log_warn("Cell ids in HMMcopy metadata do not match the original sce object. Merge may be incomplete")
   }
 
   # Merge the metadata
-  colData(sce) <- cbind(colData(sce), hmm_metadata[match(hmm_metadata$cell_id, rownames(colData(sce))),])
+  colData(sce) <- cbind(colData(sce), hmm_metadata[match(hmm_metadata$cell_id, rownames(colData(sce))), ])
 
-  if (verbose) {logger::log_info("Adding HMMcopy data to sce")}
+  if (verbose) {
+    logger::log_info("Adding HMMcopy data to sce")
+  }
 
   copy_mat <- do.call("cbind", lapply(names(hmm_results_best), FUN = function(name) {
-    dat <- hmm_results_best[[name]][['bincounts']]$copy
+    dat <- hmm_results_best[[name]][["bincounts"]]$copy
   }))
   rownames(copy_mat) <- rownames(sce)
   colnames(copy_mat) <- names(hmm_results_best)
 
   state_mat <- do.call("cbind", lapply(names(hmm_results_best), FUN = function(name) {
-    dat <- hmm_results_best[[name]][['bincounts']]$state
+    dat <- hmm_results_best[[name]][["bincounts"]]$state
   }))
   rownames(state_mat) <- rownames(sce)
   colnames(state_mat) <- names(hmm_results_best)
 
-  assay(sce, 'copy') <- copy_mat
-  assay(sce, 'state') <- state_mat
+  assay(sce, "copy") <- copy_mat
+  assay(sce, "state") <- state_mat
 
-  if (verbose) {logger::log_success("HMMcopy data added!")}
+  if (verbose) {
+    logger::log_success("HMMcopy data added!")
+  }
 
   # Store the modal segments as unstructured data
 
   return(sce)
-
 }
 
 #' Single Cell HMMcopy

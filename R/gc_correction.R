@@ -16,14 +16,15 @@
 #' @export
 #'
 add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method = c("modal", "copykit", "loess"), verbose = FALSE, ncores = 1, ...) {
-
   method <- match.arg(method)
 
   gc_slot <- paste0("counts_gc_", method)
 
   # Check if valid bins exists and pass correctly
   if ("valid_bins" %in% names(assays(sce))) {
-    if (verbose) {logger::log_info("Found valid bins in sce object")}
+    if (verbose) {
+      logger::log_info("Found valid bins in sce object")
+    }
     valid_mat <- assay(sce, "valid_bins")
   } else {
     warning("No valid bins matrix in sce object. Defaulting to all valid.")
@@ -141,7 +142,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
   }
 
   if (is.null(bin_ids)) {
-    bin_ids = seq_len(length(counts))
+    bin_ids <- seq_len(length(counts))
   }
 
   results <- match.arg(results)

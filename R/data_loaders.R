@@ -10,8 +10,6 @@
 #' @param save_as NOT IMPLEMENTED YET. Select file formats to save the object. Can provide multiple values
 #' @param verbose Message verbosity (TRUE/FALSE)
 #'
-#' @inheritParams get_ideal_mat
-#'
 #' @return A `SingleCellExperiment` object.
 #' @export
 #'
@@ -83,7 +81,9 @@ load_atac_bins <- function(directory,
     .save_to(object = sce, save_to = save_to, verbose = verbose)
   }
 
-  if (verbose) {logger::log_success("Fragments loaded successfully!")}
+  if (verbose) {
+    logger::log_success("Fragments loaded successfully!")
+  }
 
   return(sce)
 }
