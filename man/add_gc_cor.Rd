@@ -15,9 +15,11 @@ add_gc_cor(
 )
 }
 \arguments{
-\item{sce}{an SCE obkect}
+\item{sce}{an SCE object}
 
 \item{gc}{GC corresponding to bins (rows) in the matrix}
+
+\item{assay_name}{Name of assay on which to perform GC correction}
 
 \item{method}{Specifies the type of GC correction to perform. One of \verb{'modal', 'copykit', or 'loess'}}
 
@@ -26,8 +28,6 @@ add_gc_cor(
 \item{ncores}{Number of cores to use if parallel backend is available}
 
 \item{...}{Additional arguments to be passed to GC correction methods}
-
-\item{assay_aname}{Name of assay on which to perform GC correction}
 }
 \value{
 sce object with corrected GC count matrix in \code{assay(sce, 'counts_gc_[method]')}. See

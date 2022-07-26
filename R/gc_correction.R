@@ -7,8 +7,8 @@
 
 #' Add GC correction to SCE Object
 #'
-#' @param sce an SCE obkect
-#' @param assay_aname Name of assay on which to perform GC correction
+#' @param sce an SCE object
+#' @param assay_name Name of assay on which to perform GC correction
 #'
 #' @inheritParams perform_gc_cor
 #'
