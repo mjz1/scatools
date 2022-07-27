@@ -4,6 +4,7 @@
 #' @param sce an SCE object
 #' @param verbose Message verbosity
 #' @param ncores Number of cores
+#' @param save_raw_hmm Path to save raw hmm data in an `rda` file
 #'
 #' @return an sce object with hmm copy metadata added to coldata, and new slots `copy` and `state`
 #' @export
@@ -11,7 +12,7 @@
 #' @examples
 #' data(test_sce)
 #' test_sce <- add_hmmcopy(test_sce)
-add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1) {
+add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1, save_raw_hmm = NULL) {
   if (verbose) {
     logger::log_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")
   }
@@ -46,15 +47,16 @@ add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1) {
     return(res)
   })
 
+
+  names(hmm_results) <- colnames(sce)
+
   if (verbose) {
     logger::log_success("HMMcopy completed!")
   }
-  names(hmm_results) <- colnames(sce)
 
-
-  # cat("Saving HMM results to:\n\t", hmm_file, "\n")
-  # Save point
-  # save(hmm_results, file = hmm_file)
+  if (!is.null(save_raw_hmm)) {
+    save_to(hmm_results, save_to = save_raw_hmm)
+  }
 
   if (verbose) {
     logger::log_info("Grabbing best HMMcopy results")
