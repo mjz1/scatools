@@ -161,7 +161,7 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
     df_regression <- .gc_warn_error(df_regression, quantile_names)
   } else {
     # Fit second order polynormial quantile regression
-    poly2_quantile_model <- quantreg::rq(reads ~ gc + I(gc^2), tau = quantiles, data = df_regression)
+    poly2_quantile_model <- quantreg::rq(reads ~ gc + I(gc^2), tau = quantiles, data = df_regression, method = "fn")
 
     # Fit to our data
     poly_quantile_predict <- predict(object = poly2_quantile_model, newdata = df_regression)
