@@ -12,7 +12,7 @@
 #'
 #' @inheritParams perform_gc_cor
 #'
-#' @return sce object with corrected GC count matrix in `assay(sce, 'counts_gc_[method]')`. See
+#' @return sce object with corrected GC count matrix in `assay(sce, 'counts_gc_[method]')`. See [perform_gc_cor] for more information.
 #' @export
 #'
 add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method = c("modal", "copykit", "loess"), verbose = FALSE, ncores = 1, ...) {

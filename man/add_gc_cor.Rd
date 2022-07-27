@@ -30,7 +30,7 @@ add_gc_cor(
 \item{...}{Additional arguments to be passed to GC correction methods}
 }
 \value{
-sce object with corrected GC count matrix in \code{assay(sce, 'counts_gc_[method]')}. See
+sce object with corrected GC count matrix in \code{assay(sce, 'counts_gc_[method]')}. See \link{perform_gc_cor} for more information.
 }
 \description{
 Add GC correction to SCE Object
