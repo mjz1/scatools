@@ -10,29 +10,30 @@
 #' @param save_as NOT IMPLEMENTED YET. Select file formats to save the object. Can provide multiple values
 #' @param verbose Message verbosity (TRUE/FALSE)
 #'
+#' @inheritParams DropletUtils::read10xCounts
+#'
 #' @return A `SingleCellExperiment` object.
 #' @export
 #'
-load_atac_bins <- function(directory,
+load_atac_bins <- function(samples,
+                           sample.names,
                            ArchR_Proj = NULL,
                            bins = NULL,
                            BPPARAM = BiocParallel::bpparam(),
                            save_to = NULL,
                            verbose = FALSE,
                            save_as = c("sce", "adata", "seurat")) {
-  # Get sample names and directories
-  sample_names <- dir(directory)
-  samples <- dir(directory, full.names = TRUE)
 
   if (verbose) {
-    logger::log_info("Loading bin counts")
+    logger::log_info("Loading bin counts in {length(samples)} samples using {BPPARAM$workers} threads")
   }
-  sce <- DropletUtils::read10xCounts(samples = samples, sample.names = sample_names, col.names = TRUE, BPPARAM = BPPARAM)
+
+  sce <- DropletUtils::read10xCounts(samples = samples, sample.names = sample.names, col.names = TRUE, BPPARAM = BPPARAM)
 
   # Save raw counts in a seperate slot
   assay(sce, "raw_counts") <- assay(sce, "counts")
 
-  # Reset the barcodes (since the above adds index to each sample)
+  # Reset the barcodes to remove prepended index (in case of multi-sample loading)
   colnames(sce) <- sce$Barcode
 
   # Additional processing if matching ArchR project is provided
@@ -40,14 +41,16 @@ load_atac_bins <- function(directory,
     if (verbose) {
       logger::log_info("ArchR project provided. Merging cell metadata")
     }
-    # Filter down these cells to match the ArchR project (and in correct order)
-    sce <- sce[, match(rownames(ArchR_Proj@cellColData), colnames(sce))]
+    # Filter down these cells to be those in the ArchR project
+    # TODO: Allow for custom filtering
+    # TODO: Enable more flexible metadata provision
+    sce <- sce[,which(colnames(sce) %in% rownames(ArchR_Proj@cellColData))]
 
+    if (!all(rownames(ArchR_Proj@cellColData[colnames(sce), ]) == colnames(sce))) {
+      logger::log_error("Cells in ArchR project not matching with sce object")
+    }
     # Line up and merge
     colData(sce) <- cbind(colData(sce), subset(ArchR_Proj@cellColData[colnames(sce), ], select = -c(Sample)))
-
-    # Throw error if the merging is imperfect
-    stopifnot(all(sce$Barcode == rownames(ArchR_Proj@cellColData)))
   }
 
   # Merge bin level information if provided
