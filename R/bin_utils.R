@@ -297,7 +297,7 @@ get_cytobands <- function(genome = "hg38") {
 #'
 add_gc_freq <- function(bs_genome, bins) {
   stopifnot(class(bs_genome) %in% "BSgenome")
-  logger::log_info("Computing GC content...")
+  logger::log_info("Computing GC content for {prettyMb(getmode(width(bins)))} size bins")
   freqs <- BSgenome::alphabetFrequency(BSgenome::getSeq(bs_genome, bins))
   bins$gc <- (freqs[, "C"] + freqs[, "G"]) / rowSums(freqs)
 
