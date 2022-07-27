@@ -92,7 +92,7 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
       FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
     })
   } else {
-    warning("No parallel backend used. GC correction may be slow.", call. = FALSE)
+    logger::log_warn("No parallel backend used. GC correction may be slow.", call. = FALSE)
     counts_gc_list <- lapply(X = seq_len(ncol(mat)), FUN = function(i) {
       FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
     })
