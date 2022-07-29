@@ -2,7 +2,9 @@
 #' @export
 plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts") {
   if (is.null(cell_id)) {
-    logger::log_warn("No cell ids provided! Plotting all cells. Are you sure you want to do this!?")
+    if (length(cell_id) > 20) {
+      logger::log_warn("No cell ids provided and plotting many cells. Are you sure you want to do this!?")
+    }
     cell_id = colnames(sce)
   }
 
@@ -31,6 +33,8 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts") {
     pivot_longer(cols = -dplyr::starts_with("barcode"), names_to = "bin_id", values_to = "counts") %>%
     left_join(as.data.frame(bindat))
 
+  # Keep cell ordering as provided
+  plot_dat$barcode <- factor(plot_dat$barcode, levels = cell_id)
 
   ggplot(plot_dat) +
     geom_point(aes(x = start, y = counts), size = 0.5) +
