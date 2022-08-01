@@ -5,6 +5,8 @@
 #' @param verbose Message verbosity
 #' @param ncores Number of cores
 #' @param save_raw_hmm Path to save raw hmm data in an `rda` file
+#' @param slot_suffix Suffix to add to newly created `copy` and `state` assay slots.
+#' @param assay_name Name of the assay with counts to input into HMMcopy. Ideally these are GC corrected.
 #'
 #' @return an sce object with hmm copy metadata added to coldata, and new slots `copy` and `state`
 #' @export
@@ -12,20 +14,24 @@
 #' @examples
 #' data(test_sce)
 #' test_sce <- add_hmmcopy(test_sce)
-add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1, save_raw_hmm = NULL) {
+add_hmmcopy <- function(sce,
+                        verbose = FALSE,
+                        ncores = 1,
+                        assay_name = paste0("counts_gc_", sce@metadata$gc_cor_method),
+                        save_raw_hmm = NULL,
+                        slot_suffix = NULL) {
   if (verbose) {
     logger::log_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")
   }
 
-  gc_slot <- paste0("counts_gc_", sce@metadata$gc_cor_method)
 
   if (verbose) {
-    logger::log_info("GC slot: {gc_slot}")
+    logger::log_info("Input assay: {assay_name}")
   }
 
 
   # Get the matrices we need
-  count_mat <- SummarizedExperiment::assay(sce, gc_slot)
+  count_mat <- SummarizedExperiment::assay(sce, assay_name)
   reads_mat <- SummarizedExperiment::assay(sce, "raw_counts")
   ideal_mat <- SummarizedExperiment::assay(sce, "ideal_bins")
 
@@ -90,8 +96,18 @@ add_hmmcopy <- function(sce, verbose = FALSE, ncores = 1, save_raw_hmm = NULL) {
   rownames(state_mat) <- rownames(sce)
   colnames(state_mat) <- names(hmm_results_best)
 
-  assay(sce, "copy") <- copy_mat
-  assay(sce, "state") <- state_mat
+  if (!is.null(slot_suffix)) {
+    copy_slot <- paste("copy", slot_suffix, sep = "_")
+    state_slot <- paste("state", slot_suffix, sep = "_")
+  } else {
+    copy_slot <- "copy"
+    state_slot <- "state"
+  }
+
+  if (verbose) {logger::log_info("Adding copy and state data as assays: {copy_slot} AND {state_slot}")}
+
+  assay(sce, copy_slot) <- copy_mat
+  assay(sce, state_slot) <- state_mat
 
   if (verbose) {
     logger::log_success("HMMcopy data added!")

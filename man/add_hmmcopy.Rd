@@ -4,7 +4,14 @@
 \alias{add_hmmcopy}
 \title{Add HMMCopy results to sce object}
 \usage{
-add_hmmcopy(sce, verbose = FALSE, ncores = 1, save_raw_hmm = NULL)
+add_hmmcopy(
+  sce,
+  verbose = FALSE,
+  ncores = 1,
+  assay_name = paste0("counts_gc_", sce@metadata$gc_cor_method),
+  save_raw_hmm = NULL,
+  slot_suffix = NULL
+)
 }
 \arguments{
 \item{sce}{an SCE object}
@@ -13,7 +20,11 @@ add_hmmcopy(sce, verbose = FALSE, ncores = 1, save_raw_hmm = NULL)
 
 \item{ncores}{Number of cores}
 
+\item{assay_name}{Name of the assay with counts to input into HMMcopy. Ideally these are GC corrected.}
+
 \item{save_raw_hmm}{Path to save raw hmm data in an \code{rda} file}
+
+\item{slot_suffix}{Suffix to add to newly created \code{copy} and \code{state} assay slots.}
 }
 \value{
 an sce object with hmm copy metadata added to coldata, and new slots \code{copy} and \code{state}
