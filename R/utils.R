@@ -43,7 +43,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
     for (target in target_assays) {
       # If variable is "all", compute sums over all samples
       if (variable == "all") {
-        dat <- data.frame("all" = as.integer(rowSums(assay(sce, target))))
+        dat <- data.frame("all" = as.integer(Matrix::rowSums(assay(sce, target))))
       } else {
         dat <- sapply(levels(sce[[variable]]), FUN = function(X) {
           idx <- which(sce[[variable]] == X)
