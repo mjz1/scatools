@@ -4,7 +4,15 @@
 \alias{read_vartrix}
 \title{Read Vatrix Data}
 \usage{
-read_vartrix(dir_path = NULL, mtx_ref, mtx_alt, barcodes, variants)
+read_vartrix(
+  dir_path = NULL,
+  mtx_ref = NULL,
+  mtx_alt = NULL,
+  barcodes = NULL,
+  variants = NULL,
+  phased_vcf = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{dir_path}{Path to \code{Vartrix} outputs directory}

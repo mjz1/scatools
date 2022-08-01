@@ -107,7 +107,7 @@ load_atac_bins <- function(samples,
 #'
 #' @return A `SingleCellExperiment` object
 #' @export
-read_vartrix <- function(dir_path = NULL, mtx_ref, mtx_alt, barcodes, variants) {
+read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcodes = NULL, variants = NULL, phased_vcf = NULL, verbose = TRUE) {
   if (!is.null(dir_path)) {
     mtx_ref <- file.path(dir_path, "ref_matrix.mtx")
     mtx_alt <- file.path(dir_path, "alt_matrix.mtx")
@@ -121,12 +121,35 @@ read_vartrix <- function(dir_path = NULL, mtx_ref, mtx_alt, barcodes, variants) 
   snps <- read.table(variants, header = FALSE, col.names = "pos") %>%
     tidyr::separate(pos, into = c("chr", "pos"), sep = "_") %>%
     # Big memory savings plus we rebase the positions to match original VCF
-    dplyr::mutate("chr" = as.factor(chr), "pos" = as.integer(as.integer(pos) + 1))
+    dplyr::mutate("chr" = as.factor(chr), "start" = as.integer(as.integer(pos) + 1), "end" = as.integer(as.integer(pos) + 1))
 
   colnames(ref) <- cells$barcodes
   colnames(alt) <- cells$barcodes
 
-  sce <- SingleCellExperiment(list(ref = ref, alt = alt), rowData = snps, colData = cells)
+  # Load phasing if provided
+  if (!is.null(phased_vcf)) {
+    if (verbose) {
+      logger::log_info("Loading phasing information from: {phased_vcf}")
+    }
+
+    phased_vcfR <- vcfR::read.vcfR(phased_vcf, verbose = verbose)
+
+    phased_df <- cbind(phased_vcfR@fix, gt = phased_vcfR@gt[, 2]) %>%
+      dplyr::as_tibble() %>%
+      dplyr::select(CHROM, POS, REF, ALT, gt) %>%
+      dplyr::rename(chr = CHROM, ref = REF, alt = ALT) %>%
+      dplyr::mutate(start = as.integer(POS), end = as.integer(POS)) %>%
+      dplyr::mutate(across(where(is.character), as.factor))
+
+    # TODO: Check that variants are in common
+
+    snps <- snps %>% dplyr::left_join(phased_df, by = c("chr", "start", "end")) %>%
+      select(chr, start, end, ref, alt, gt)
+
+    if (verbose) {logger::log_success("Phased VCF data loaded")}
+  }
+
+  sce <- SingleCellExperiment(list(ref = ref, alt = alt), rowRanges = GenomicRanges::makeGRangesFromDataFrame(snps, keep.extra.columns = TRUE), colData = cells)
 
   return(sce)
 }
