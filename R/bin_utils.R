@@ -406,7 +406,7 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
 
 
 #' @rdname get_ideal_mat
-#'
+#' @export
 add_ideal_mat <- function(sce, assay_name = "counts", gc = rowData(sce)$gc, n_freq = rowData(sce)$n_freq, map = rowData(sce)$map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
   id_val_mats <- get_ideal_mat(
     mat = assay(sce, assay_name),
