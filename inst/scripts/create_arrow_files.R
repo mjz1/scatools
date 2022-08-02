@@ -6,10 +6,10 @@ parser <- ArgumentParser()
 parser$add_argument("--sample_name", help="Sample name")
 parser$add_argument("--fragment_file", help="Path to fragment file")
 parser$add_argument("--genome_ver", help="Genome version (hg19, hg38) [default %(default)s]", default = "hg38")
-parser$add_argument("--arrowdir", help="output directory for arrow file")
+parser$add_argument("--arrowdir", help="output directory for arrow file", default = "./ArrowFiles")
 parser$add_argument("--binsize", help="Bin size for counts matrix [default %(default)s]", default = 1e7)
-parser$add_argument("--bindepthdir", help="output directory for binned depth file")
-parser$add_argument("--scatoolsdir", help="output directory for scatools processed files")
+parser$add_argument("--bindepthdir", help="output directory for binned depth file", default = "./binned_depth")
+parser$add_argument("--scatoolsdir", help="output directory for scatools processed files", default = "./scatools_analysis")
 parser$add_argument("--reformat_frags", help="Logical: Reformat fragments before arrow [default %(default)s]", action="store_true")
 parser$add_argument("--verbose", help="Message verbosity [default %(default)s]", action="store_true")
 parser$add_argument("--overwrite", help="Logical: Overwrite existing files [default %(default)s]", action="store_true")
@@ -36,16 +36,8 @@ overwrite = args$overwrite
 logger::log_info("THREADS: {ncores}")
 
 
-# devtools::load_all("~/work/repos/ArchR/")
 library(ArchR)
-devtools::load_all("~/repos/scatools")
-
-# TESTING
-# fragment_file = "/home/zatzmanm/work/repos/scatac_fetal_atlas/data/fragments/sample_59_bonemarrow.fragments.hg38.liftover.bed"
-# sample_name = "sample_59_bonemarrow_TEST"
-# arrowdir = "~/dump/create_arrows_test/ArrowFiles"
-# bindepthdir = "~/dump/create_arrows_test/binned_depth"
-# scatoolsdir = "~/dump/create_arrows_test/scatools_analysis"
+library(scatools)
 
 # function from archr has bug to fix here
 reformatFragmentFiles <- function(
