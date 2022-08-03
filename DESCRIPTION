@@ -22,6 +22,7 @@ Imports:
     magrittr,
     Matrix,
     methods,
+    patchwork,
     polynom,
     quantreg,
     R.utils,
@@ -39,10 +40,13 @@ URL: https://github.com/mjz1/scatools
 BugReports: https://github.com/mjz1/scatools/issues
 Suggests: 
     gtools,
+    knitr,
     pbmcapply,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends: 
     R (>= 4.0),
     SingleCellExperiment
 LazyData: true
+VignetteBuilder: knitr
