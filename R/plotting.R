@@ -104,4 +104,29 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   return(p)
 }
 
+#' Plot multiple cell assays together
+#'
+#' @param sce SCE object
+#' @param cell_id Cell ids
+#' @param assays Assays to plot
+#'
+#' @return List of ggplot objects
+#' @export
+#'
+plot_cell_multi <- function(sce, cell_id, assays) {
+
+  plots <- vector(mode = "list")
+
+  for (cell in cell_id) {
+    cell_ps <- vector(mode = "list")
+    for (assay in assays) {
+      cell_p <- plot_cell_cna(sce = sce, cell_id = cell, assay_name = assay)
+      cell_ps[[assay]] <- cell_p
+    }
+    plots[[cell]] <- patchwork::wrap_plots(cell_ps, ncol = 1) + patchwork::plot_annotation(title = cell)
+  }
+
+  # Arrange output
+  return(plots)
+
 }
