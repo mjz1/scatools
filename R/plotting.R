@@ -170,7 +170,7 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "clone_id"]
 
   } else {
-    if (!all(cell_order %in% rownames(cn_mat))) {
+    if (!all(cell_order %in% colnames(cn_mat))) {
       logger::log_error("Provided cell ordering contains cells not contained in the input")
     }
     ordered_cell_ids <- cell_order
