@@ -130,3 +130,94 @@ plot_cell_multi <- function(sce, cell_id, assays) {
   return(plots)
 
 }
+
+
+#' Plot copy number heatmap
+#'
+#' @param sce A SingleCellExperiment object
+#' @param assay_name Name of the assay to plot
+#' @param cell_order Optional: Order of the cells
+#' @param log2 Logical: Log2 transform the matrix prior to plotting
+#' @param scale Logical: Scale and center the matrix before plotting
+#' @param clustering_results Clustering results to provide to inform cell ordering and cluster labelling. From [perform_umap_clustering]
+#' @param col_fun Color mapping function from [circlize::colorRamp2()]
+#' @param legend_name Name of the legend
+#' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
+#'
+#' @return A heatmap
+#' @export
+#'
+cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALSE, scale = FALSE, clustering_results = NULL, col_fun = NULL, legend_name = assay_name, ...) {
+
+  # TODO: seperate out the clustering to be containing within the sce object and allow the user to pass specified ordering or clusters
+  cn_mat <- t(as.matrix(assay(sce, assay_name)))
+
+  # Remove fully NA or 0 columns
+  keep_bins <- apply(cn_mat, 2, FUN = function(x) !all(is.na(x)) & !all(x == 0))
+
+  cn_mat <- cn_mat[, keep_bins]
+  sce <- sce[keep_bins, ]
+
+  # Replace remaining NAs with 0?
+  cn_mat[is.na(cn_mat)] <- 0
+
+  if (log2) {
+    cn_mat <- log2(cn_mat + 1e-5)
+  }
+
+  if (scale) {
+    cn_mat <- scale(cn_mat)
+  }
+
+
+  if (is.null(cell_order) & is.null(clustering_results)) {
+    clustering_results <- perform_umap_clustering(cn_matrix = t(cn_mat))
+
+    ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "cell_id"]
+
+    cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "clone_id"]
+  } else if (!is.null(clustering_results)) {
+    ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "cell_id"]
+    cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "clone_id"]
+  } else {
+    if (!all(cell_order %in% rownames(cn_mat))) {
+      logger::log_error("Provided cell ordering contains cells not contained in the input")
+    }
+    ordered_cell_ids <- cell_order
+  }
+
+  cn_mat <- cn_mat[ordered_cell_ids, ]
+
+
+
+  if (grepl("state", assay_name)) {
+    cn_mat[cn_mat >= 11] <- "11+"
+    cn_colors <- state_cn_colors()
+  } else if (!is.null(col_fun)) {
+    cn_colors <- col_fun
+  } else {
+    # Attempt some intelligent color mapping
+    cn_colors <- NULL
+  }
+
+  # Split columns by chromosome
+  chrs <- as.vector(gsub("chr", "", GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce))))
+  col_split <- factor(chrs, levels = unique(gtools::mixedsort(chrs)))
+
+  ht_plot <- ComplexHeatmap::Heatmap(
+    name = legend_name,
+    matrix = cn_mat,
+    show_row_names = FALSE,
+    cluster_rows = FALSE,
+    col = cn_colors,
+    cluster_columns = FALSE,
+    show_column_names = FALSE,
+    na_col = "white",
+    use_raster = TRUE,
+    raster_quality = 10,
+    column_split = col_split,
+    ...
+  )
+
+  return(ht_plot)
+}
