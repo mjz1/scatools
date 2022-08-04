@@ -150,52 +150,25 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALSE, scale = c("none", "cells", "bins", "both"), clustering_results = NULL, col_fun = NULL, legend_name = assay_name, ...) {
 
   # TODO: seperate out the clustering to be containing within the sce object and allow the user to pass specified ordering or clusters
-  cn_mat <- t(as.matrix(assay(sce, assay_name)))
+  cn_mat <- as.matrix(assay(sce, assay_name))
 
-  scale <- match.arg(scale)
+  cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale)
 
-  logger::log_debug("Scaling: {scale}")
+  sce <- sce[rownames(cn_mat),colnames(cn_mat)]
 
-
-  if (scale == "none") {
-    scale = FALSE
-  }
-
-
-  # Remove fully NA or 0 columns
-  keep_bins <- apply(cn_mat, 2, FUN = function(x) !all(is.na(x)) & !all(x == 0))
-
-  cn_mat <- cn_mat[, keep_bins]
-  sce <- sce[keep_bins, ]
-
-  # Replace remaining NAs with 0?
-  cn_mat[is.na(cn_mat)] <- 0
-
-  if (log2) {
-    cn_mat <- log2(cn_mat + 1e-5)
-  }
-
-  if (scale == "both") {
-    cn_mat <- scale(t(scale(t(cn_mat))))
-  }
-
-  if (scale == "cells") {
-    cn_mat <- t(scale(t(cn_mat)))
-  }
-
-  if (scale == "bins") {
-    cn_mat <- scale(cn_mat)
-  }
 
   if (is.null(cell_order) & is.null(clustering_results)) {
-    clustering_results <- perform_umap_clustering(cn_matrix = t(cn_mat))
+
+    clustering_results <- perform_umap_clustering(cn_matrix = cn_mat)
 
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "cell_id"]
-
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "clone_id"]
+
   } else if (!is.null(clustering_results)) {
+
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "cell_id"]
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_id), "clone_id"]
+
   } else {
     if (!all(cell_order %in% rownames(cn_mat))) {
       logger::log_error("Provided cell ordering contains cells not contained in the input")
@@ -203,7 +176,8 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
     ordered_cell_ids <- cell_order
   }
 
-  cn_mat <- cn_mat[ordered_cell_ids, ]
+  # Reorder cells
+  cn_mat <- cn_mat[,ordered_cell_ids]
 
 
 
@@ -221,9 +195,9 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
   chrs <- as.vector(gsub("chr", "", GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce))))
   col_split <- factor(chrs, levels = unique(gtools::mixedsort(chrs)))
 
-  invisible(ht_plot <- ComplexHeatmap::Heatmap(
+  suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
     name = legend_name,
-    matrix = cn_mat,
+    matrix = t(cn_mat),
     show_row_names = FALSE,
     cluster_rows = FALSE,
     col = cn_colors,

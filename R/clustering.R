@@ -3,22 +3,19 @@ perform_umap_clustering <- function(cn_matrix,
                                     n_neighbors = 10,
                                     min_dist = 0.1,
                                     minPts = 30,
+                                    scale = c("none", "cells", "bins", "both"),
+                                    log2 = FALSE,
                                     seed = 3,
                                     umapmetric = "correlation") {
 
-  # First clean the matrix
-  # Remove fully NA or 0 columns
-  keep_bins <- apply(cn_matrix, 2, FUN = function(x) !all(is.na(x)) & !all(x == 0))
+  # TODO: Integrate with the SCE object better -- in the reduced dim slot
 
-  cn_matrix <- cn_matrix[, keep_bins]
+  cn_matrix <- as.matrix(cn_matrix)
 
-  # Replace remaining NAs with 0?
-  cn_matrix[is.na(cn_matrix)] <- 0
-
+  # Scale and clean matrix
   # This function expects bins in cols and cells in rows
-  cn_matrix <- t(cn_matrix)
+  cn_matrix <- t(scale_mat(cn_matrix, log2 = log2, scale = scale))
 
-  # Remove any bins which are only NA, or impute the values...
 
   if (ncol(cn_matrix) < n_neighbors) {
     n_neighbors <- ncol(cn_matrix) - 1
@@ -28,7 +25,7 @@ perform_umap_clustering <- function(cn_matrix,
 
   set.seed(seed)
 
-  logger::log_info("Calculating UMAP dimensionality reduction...")
+  logger::log_info("Calculating UMAP dimensionality reduction in {nrow(cn_matrix)} cells")
   if (nrow(cn_matrix) > 500 & is.null(seed)) {
     pca <- min(50, ncol(cn_matrix))
     fast_sgd <- TRUE
