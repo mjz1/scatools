@@ -1,3 +1,46 @@
+scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
+
+  mat <- as.matrix(mat)
+
+  scale <- match.arg(scale)
+
+  # TODO: separate out cleaning of the matrix from this function
+
+  logger::log_debug("Scaling: {scale}")
+
+  if (scale == "none") {
+    scale = FALSE
+  }
+
+  # Remove fully NA or 0 columns
+  keep_bins <- apply(mat, 1, FUN = function(x) !all(is.na(x)) & !all(x == 0))
+
+  logger::log_debug("Keeping {sum(keep_bins)} of {nrow(mat)} bins")
+
+  mat <- mat[keep_bins,]
+
+  # Replace remaining NAs with 0?
+  mat[is.na(mat)] <- 0
+
+  if (log2) {
+    mat <- log2(mat + 1e-5)
+  }
+
+  if (scale == "both") {
+    mat <- scale(t(scale(t(mat))))
+  }
+
+  if (scale == "cells") {
+    mat <- scale(mat)
+  }
+
+  if (scale == "bins") {
+    mat <- t(scale(t(mat)))
+  }
+  return(mat)
+}
+
+
 #' get_snp_counts
 #'
 #' Computes per feature counts across the dataset. Equivalent to pseudobulk summarization.
