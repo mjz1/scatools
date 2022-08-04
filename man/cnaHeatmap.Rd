@@ -9,7 +9,7 @@ cnaHeatmap(
   assay_name = "state",
   cell_order = NULL,
   log2 = FALSE,
-  scale = FALSE,
+  scale = c("none", "cells", "bins", "both"),
   clustering_results = NULL,
   col_fun = NULL,
   legend_name = assay_name,
@@ -25,7 +25,7 @@ cnaHeatmap(
 
 \item{log2}{Logical: Log2 transform the matrix prior to plotting}
 
-\item{scale}{Logical: Scale and center the matrix before plotting}
+\item{scale}{One of \verb{'cells', 'bins', 'both' or 'none'}. Determines what kind of scaling is done.}
 
 \item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
 
