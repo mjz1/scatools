@@ -164,3 +164,8 @@ prettyMb <- function(x, places = 3) {
   x <- x / (1000^power)
   paste(prettyNum(signif(x, places)), units, sep = "")
 }
+
+
+chr_reorder <- function(chrs) {
+  gtools::mixedsort(chrs)
+}
