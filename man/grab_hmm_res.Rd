@@ -9,7 +9,7 @@ grab_hmm_res(hmm_results, grab = "best", ncores = 1)
 \arguments{
 \item{hmm_results}{hmm results in multilist format}
 
-\item{grab}{What to grab ("best")}
+\item{grab}{What to grab ("best" for best results; m1, m2, m3...for specific multiplier)}
 
 \item{ncores}{number of cores for parallelization}
 }
