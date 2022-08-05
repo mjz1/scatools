@@ -6,7 +6,8 @@ perform_umap_clustering <- function(cn_matrix,
                                     scale = c("none", "cells", "bins", "both"),
                                     log2 = FALSE,
                                     seed = 3,
-                                    umapmetric = "correlation") {
+                                    umapmetric = "correlation",
+                                    verbose = TRUE) {
 
   # TODO: Integrate with the SCE object better -- in the reduced dim slot
 
@@ -25,7 +26,7 @@ perform_umap_clustering <- function(cn_matrix,
 
   set.seed(seed)
 
-  logger::log_info("Calculating UMAP dimensionality reduction in {nrow(cn_matrix)} cells")
+  logger::log_info("Calculating UMAP in {nrow(cn_matrix)} cells and {ncol(cn_matrix)} bins")
   if (nrow(cn_matrix) > 500 & is.null(seed)) {
     pca <- min(50, ncol(cn_matrix))
     fast_sgd <- TRUE
@@ -41,7 +42,8 @@ perform_umap_clustering <- function(cn_matrix,
     ret_model = TRUE,
     ret_nn = TRUE,
     pca = pca,
-    fast_sgd = fast_sgd
+    fast_sgd = fast_sgd,
+    verbose = verbose
   )
 
   dfumap <- data.frame(
@@ -77,17 +79,22 @@ perform_umap_clustering <- function(cn_matrix,
       gentree <- TRUE
     }
   }
+
+  # TODO: Clone names alphabetical in order of size
   clusterids <- hdbscanresults$cluster
   clusterids[clusterids == 0] <- 702
   LETTERS702 <- c(LETTERS, sapply(LETTERS, function(x) paste0(x, LETTERS)))
   dfumap$clone_id <- LETTERS702[clusterids]
   dfumap <- dfumap %>%
-    dplyr::mutate(clone_id = ifelse(clone_id == "ZZ", "0", clone_id))
+    dplyr::mutate(clone_id = ifelse(clone_id == "ZZ", "0", clone_id)) %>%
+    dplyr::add_count(clone_id, name = "clone_size") %>%
+    dplyr::arrange(dplyr::desc(clone_size))
+  rownames(dfumap) <- dfumap$cell_id
 
   logger::log_info(paste0("Identified ", length(unique(dfumap$clone_id)), " clusters"))
   logger::log_info("Distribution of clusters:")
-  f <- table(dfumap$clone_id)
-  for (cl in sort(unique(dfumap$clone_id))) {
+  f <- sort(table(dfumap$clone_id), decreasing = TRUE)
+  for (cl in unique(dfumap$clone_id)) {
     message(paste0("  Cluster ", cl, ": ", f[[cl]]))
   }
 
