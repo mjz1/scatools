@@ -13,6 +13,7 @@ cnaHeatmap(
   clustering_results = NULL,
   col_fun = NULL,
   legend_name = assay_name,
+  clust_annot = TRUE,
   ...
 )
 }
@@ -32,6 +33,8 @@ cnaHeatmap(
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
 
 \item{legend_name}{Name of the legend}
+
+\item{clust_annot}{Annotate cluster and sample labels}
 
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
 }
