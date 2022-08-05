@@ -104,7 +104,9 @@ add_hmmcopy <- function(sce,
     state_slot <- "state"
   }
 
-  if (verbose) {logger::log_info("Adding copy and state data as assays: {copy_slot} AND {state_slot}")}
+  if (verbose) {
+    logger::log_info("Adding copy and state data as assays: {copy_slot} AND {state_slot}")
+  }
 
   assay(sce, copy_slot) <- copy_mat
   assay(sce, state_slot) <- state_mat
@@ -365,7 +367,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
 
     hmm_results["best"] <- pick
 
-    logger::log_info("Best ploidy: ", pick)
+    # logger::log_info("Best ploidy: ", pick)
 
     pick_m <- paste0("m", pick)
   }
@@ -503,7 +505,6 @@ grab_hmm_res <- function(hmm_results, grab = "best", ncores = 1) {
       } else {
         res <- cell_hmm[[grab]]
       }
-
     })
   }
 }

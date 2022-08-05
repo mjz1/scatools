@@ -13,7 +13,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     if (length(cell_id) > 20) {
       logger::log_warn("No cell ids provided and plotting many cells. Are you sure you want to do this!?")
     }
-    cell_id = colnames(sce)
+    cell_id <- colnames(sce)
   }
 
   # TODO: Try to intelligently find the start positions from the provided sce
@@ -49,10 +49,10 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   plot_dat$barcode <- factor(plot_dat$barcode, levels = cell_id)
 
   # check for assay type and add colors
-  if (grepl("state", assay_name) ){
-    cn_colors = state_cn_colors()
+  if (grepl("state", assay_name)) {
+    cn_colors <- state_cn_colors()
     # Clip counts to 11
-    plot_dat[plot_dat$counts > 11,'counts'] <- 11
+    plot_dat[plot_dat$counts > 11, "counts"] <- 11
     plot_dat$counts <- as.factor(plot_dat$counts)
     plot_dat$counts <- dplyr::recode_factor(plot_dat$counts, "11" = "11+")
 
@@ -66,10 +66,9 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
         axis.text.x = element_blank()
       ) +
       scale_color_manual(values = cn_colors) +
-      guides(colour = guide_legend(override.aes = list(size=3)))
-
+      guides(colour = guide_legend(override.aes = list(size = 3)))
   } else if (!is.null(col_fun)) {
-    cn_colors = col_fun
+    cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
 
     p <- ggplot(plot_dat) +
@@ -81,14 +80,15 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
         panel.border = element_rect(fill = NA),
         axis.text.x = element_blank()
       ) +
-      scale_color_gradient2(low = attr(cn_colors, "colors")[1],
-                            mid = attr(cn_colors, "colors")[2],
-                            high = attr(cn_colors, "colors")[3],
-                            limits = c(attr(cn_colors, "breaks")[1], attr(cn_colors, "breaks")[3]))
-
+      scale_color_gradient2(
+        low = attr(cn_colors, "colors")[1],
+        mid = attr(cn_colors, "colors")[2],
+        high = attr(cn_colors, "colors")[3],
+        limits = c(attr(cn_colors, "breaks")[1], attr(cn_colors, "breaks")[3])
+      )
   } else {
     # Attempt some intelligent color mapping
-    cn_colors = NULL
+    cn_colors <- NULL
 
     p <- ggplot(plot_dat) +
       geom_point(aes(x = start, y = counts), size = 0.5) +
@@ -114,7 +114,6 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 #' @export
 #'
 plot_cell_multi <- function(sce, cell_id, assays) {
-
   plots <- vector(mode = "list")
 
   for (cell in cell_id) {
@@ -128,7 +127,6 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 
   # Arrange output
   return(plots)
-
 }
 
 
@@ -155,21 +153,17 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
 
   cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale)
 
-  sce <- sce[rownames(cn_mat),colnames(cn_mat)]
+  sce <- sce[rownames(cn_mat), colnames(cn_mat)]
 
 
   if (is.null(cell_order) & is.null(clustering_results)) {
-
     clustering_results <- perform_umap_clustering(cn_matrix = cn_mat)
 
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
-
   } else if (!is.null(clustering_results)) {
-
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
-
   } else {
     if (!all(cell_order %in% colnames(cn_mat))) {
       logger::log_error("Provided cell ordering contains cells not contained in the input")
@@ -178,18 +172,19 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
   }
 
   # Reorder cells
-  cn_mat <- cn_mat[,ordered_cell_ids]
+  cn_mat <- cn_mat[, ordered_cell_ids]
 
   if (class(clust_annot) == "HeatmapAnnotation") {
     left_annot <- clust_annot
   } else if (clust_annot) {
     left_annot <- ComplexHeatmap::HeatmapAnnotation(
-      Cluster = clustering_results$clustering[ordered_cell_ids,'clone_id'],
-      Sample = sce[,ordered_cell_ids]$Sample,
+      Cluster = clustering_results$clustering[ordered_cell_ids, "clone_id"],
+      Sample = sce[, ordered_cell_ids]$Sample,
       which = "row",
-      show_legend = c(FALSE, FALSE))
+      show_legend = c(FALSE, FALSE)
+    )
   } else {
-    left_annot = NULL
+    left_annot <- NULL
   }
 
 
@@ -229,7 +224,6 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
 
 #' @export
 cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
-
   orig_sce <- sce
 
   clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2)
@@ -245,13 +239,13 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
     clustering_results <- perform_umap_clustering(assay(sce, new_assay))
   }
 
-  sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), 'clone_id']
+  sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), "clone_id"]
 
   avg_exp <- summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce$clone_id, statistics = "mean")
   rowRanges(avg_exp) <- rowRanges(sce)
 
   # Order by clone size
-  avg_exp <- avg_exp[,order(avg_exp$ncells, decreasing = TRUE)]
+  avg_exp <- avg_exp[, order(avg_exp$ncells, decreasing = TRUE)]
 
   if (grepl("state", new_assay)) {
     # Round to integers
@@ -270,7 +264,8 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
     ClusterLab = clust_lab,
     Clone = avg_exp$ids,
     which = "row",
-    show_legend = c(FALSE, FALSE))
+    show_legend = c(FALSE, FALSE)
+  )
 
 
   metadata(orig_sce)[[new_assay]] <- avg_exp
@@ -282,4 +277,3 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
   print(ht_plot)
   return(list(plot = ht_plot, sce = orig_sce))
 }
-

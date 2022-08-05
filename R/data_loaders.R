@@ -23,7 +23,6 @@ load_atac_bins <- function(samples,
                            save_to = NULL,
                            verbose = FALSE,
                            save_as = c("sce", "adata", "seurat")) {
-
   if (verbose) {
     logger::log_info("Loading bin counts in {length(samples)} samples using {BPPARAM$workers} threads")
   }
@@ -44,7 +43,7 @@ load_atac_bins <- function(samples,
     # Filter down these cells to be those in the ArchR project
     # TODO: Allow for custom filtering
     # TODO: Enable more flexible metadata provision
-    sce <- sce[,which(colnames(sce) %in% rownames(ArchR_Proj@cellColData))]
+    sce <- sce[, which(colnames(sce) %in% rownames(ArchR_Proj@cellColData))]
 
     if (!all(rownames(ArchR_Proj@cellColData[colnames(sce), ]) == colnames(sce))) {
       logger::log_error("Cells in ArchR project not matching with sce object")
@@ -143,10 +142,13 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
 
     # TODO: Check that variants are in common
 
-    snps <- snps %>% dplyr::left_join(phased_df, by = c("chr", "start", "end")) %>%
+    snps <- snps %>%
+      dplyr::left_join(phased_df, by = c("chr", "start", "end")) %>%
       select(chr, start, end, ref, alt, gt)
 
-    if (verbose) {logger::log_success("Phased VCF data loaded")}
+    if (verbose) {
+      logger::log_success("Phased VCF data loaded")
+    }
   }
 
   sce <- SingleCellExperiment(list(ref = ref, alt = alt), rowRanges = GenomicRanges::makeGRangesFromDataFrame(snps, keep.extra.columns = TRUE), colData = cells)

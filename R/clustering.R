@@ -10,6 +10,7 @@ perform_umap_clustering <- function(cn_matrix,
                                     verbose = TRUE) {
 
   # TODO: Integrate with the SCE object better -- in the reduced dim slot
+  # TODO: Add clone id colors to the clustering object so that they are fixed across plots
 
   cn_matrix <- as.matrix(cn_matrix)
 
@@ -112,4 +113,3 @@ perform_umap_clustering <- function(cn_matrix,
     tree = tree
   ))
 }
-

@@ -1,5 +1,4 @@
 scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
-
   mat <- as.matrix(mat)
 
   scale <- match.arg(scale)
@@ -9,7 +8,7 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
   logger::log_debug("Scaling: {scale}")
 
   if (scale == "none") {
-    scale = FALSE
+    scale <- FALSE
   }
 
   # Remove fully NA or 0 columns
@@ -17,7 +16,7 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
 
   logger::log_debug("Keeping {sum(keep_bins)} of {nrow(mat)} bins")
 
-  mat <- mat[keep_bins,]
+  mat <- mat[keep_bins, ]
 
   # Replace remaining NAs with 0?
   mat[is.na(mat)] <- 0
