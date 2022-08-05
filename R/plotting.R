@@ -226,3 +226,59 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
 
   return(ht_plot)
 }
+
+#' @export
+cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
+
+  orig_sce <- sce
+
+  clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2)
+
+  # Subset the SCE to the same dimensions
+  sce <- sce[rownames(clust_mat), colnames(clust_mat)]
+
+  new_assay <- paste(assay_name, "avg", sep = "_")
+
+  assay(sce, new_assay) <- clust_mat
+
+  if (is.null(clustering_results)) {
+    clustering_results <- perform_umap_clustering(assay(sce, new_assay))
+  }
+
+  sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), 'clone_id']
+
+  avg_exp <- summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce$clone_id, statistics = "mean")
+  rowRanges(avg_exp) <- rowRanges(sce)
+
+  # Order by clone size
+  avg_exp <- avg_exp[,order(avg_exp$ncells, decreasing = TRUE)]
+
+  if (grepl("state", new_assay)) {
+    # Round to integers
+    assay(avg_exp, new_assay) <- round(assay(avg_exp, "mean"))
+  } else {
+    assay(avg_exp, new_assay) <- assay(avg_exp, "mean")
+  }
+
+  if (clust_lab) {
+    clust_lab <- row_anno_text(avg_exp$ids, rot = 90, just = "center")
+  } else {
+    clust_lab <- NULL
+  }
+
+  left_annot <- ComplexHeatmap::HeatmapAnnotation(
+    ClusterLab = clust_lab,
+    Clone = avg_exp$ids,
+    which = "row",
+    show_legend = c(FALSE, FALSE))
+
+
+  metadata(orig_sce)[[new_assay]] <- avg_exp
+
+  # TODO: Figure out how to handle returning the avg exp data and plot
+  # Ideally want to replace the SCE in the parent environment while also returning the plot
+
+  ht_plot <- cnaHeatmap(avg_exp, assay_name = new_assay, scale = "none", cell_order = avg_exp$ids, clust_annot = left_annot, ...)
+  print(ht_plot)
+  return(list(plot = ht_plot, sce = orig_sce))
+}
