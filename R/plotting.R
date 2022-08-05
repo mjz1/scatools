@@ -282,3 +282,4 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
   print(ht_plot)
   return(list(plot = ht_plot, sce = orig_sce))
 }
+
