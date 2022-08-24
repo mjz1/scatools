@@ -183,7 +183,7 @@ cnaPlot <- cnaHeatmap(sce = sce, assay_name = "counts", log2 = TRUE, scale = "bo
 cnaPlot
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+<img src="man/figures/README-cnaheatmap_plot-1.png" width="100%" />
 
 Or plot individual cells
 
@@ -192,4 +192,4 @@ plot_cell_cna(sce = sce, cell_id = colnames(sce)[1:5], assay_name = "counts_gc_m
   coord_cartesian(ylim = c(0, 10))
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-cell_cna_plot-1.png" width="100%" />

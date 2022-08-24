@@ -169,13 +169,13 @@ sce <- test_sce
 
 
 We can visualize the results as a heatmap.
-```{r, message=FALSE}
+```{r cnaheatmap_plot, message=FALSE}
 cnaPlot <- cnaHeatmap(sce = sce, assay_name = "counts", log2 = TRUE, scale = "both", legend_name = "Log Normalized Counts", verbose = FALSE)
 cnaPlot
 ```
 
 Or plot individual cells
-```{r}
+```{r cell_cna_plot}
 plot_cell_cna(sce = sce, cell_id = colnames(sce)[1:5], assay_name = "counts_gc_modal") +
   coord_cartesian(ylim = c(0, 10))
 ```
