@@ -40,7 +40,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     tibble::rownames_to_column(var = "barcode") %>%
     tidyr::pivot_longer(cols = -dplyr::starts_with("barcode"), names_to = "bin_id", values_to = "counts") %>%
     dplyr::left_join(as.data.frame(bindat), by = "bin_id") %>%
-    filter(!is.na(counts))
+    dplyr::filter(!is.na(counts))
 
   plot_dat$chr_no <- gsub("chr", "", plot_dat$chr)
   plot_dat$chr_no <- factor(plot_dat$chr_no, levels = unique(chr_reorder(plot_dat$chr_no)))
@@ -141,12 +141,13 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
+#' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
 #'
 #' @return A heatmap
 #' @export
 #'
-cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALSE, scale = c("none", "cells", "bins", "both"), clustering_results = NULL, col_fun = NULL, legend_name = assay_name, clust_annot = TRUE, ...) {
+cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALSE, scale = c("none", "cells", "bins", "both"), clustering_results = NULL, col_fun = NULL, legend_name = assay_name, clust_annot = TRUE, verbose = TRUE, ...) {
 
   # TODO: seperate out the clustering to be containing within the sce object and allow the user to pass specified ordering or clusters
   cn_mat <- as.matrix(assay(sce, assay_name))
@@ -157,7 +158,7 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
 
 
   if (is.null(cell_order) & is.null(clustering_results)) {
-    clustering_results <- perform_umap_clustering(cn_matrix = cn_mat)
+    clustering_results <- perform_umap_clustering(cn_matrix = cn_mat, verbose = verbose)
 
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
