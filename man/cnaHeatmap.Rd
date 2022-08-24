@@ -14,6 +14,7 @@ cnaHeatmap(
   col_fun = NULL,
   legend_name = assay_name,
   clust_annot = TRUE,
+  verbose = TRUE,
   ...
 )
 }
@@ -35,6 +36,8 @@ cnaHeatmap(
 \item{legend_name}{Name of the legend}
 
 \item{clust_annot}{Annotate cluster and sample labels}
+
+\item{verbose}{Logical: Message verbosity}
 
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
 }

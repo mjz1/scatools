@@ -38,7 +38,8 @@ Imports:
     utils,
     vroom,
     withr
-URL: https://github.com/mjz1/scatools
+URL: https://github.com/mjz1/scatools,
+    https://mjz1.github.io/scatools/
 BugReports: https://github.com/mjz1/scatools/issues
 Suggests: 
     gtools,

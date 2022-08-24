@@ -12,6 +12,7 @@ A collection of useful code for handling scATAC data.
 Useful links:
 \itemize{
   \item \url{https://github.com/mjz1/scatools}
+  \item \url{https://mjz1.github.io/scatools/}
   \item Report bugs at \url{https://github.com/mjz1/scatools/issues}
 }
 
