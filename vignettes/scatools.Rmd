@@ -10,7 +10,7 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment = "#>"
 )
 ```
 
@@ -21,17 +21,20 @@ Note that all steps in this vignette work with a list of fragment files from mul
 library(scatools)
 library(ArchR)
 library(BSgenome.Hsapiens.UCSC.hg38)
+ncores = 8 # Adjust this accordingly
 
-addArchRThreads(8)
+addArchRThreads(ncores)
 addArchRGenome("hg38")
 
 fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools")
 names(fragment_file) <- "test_sample"
 
+cur_dir <- getwd()
+
 # Set up example output directories
-arrow_dir = "./example/ArrowFiles"
-bindepth_dir = "./example/binned_depth"
-scatools_dir = "./example/scatools_analysis"
+arrow_dir = file.path(cur_dir, "./example/ArrowFiles")
+bindepth_dir = file.path(cur_dir, "./example/binned_depth")
+scatools_dir = file.path(cur_dir, "./example/scatools_analysis")
 
 invisible(lapply(list(arrow_dir, bindepth_dir, scatools_dir), dir.create, showWarnings = FALSE, recursive = TRUE))
 ```
@@ -85,19 +88,25 @@ head(bins)
 
 Next we bin the atac fragments from the input ArrowFiles.
 ```{r}
+knitr::opts_chunk$set(root.dir = arrow_dir)
+
+setwd(arrow_dir)
+
 # Bin the fragments
-bin_atac_frags(ArrowFiles = getArrowFiles(proj), bins = bins, outdir = bindepth_dir, ncores = 8, overwrite = FALSE, return_mat = FALSE)
+bin_atac_frags(ArrowFiles = getArrowFiles(proj), bins = bins, outdir = bindepth_dir, ncores = ncores, overwrite = FALSE, return_mat = FALSE)
 ```
 
 
 ```{r}
-samples <- file.path(bins_out, bin_name, sample_name)
+samples <- file.path(bindepth_dir, bin_name, names(fragment_file))
+overwrite = TRUE
+verbose = TRUE
 
 for (i in seq_along(samples)) {
   samp_dir <- samples[i]
-  samp_name <- sample_name[i]
+  samp_name <- basename(samp_dir)
 
-  samp_outdir <- file.path(scatoolsdir, bin_name, samp_name)
+  samp_outdir <- file.path(scatools_dir, bin_name, samp_name)
 
   raw_out <- file.path(samp_outdir, "sce", "01_raw.sce")
   final_out <- file.path(samp_outdir, "sce", "02_hmm.sce")
@@ -135,3 +144,7 @@ for (i in seq_along(samples)) {
 
 ```
 
+We can visualize the results as a heatmap.
+```{r, message=FALSE}
+cnaHeatmap(sce = sce, assay_name = "counts", log2 = TRUE, scale = "both", legend_name = "Log Normalized Counts")
+```

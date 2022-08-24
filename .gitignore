@@ -6,3 +6,5 @@
 inst/doc
 *.bed
 data-raw/example
+docs
+example
