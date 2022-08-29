@@ -25,6 +25,9 @@
     <loc>https://mjz1.github.io/scatools/reference/add_hmmcopy.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/add_umap_clusters.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/bin_atac_frags.html</loc>
   </url>
   <url>
@@ -86,6 +89,9 @@
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/perform_gc_cor.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/perform_umap_clustering.html</loc>
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/pipe.html</loc>

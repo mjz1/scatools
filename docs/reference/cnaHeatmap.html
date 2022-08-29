@@ -54,6 +54,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cnaHeatmap</span><span class="op">(</span></span>
 <span>  <span class="va">sce</span>,</span>
 <span>  assay_name <span class="op">=</span> <span class="st">"state"</span>,</span>
+<span>  clone_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cell_order <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  log2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"cells"</span>, <span class="st">"bins"</span>, <span class="st">"both"</span><span class="op">)</span>,</span>
@@ -76,6 +77,10 @@
 <dd><p>Name of the assay to plot</p></dd>
 
 
+<dt>clone_name</dt>
+<dd><p>Name of clone_id column in sce object</p></dd>
+
+
 <dt>cell_order</dt>
 <dd><p>Optional: Order of the cells</p></dd>
 
@@ -89,7 +94,7 @@
 
 
 <dt>clustering_results</dt>
-<dd><p>Clustering results to provide to inform cell ordering and cluster labelling. From perform_umap_clustering</p></dd>
+<dd><p>Clustering results to provide to inform cell ordering and cluster labelling. From <a href="perform_umap_clustering.html">perform_umap_clustering</a></p></dd>
 
 
 <dt>col_fun</dt>

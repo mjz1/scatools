@@ -3,7 +3,7 @@ pkgdown: 2.0.6.9000
 pkgdown_sha: 956f076f661eb2de9413f64ea24a580cf444466d
 articles:
   scatools: scatools.html
-last_built: 2022-08-24T19:30Z
+last_built: 2022-08-29T17:39Z
 urls:
   reference: https://mjz1.github.io/scatools/reference
   article: https://mjz1.github.io/scatools/articles
