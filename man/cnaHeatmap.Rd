@@ -7,6 +7,7 @@
 cnaHeatmap(
   sce,
   assay_name = "state",
+  clone_name = NULL,
   cell_order = NULL,
   log2 = FALSE,
   scale = c("none", "cells", "bins", "both"),
@@ -22,6 +23,8 @@ cnaHeatmap(
 \item{sce}{A SingleCellExperiment object}
 
 \item{assay_name}{Name of the assay to plot}
+
+\item{clone_name}{Name of clone_id column in sce object}
 
 \item{cell_order}{Optional: Order of the cells}
 

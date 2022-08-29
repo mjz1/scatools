@@ -134,6 +134,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #'
 #' @param sce A SingleCellExperiment object
 #' @param assay_name Name of the assay to plot
+#' @param clone_name Name of clone_id column in sce object
 #' @param cell_order Optional: Order of the cells
 #' @param log2 Logical: Log2 transform the matrix prior to plotting
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
@@ -147,7 +148,18 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @return A heatmap
 #' @export
 #'
-cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALSE, scale = c("none", "cells", "bins", "both"), clustering_results = NULL, col_fun = NULL, legend_name = assay_name, clust_annot = TRUE, verbose = TRUE, ...) {
+cnaHeatmap <- function(sce,
+                       assay_name = "state",
+                       clone_name = NULL,
+                       cell_order = NULL,
+                       log2 = FALSE,
+                       scale = c("none", "cells", "bins", "both"),
+                       clustering_results = NULL,
+                       col_fun = NULL,
+                       legend_name = assay_name,
+                       clust_annot = TRUE,
+                       verbose = TRUE,
+                       ...) {
 
   # TODO: seperate out the clustering to be containing within the sce object and allow the user to pass specified ordering or clusters
   cn_mat <- as.matrix(assay(sce, assay_name))
@@ -156,12 +168,23 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
 
   sce <- sce[rownames(cn_mat), colnames(cn_mat)]
 
+  if (!is.null(clone_name)) {
+    if (clone_name %in% colnames(colData(sce))) {
+      # If the data is present and not overridden by provided clustering results pull the data
+      clone_sz_col <- paste0(clone_name, "_clonesize")
 
-  if (is.null(cell_order) & is.null(clustering_results)) {
+      ordered_cell_ids <- as.character(colData(sce)[order(sce[[clone_sz_col]], decreasing = TRUE), 'cell_id'])
+      cnv_clusters <- colData(sce)[order(sce[[clone_sz_col]], decreasing = TRUE), clone_name]
+    } else {
+      logger::log_warn("{clone_name} not found in sce object. Reperforming clustering...")
+    }
+  } else if (is.null(cell_order) & is.null(clustering_results)) {
+
     clustering_results <- perform_umap_clustering(cn_matrix = cn_mat, verbose = verbose)
 
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
+
   } else if (!is.null(clustering_results)) {
     ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
     cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
@@ -179,7 +202,7 @@ cnaHeatmap <- function(sce, assay_name = "state", cell_order = NULL, log2 = FALS
     left_annot <- clust_annot
   } else if (clust_annot) {
     left_annot <- ComplexHeatmap::HeatmapAnnotation(
-      Cluster = clustering_results$clustering[ordered_cell_ids, "clone_id"],
+      Cluster = cnv_clusters,
       Sample = sce[, ordered_cell_ids]$Sample,
       which = "row",
       show_legend = c(FALSE, FALSE)
