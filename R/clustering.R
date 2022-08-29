@@ -1,4 +1,86 @@
+#' Add UMAP clusters to SCE
+#'
+#' @param sce SCE object
+#' @param assay_name Name of assay to use for clustering
+#' @param name 	String specifying the name to be used to store the result in the [reducedDims] of the output.
+#' @param clone_colname Name of clone column in resulting sce object.
+#' @inheritParams perform_umap_clustering
+#'
+#' @return An SCE object with the umap results and clones
 #' @export
+#'
+#' @examples
+#' sce <- add_umap_clusters(sce = test_sce, assay_name = "counts")
+add_umap_clusters <- function(sce,
+                              assay_name,
+                              n_neighbors = 10,
+                              min_dist = 0.1,
+                              minPts = 30,
+                              scale = c("none", "cells", "bins", "both"),
+                              name = "UMAP",
+                              clone_colname = "clone_id",
+                              log2 = FALSE,
+                              seed = 3,
+                              metric = "correlation",
+                              verbose = TRUE) {
+
+  clust_results <- perform_umap_clustering(
+    cn_matrix = assay(sce, assay_name),
+    n_neighbors = n_neighbors,
+    min_dist = min_dist,
+    minPts = minPts,
+    scale = scale,
+    log2 = log2,
+    seed = seed,
+    metric = metric,
+    verbose = verbose
+  )
+
+  # Add the UMAP results to the sce object
+  reducedDim(sce, name, withDimnames = TRUE) <- clust_results$umapresults$embedding
+
+  # Add the clone_ids
+  # Non overwriting naming
+  clone_colname_orig <- clone_colname
+  n_idx <- 0
+  while (clone_colname %in% colnames(colData(sce))) {
+    if (verbose) {
+      logger::log_warn("{clone_colname} already present as column in sce object. Picking alternate name")
+    }
+    clone_colname <- paste0(clone_colname_orig, "_", n_idx)
+  }
+
+  if (verbose) {
+    logger::log_info("Saving clones in column: '{clone_colname}'")
+  }
+  sce[[clone_colname]] <- clust_results$clustering$clone_id[match(clust_results$clustering$cell_id, colnames(sce))]
+
+  return(sce)
+}
+
+
+
+#' Perform UMAP and clustering
+#'
+#' Clusters a copy number matrix using `hdbscan`.
+#'
+#' @param cn_matrix Copy number matrix with cells in columns and bins in rows
+#'
+#' @return A list with the clustering results
+#' \describe{
+#'   \item{clustering}{Data frame of cell and cluster identities}
+#'   \item{hdbscanresults}{Results from [dbscan::hdbscan]}
+#'   \item{umapresults}{Results from [uwot::umap]}
+#'   \item{tree}{Results from [ape::as.phylo] on `hdbscanresults$hc`}
+#' }
+#' @export
+#'
+#' @inheritParams cnaHeatmap
+#' @inheritParams uwot::umap
+#'
+#' @examples
+#' clust_results <- perform_umap_clustering(cn_matrix = assay(test_sce, "counts"))
+#'
 perform_umap_clustering <- function(cn_matrix,
                                     n_neighbors = 10,
                                     min_dist = 0.1,
@@ -6,7 +88,7 @@ perform_umap_clustering <- function(cn_matrix,
                                     scale = c("none", "cells", "bins", "both"),
                                     log2 = FALSE,
                                     seed = 3,
-                                    umapmetric = "correlation",
+                                    metric = "correlation",
                                     verbose = TRUE) {
 
   # TODO: Integrate with the SCE object better -- in the reduced dim slot
@@ -36,7 +118,7 @@ perform_umap_clustering <- function(cn_matrix,
     fast_sgd <- FALSE
   }
   umapresults <- uwot::umap(cn_matrix,
-    metric = umapmetric,
+    metric = metric,
     n_neighbors = n_neighbors,
     n_components = 2,
     min_dist = min_dist,
