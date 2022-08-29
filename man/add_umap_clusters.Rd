@@ -16,7 +16,8 @@ add_umap_clusters(
   log2 = FALSE,
   seed = 3,
   metric = "correlation",
-  verbose = TRUE
+  verbose = TRUE,
+  force = TRUE
 )
 }
 \arguments{
@@ -85,6 +86,8 @@ PCA applied to both, but with centering applied only to the real-valued data
 (it is typical not to apply centering to binary data before PCA is applied).}
 
 \item{verbose}{Logical: Message verbosity}
+
+\item{force}{Logical. Overwrite identical column names in sce object}
 }
 \value{
 An SCE object with the umap results and clones

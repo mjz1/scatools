@@ -4,6 +4,7 @@
 #' @param assay_name Name of assay to use for clustering
 #' @param name 	String specifying the name to be used to store the result in the [reducedDims] of the output.
 #' @param clone_colname Name of clone column in resulting sce object.
+#' @param force Logical. Overwrite identical column names in sce object
 #' @inheritParams perform_umap_clustering
 #'
 #' @return An SCE object with the umap results and clones
@@ -22,7 +23,8 @@ add_umap_clusters <- function(sce,
                               log2 = FALSE,
                               seed = 3,
                               metric = "correlation",
-                              verbose = TRUE) {
+                              verbose = TRUE,
+                              force = TRUE) {
 
   clust_results <- perform_umap_clustering(
     cn_matrix = assay(sce, assay_name),
@@ -43,7 +45,7 @@ add_umap_clusters <- function(sce,
   # Non overwriting naming
   clone_colname_orig <- clone_colname
   n_idx <- 0
-  while (clone_colname %in% colnames(colData(sce))) {
+  while (clone_colname %in% colnames(colData(sce)) & !force) {
     if (verbose) {
       logger::log_warn("{clone_colname} already present as column in sce object. Picking alternate name")
     }
@@ -53,7 +55,8 @@ add_umap_clusters <- function(sce,
   if (verbose) {
     logger::log_info("Saving clones in column: '{clone_colname}'")
   }
-  sce[[clone_colname]] <- clust_results$clustering$clone_id[match(clust_results$clustering$cell_id, colnames(sce))]
+  sce[[clone_colname]] <- clust_results$clustering$clone_id[match(colnames(sce), clust_results$clustering$cell_id)]
+  sce[[paste0(clone_colname, "_clonesize")]] <- clust_results$clustering$clone_size[match(colnames(sce), clust_results$clustering$cell_id)]
 
   return(sce)
 }
@@ -110,6 +113,7 @@ perform_umap_clustering <- function(cn_matrix,
   set.seed(seed)
 
   logger::log_info("Calculating UMAP in {nrow(cn_matrix)} cells and {ncol(cn_matrix)} bins")
+
   if (nrow(cn_matrix) > 500 & is.null(seed)) {
     pca <- min(50, ncol(cn_matrix))
     fast_sgd <- TRUE
