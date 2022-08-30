@@ -36,7 +36,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
   # TODO: subset for main chromosomes and reorder)
 
-  plot_dat <- scuttle::makePerCellDF(sce[, cell_id], features = rownames(sce), assay.type = assay_name, use.coldata = F) %>%
+  plot_dat <- scuttle::makePerCellDF(sce[, cell_id], features = rownames(sce), assay.type = assay_name, use.coldata = FALSE, use.dimred = FALSE, use.altexps = FALSE) %>%
     tibble::rownames_to_column(var = "barcode") %>%
     tidyr::pivot_longer(cols = -dplyr::starts_with("barcode"), names_to = "bin_id", values_to = "counts") %>%
     dplyr::left_join(as.data.frame(bindat), by = "bin_id") %>%
