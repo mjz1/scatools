@@ -171,7 +171,7 @@ cnaHeatmap <- function(sce,
   if (!is.null(clone_name)) {
     if (clone_name %in% colnames(colData(sce))) {
       # If the data is present and not overridden by provided clustering results pull the data
-      clone_order <- names(sort(table(sce$seurat_clusters),
+      clone_order <- names(sort(table(sce[[clone_name]]),
                                 decreasing = TRUE))
 
       cell_order <- order(match(sce[[clone_name]], clone_order))
@@ -251,7 +251,7 @@ cnaHeatmap <- function(sce,
 }
 
 #' @export
-cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
+cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
   orig_sce <- sce
 
   clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2)
@@ -263,13 +263,17 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
 
   assay(sce, new_assay) <- clust_mat
 
-  if (is.null(clustering_results)) {
-    clustering_results <- perform_umap_clustering(assay(sce, new_assay))
-  }
+  # if (!is.null(clone_name)) {
+  #
+  # }
 
-  sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), "clone_id"]
+  # if (is.null(clustering_results)) {
+  #   clustering_results <- perform_umap_clustering(assay(sce, new_assay))
+  # }
 
-  avg_exp <- summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce$clone_id, statistics = "mean")
+  # sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), "clone_id"]
+
+  avg_exp <- summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
   rowRanges(avg_exp) <- rowRanges(sce)
 
   # Order by clone size
@@ -283,7 +287,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
   }
 
   if (clust_lab) {
-    clust_lab <- row_anno_text(avg_exp$ids, rot = 90, just = "center")
+    clust_lab <- ComplexHeatmap::row_anno_text(avg_exp$ids, rot = 90, just = "center")
   } else {
     clust_lab <- NULL
   }
@@ -298,10 +302,12 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", scale = c("none", "cells
 
   metadata(orig_sce)[[new_assay]] <- avg_exp
 
+  avg_exp$cell_id <- avg_exp$ids
+
   # TODO: Figure out how to handle returning the avg exp data and plot
   # Ideally want to replace the SCE in the parent environment while also returning the plot
 
-  ht_plot <- cnaHeatmap(avg_exp, assay_name = new_assay, scale = "none", cell_order = avg_exp$ids, clust_annot = left_annot, ...)
+  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clust_annot = left_annot, clone_name = "ids", ...)
   print(ht_plot)
   return(list(plot = ht_plot, sce = orig_sce))
 }
