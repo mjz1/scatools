@@ -171,10 +171,14 @@ cnaHeatmap <- function(sce,
   if (!is.null(clone_name)) {
     if (clone_name %in% colnames(colData(sce))) {
       # If the data is present and not overridden by provided clustering results pull the data
-      clone_sz_col <- paste0(clone_name, "_clonesize")
+      clone_order <- names(sort(table(sce$seurat_clusters),
+                                decreasing = TRUE))
 
-      ordered_cell_ids <- as.character(colData(sce)[order(sce[[clone_sz_col]], decreasing = TRUE), 'cell_id'])
-      cnv_clusters <- colData(sce)[order(sce[[clone_sz_col]], decreasing = TRUE), clone_name]
+      cell_order <- order(match(sce[[clone_name]], clone_order))
+
+      ordered_cell_ids <- as.character(colData(sce)[cell_order, 'cell_id'])
+
+      cnv_clusters <- colData(sce)[cell_order, clone_name]
     } else {
       logger::log_warn("{clone_name} not found in sce object. Reperforming clustering...")
     }
