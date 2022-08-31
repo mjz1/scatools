@@ -1,3 +1,21 @@
+#' @export
+scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
+  mat <- assay(sce, assay_name)
+
+  scaled_mat <- scale_mat(mat, log2 = log2, scale = scale)
+
+  new_assay <- paste0(assay_name, "_scaled_", scale)
+
+  sce <- sce[rownames(scaled_mat), colnames(scaled_mat)]
+
+  assay(sce, new_assay) <- scaled_mat
+  logger::log_info("Scaled assay: {new_assay}")
+
+  return(sce)
+}
+
+
+#' @export
 scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
   mat <- as.matrix(mat)
 
@@ -16,7 +34,11 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
 
   logger::log_debug("Keeping {sum(keep_bins)} of {nrow(mat)} bins")
 
-  mat <- mat[keep_bins, ]
+  mat_names <- colnames(mat)
+
+  mat <- as.matrix(mat[keep_bins, ])
+
+  colnames(mat) <- mat_names
 
   # Replace remaining NAs with 0?
   mat[is.na(mat)] <- 0
@@ -36,7 +58,7 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
   if (scale == "bins") {
     mat <- t(scale(t(mat)))
   }
-  return(mat)
+  return(as.matrix(mat))
 }
 
 
@@ -182,7 +204,7 @@ bind_sublist <- function(toplist, sublist, what = c("rbind"), .add_id = FALSE, .
   res <- do.call(what, lapply(names(toplist), FUN = function(name) {
     dat <- toplist[[name]][[sublist]]
 
-    if (.add_id) {
+    if (what == "rbind" & .add_id) {
       dat <- cbind(id = name, dat)
       colnames(dat)[1] <- .id_name
     }
