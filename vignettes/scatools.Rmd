@@ -14,7 +14,10 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
 We start by loading `scatools` and `ArchR`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells. This bed file was generated using the `reformatFragmentFiles()` function from the `ArchR` package.
+
+Note this vignette is currently set up with dummy normal data and is purely intended to demonstrate package functionality. There are no CNV changes in the test data.
 
 ## Installation
 
@@ -32,8 +35,10 @@ We start by loading `scatools` and `ArchR`, as well as the filepath to an exampl
 Note that all steps in this vignette work with a list of fragment files from multiple samples as well.
 ```{r setup, eval=TRUE, message=FALSE}
 library(scatools)
+library(Seurat)
 library(ArchR, quietly = TRUE)
 library(BSgenome.Hsapiens.UCSC.hg38, quietly = TRUE)
+library(patchwork)
 ```
 
 
@@ -158,16 +163,62 @@ data('test_sce')
 sce <- test_sce
 ```
 
+Use Seurat to cluster and dimensionality reduce
+```{r}
+# Scale and subset
+sce <- scale_sub(sce, assay_name = "counts_gc_modal", scale = "cell", log2 = TRUE)
+
+# Calculate CNV score
+sce <- calc_cnv_score(sce, assay_name = "counts_gc_modal_scaled_cell")
+
+# Convert to seurat object
+srt <- as.Seurat(sce, counts = "counts", data = "counts_gc_modal_scaled_cell")
+
+# Scale (but don't actually scale as it's done already)
+srt <- ScaleData(srt, do.scale = FALSE, do.center = FALSE, verbose = FALSE)
+
+# Run PCA, and clustering workflow
+srt <- RunPCA(srt, features = rownames(srt), verbose = FALSE)
+srt <- FindNeighbors(srt, dims = 1:50, verbose = FALSE)
+srt <- FindClusters(srt, resolution = c(0.5), algorithm = 1, verbose = FALSE)
+srt <- RunUMAP(srt, dims = 1:50, n.neighbors = 10, metric = "correlation", verbose = FALSE)
+
+# Put the PCA, UMAP, and clustering results into the original SCE
+reducedDim(sce, "PCA") <- srt@reductions$pca@cell.embeddings
+reducedDim(sce, "UMAP") <- srt@reductions$umap@cell.embeddings
+sce$seurat_clusters <- srt[[]]$seurat_clusters
+```
+
+Plot the results
+```{r}
+# Color palette
+col_pal <- scales::hue_pal()(length(levels(srt[[]]$seurat_clusters)))
+names(col_pal) <- levels(srt[[]]$seurat_clusters)
+
+p1 <- DimPlot(srt, group.by = "seurat_clusters", reduction = "umap", label = TRUE) + scale_color_manual(values = col_pal) + NoLegend()
+p2 <- FeaturePlot(srt, features = "cnv_score", label = TRUE) + scale_color_viridis_c()
+# p2 <- DimPlot(srt, group.by = "tumor_type", reduction = "umap", label = FALSE) + scale_color_colorblind()
+
+pcomb <- p1 + p2 + plot_layout(ncol = 2) & theme(aspect.ratio = 1)
+pcomb
+```
+
+
 
 We can visualize the results as a heatmap.
 ```{r cnaheatmap_plot, message=FALSE}
-cnaPlot <- cnaHeatmap(sce = sce, assay_name = "counts", log2 = TRUE, scale = "both", legend_name = "Log Normalized Counts", verbose = FALSE)
-cnaPlot
+ht <- cnaHeatmap(sce, assay_name = "counts_gc_modal_scaled_cell", clone_name = "seurat_clusters", legend_name = "cell scaled", col_clones = col_pal, border = TRUE)
+ht
+```
+
+A clone summarized heatmap
+```{r cnaheatmap_plot2, message=FALSE}
+ht2 <- cloneCnaHeatmap(sce, assay_name = "counts_gc_modal_scaled_cell", clone_name = "seurat_clusters", legend_name = "clone avg", col_clones = col_pal)$plot
+ht2
 ```
 
 
 Or plot individual cells
 ```{r cell_cna_plot}
-plot_cell_cna(sce = sce, cell_id = colnames(sce)[1:5], assay_name = "counts_gc_modal") +
-  coord_cartesian(ylim = c(0, 10))
+plot_cell_cna(sce = sce, cell_id = colnames(sce)[1:5], assay_name = "counts_gc_modal_scaled_cell")
 ```
