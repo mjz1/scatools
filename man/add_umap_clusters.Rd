@@ -95,6 +95,3 @@ An SCE object with the umap results and clones
 \description{
 Add UMAP clusters to SCE
 }
-\examples{
-sce <- add_umap_clusters(sce = test_sce, assay_name = "counts")
-}

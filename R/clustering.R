@@ -10,8 +10,6 @@
 #' @return An SCE object with the umap results and clones
 #' @export
 #'
-#' @examples
-#' sce <- add_umap_clusters(sce = test_sce, assay_name = "counts")
 add_umap_clusters <- function(sce,
                               assay_name,
                               n_neighbors = 10,
