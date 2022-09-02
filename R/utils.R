@@ -1,3 +1,22 @@
+#' Calculate CNV Score
+#'
+#' @param sce SingleCellExperiment object
+#' @param assay_name Name of assay
+#'
+#' @return SCE object with `cnv_score` appended
+#' @export
+#'
+calc_cnv_score <- function(sce, assay_name = "counts") {
+
+  dat <- assay(sce, assay_name)
+
+  cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
+    cnv_score <- mean(abs(dat[,i]))
+  }))
+  sce$cnv_score <- cnv_scores
+  return(sce)
+}
+
 #' @export
 scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
   mat <- assay(sce, assay_name)
