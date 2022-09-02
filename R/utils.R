@@ -18,7 +18,7 @@ calc_cnv_score <- function(sce, assay_name = "counts") {
 }
 
 #' @export
-scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
+scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both"), verbose = FALSE) {
   mat <- assay(sce, assay_name)
 
   scaled_mat <- scale_mat(mat, log2 = log2, scale = scale)
@@ -28,7 +28,7 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none"
   sce <- sce[rownames(scaled_mat), colnames(scaled_mat)]
 
   assay(sce, new_assay) <- scaled_mat
-  logger::log_info("Scaled assay: {new_assay}")
+  if (verbose) {logger::log_info("Scaled assay: {new_assay}")}
 
   return(sce)
 }
