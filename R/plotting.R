@@ -166,7 +166,7 @@ cnaHeatmap <- function(sce,
                        verbose = TRUE,
                        ...) {
 
-  # TODO: seperate out the clustering to be containing within the sce object and allow the user to pass specified ordering or clusters
+  # TODO: cluster clones based on averaged signal
   cn_mat <- as.matrix(assay(sce, assay_name))
 
   cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale)
@@ -284,7 +284,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 
   # sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), "clone_id"]
 
-  avg_exp <- summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
+  avg_exp <- scuttle::summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
   rowRanges(avg_exp) <- rowRanges(sce)
 
   # Order by clone size
