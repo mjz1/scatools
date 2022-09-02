@@ -60,6 +60,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
       geom_point(aes(x = start, y = counts, color = counts), size = 0.5) +
       facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
       labs(x = NULL, y = assay_name, color = assay_name) +
+      theme_bw() +
       theme(
         panel.spacing = unit(0, "lines"),
         panel.border = element_rect(fill = NA),
@@ -75,6 +76,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
       geom_point(aes(x = start, y = counts, color = counts), size = 0.5) +
       facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
       labs(x = NULL, y = assay_name, color = assay_name) +
+      theme_bw() +
       theme(
         panel.spacing = unit(0, "lines"),
         panel.border = element_rect(fill = NA),
@@ -94,6 +96,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
       geom_point(aes(x = start, y = counts), size = 0.5) +
       facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
       labs(x = NULL, y = assay_name, color = assay_name) +
+      theme_bw() +
       theme(
         panel.spacing = unit(0, "lines"),
         panel.border = element_rect(fill = NA),
@@ -140,6 +143,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
 #' @param clustering_results Clustering results to provide to inform cell ordering and cluster labelling. From [perform_umap_clustering]
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
+#' @param col_clones Optional: A named vector of clone colors.
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
 #' @param verbose Logical: Message verbosity
@@ -156,6 +160,7 @@ cnaHeatmap <- function(sce,
                        scale = c("none", "cells", "bins", "both"),
                        clustering_results = NULL,
                        col_fun = NULL,
+                       col_clones = NULL,
                        legend_name = assay_name,
                        clust_annot = TRUE,
                        verbose = TRUE,
@@ -205,11 +210,17 @@ cnaHeatmap <- function(sce,
   if (class(clust_annot) == "HeatmapAnnotation") {
     left_annot <- clust_annot
   } else if (clust_annot) {
+    if (is.null(col_clones)) {
+      col_clones <- scales::hue_pal()(length(unique(cnv_clusters)))
+      names(col_clones) <- levels(cnv_clusters)
+    }
+
     left_annot <- ComplexHeatmap::HeatmapAnnotation(
-      Cluster = cnv_clusters,
-      Sample = sce[, ordered_cell_ids]$Sample,
+      Clone = cnv_clusters,
+      # Sample = sce[, ordered_cell_ids]$Sample,
+      col = list(Clone = col_clones),
       which = "row",
-      show_legend = c(FALSE, FALSE)
+      show_legend = c(TRUE, FALSE)
     )
   } else {
     left_annot <- NULL
@@ -286,18 +297,18 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
     assay(avg_exp, new_assay) <- assay(avg_exp, "mean")
   }
 
-  if (clust_lab) {
-    clust_lab <- ComplexHeatmap::row_anno_text(avg_exp$ids, rot = 90, just = "center")
-  } else {
-    clust_lab <- NULL
-  }
+  # if (clust_lab) {
+  #   clust_lab <- ComplexHeatmap::row_anno_text(avg_exp$ids, rot = 90, just = "center")
+  # } else {
+  #   clust_lab <- NULL
+  # }
 
-  left_annot <- ComplexHeatmap::HeatmapAnnotation(
-    ClusterLab = clust_lab,
-    Clone = avg_exp$ids,
-    which = "row",
-    show_legend = c(FALSE, FALSE)
-  )
+  # left_annot <- ComplexHeatmap::HeatmapAnnotation(
+  #   # ClusterLab = clust_lab,
+  #   Clone = avg_exp$ids,
+  #   which = "row",
+  #   show_legend = c(FALSE, FALSE)
+  # )
 
 
   metadata(orig_sce)[[new_assay]] <- avg_exp
@@ -307,7 +318,9 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # TODO: Figure out how to handle returning the avg exp data and plot
   # Ideally want to replace the SCE in the parent environment while also returning the plot
 
-  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clust_annot = left_annot, clone_name = "ids", ...)
-  print(ht_plot)
+  row_split <- factor(sort(avg_exp$ids))
+
+  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", row_split = row_split, border = TRUE, ...)
+  # print(ht_plot)
   return(list(plot = ht_plot, sce = orig_sce))
 }

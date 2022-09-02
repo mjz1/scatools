@@ -13,6 +13,7 @@ cnaHeatmap(
   scale = c("none", "cells", "bins", "both"),
   clustering_results = NULL,
   col_fun = NULL,
+  col_clones = NULL,
   legend_name = assay_name,
   clust_annot = TRUE,
   verbose = TRUE,
@@ -35,6 +36,8 @@ cnaHeatmap(
 \item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
 
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
+
+\item{col_clones}{Optional: A named vector of clone colors.}
 
 \item{legend_name}{Name of the legend}
 
