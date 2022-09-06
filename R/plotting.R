@@ -49,6 +49,18 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   # Keep cell ordering as provided
   plot_dat$barcode <- factor(plot_dat$barcode, levels = cell_id)
 
+  # Base plot
+  base_p <- ggplot(plot_dat) +
+    geom_segment(aes(x = start, xend = end, y = counts, yend = counts), size = 1) +
+    facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
+    labs(x = NULL, y = assay_name, color = assay_name) +
+    theme_bw() +
+    theme(
+      panel.spacing = unit(0, "lines"),
+      panel.border = element_rect(fill = NA),
+      axis.text.x = element_blank()
+    )
+
   # check for assay type and add colors
   if (grepl("state", assay_name)) {
     cn_colors <- state_cn_colors()
@@ -57,32 +69,14 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     plot_dat$counts <- as.factor(plot_dat$counts)
     plot_dat$counts <- dplyr::recode_factor(plot_dat$counts, "11" = "11+")
 
-    p <- ggplot(plot_dat) +
-      geom_point(aes(x = start, y = counts, color = counts), size = 0.5) +
-      facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
-      labs(x = NULL, y = assay_name, color = assay_name) +
-      theme_bw() +
-      theme(
-        panel.spacing = unit(0, "lines"),
-        panel.border = element_rect(fill = NA),
-        axis.text.x = element_blank()
-      ) +
+    p <- base_p +
       scale_color_manual(values = cn_colors) +
       guides(colour = guide_legend(override.aes = list(size = 3)))
   } else if (!is.null(col_fun)) {
     cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
 
-    p <- ggplot(plot_dat) +
-      geom_point(aes(x = start, y = counts, color = counts), size = 0.5) +
-      facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
-      labs(x = NULL, y = assay_name, color = assay_name) +
-      theme_bw() +
-      theme(
-        panel.spacing = unit(0, "lines"),
-        panel.border = element_rect(fill = NA),
-        axis.text.x = element_blank()
-      ) +
+    p <- base_p  +
       scale_color_gradient2(
         low = attr(cn_colors, "colors")[1],
         mid = attr(cn_colors, "colors")[2],
@@ -93,16 +87,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     # Attempt some intelligent color mapping
     cn_colors <- NULL
 
-    p <- ggplot(plot_dat) +
-      geom_point(aes(x = start, y = counts), size = 0.5) +
-      facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
-      labs(x = NULL, y = assay_name, color = assay_name) +
-      theme_bw() +
-      theme(
-        panel.spacing = unit(0, "lines"),
-        panel.border = element_rect(fill = NA),
-        axis.text.x = element_blank()
-      )
+    p <- base_p
   }
 
   return(p)
