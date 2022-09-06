@@ -30,7 +30,8 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     bindat$chr <- bindat$seqnames
   }
   if (is.null(rownames(sce))) {
-    logger::log_error("rownames(sce) cannot be NULL.")
+    rownames(sce) <- with(bindat, paste(chr, start, end, sep = "_"))
+    # logger::log_error("rownames(sce) cannot be NULL.")
   }
   bindat$bin_id <- rownames(sce)
 
