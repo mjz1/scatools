@@ -156,6 +156,7 @@ cnaHeatmap <- function(sce,
                        assay_name = "state",
                        clone_name = NULL,
                        cell_order = NULL,
+                       cluster_rows = NULL,
                        log2 = FALSE,
                        scale = c("none", "cells", "bins", "both"),
                        clustering_results = NULL,
@@ -175,15 +176,34 @@ cnaHeatmap <- function(sce,
 
   if (!is.null(clone_name)) {
     if (clone_name %in% colnames(colData(sce))) {
-      # If the data is present and not overridden by provided clustering results pull the data
-      clone_order <- names(sort(table(sce[[clone_name]]),
-                                decreasing = TRUE))
+      # If clone data is present use it
+
+      # TODO: Separate the below into a separate function
+      # First get the average per clone signal to order the clones properly
+      avg_exp <- scuttle::summarizeAssayByGroup(sce,
+                                                assay.type = assay_name,
+                                                ids = sce[[clone_name]],
+                                                statistics = "mean")
+      rowRanges(avg_exp) <- rowRanges(sce)
+
+      # Compute the distance based on correlation
+      d <- as.dist(1-cor(assay(avg_exp, 'mean')))
+      hc <- hclust(d, method = "complete")
+
+      # Pull out the order from the hc object
+      clone_order <- hc$labels[hc$order]
+
+      # clone_order <- names(sort(table(sce[[clone_name]]),
+      #                           decreasing = TRUE))
 
       cell_order <- order(match(sce[[clone_name]], clone_order))
 
       ordered_cell_ids <- as.character(colData(sce)[cell_order, 'cell_id'])
 
       cnv_clusters <- colData(sce)[cell_order, clone_name]
+
+      row_split <- factor(cnv_clusters, levels = as.character(hc$labels[hc$order]))
+      row_title <- hc$labels[hc$order]
     } else {
       logger::log_warn("{clone_name} not found in sce object. Reperforming clustering...")
     }
@@ -242,19 +262,28 @@ cnaHeatmap <- function(sce,
   chrs <- as.vector(gsub("chr", "", GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce))))
   col_split <- factor(chrs, levels = unique(gtools::mixedsort(chrs)))
 
+  if (is.null(cluster_rows)) {
+    cluster_rows <- FALSE
+  } else if (class(cluster_rows) == "dendrogram") {
+    row_split = length(levels(cnv_clusters))
+    row_title = hc$labels[hc$order]
+  }
+
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
     name = legend_name,
     matrix = t(cn_mat),
     show_row_names = FALSE,
-    cluster_rows = FALSE,
     col = cn_colors,
     cluster_columns = FALSE,
+    cluster_rows = cluster_rows,
     show_column_names = FALSE,
     na_col = "white",
     use_raster = TRUE,
     raster_quality = 10,
     column_split = col_split,
     left_annotation = left_annot,
+    row_split = row_split,
+    row_title = row_title,
     ...
   ))
 
@@ -318,9 +347,41 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # TODO: Figure out how to handle returning the avg exp data and plot
   # Ideally want to replace the SCE in the parent environment while also returning the plot
 
-  row_split <- factor(sort(avg_exp$ids))
+  # row_split <- factor(sort(avg_exp$ids))
 
-  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", row_split = row_split, border = TRUE, ...)
+  # Get dendrogram
+  # Compute the distance based on correlation
+  d <- as.dist(1-cor(assay(avg_exp, 'mean')))
+  hc <- hclust(d, method = "complete")
+
+  tree <- as.dendrogram(hc)
+
+  # Pull out the order from the hc object
+  # clone_order <- hc$labels[hc$order]
+
+  # clone_order <- names(sort(table(sce[[clone_name]]),
+  #                           decreasing = TRUE))
+
+  # cell_order <- order(match(sce[[clone_name]], clone_order))
+  #
+  # ordered_cell_ids <- as.character(colData(sce)[cell_order, 'cell_id'])
+  #
+  # cnv_clusters <- colData(sce)[cell_order, clone_name]
+
+  # row_split <- factor(cnv_clusters, levels = hc$labels[hc$order])
+
+  # left_annot <- ComplexHeatmap::HeatmapAnnotation(
+  #   Clone = hc$labels[hc$order],
+  #   # Sample = sce[, ordered_cell_ids]$Sample,
+  #   col = list(Clone = col_clones),
+  #   # pch = hc$labels[hc$order],
+  #   which = "row",
+  #   show_legend = c(TRUE, FALSE)
+  # )
+
+  # ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", border = TRUE, cluster_rows = tree, ...)
+  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", border = TRUE, ...)
+
   # print(ht_plot)
   return(list(plot = ht_plot, sce = orig_sce))
 }
