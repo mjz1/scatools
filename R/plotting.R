@@ -16,6 +16,10 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     cell_id <- colnames(sce)
   }
 
+  if (is.numeric(cell_id)) {
+    cell_id <- colnames(sce[,cell_id])
+  }
+
   # TODO: Try to intelligently find the start positions from the provided sce
   bindat <- as.data.frame(SummarizedExperiment::rowRanges(sce))
   if (nrow(bindat) == 0) {
@@ -105,6 +109,10 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 plot_cell_multi <- function(sce, cell_id, assays) {
   plots <- vector(mode = "list")
 
+  if (is.numeric(cell_id)) {
+    cell_id <- colnames(sce[,cell_id])
+  }
+
   for (cell in cell_id) {
     cell_ps <- vector(mode = "list")
     for (assay in assays) {
@@ -153,7 +161,10 @@ cnaHeatmap <- function(sce,
                        verbose = TRUE,
                        ...) {
 
-  # TODO: cluster clones based on averaged signal
+  if (is.null(rownames(sce))) {
+    rownames(sce) <- 1:nrow(sce)
+  }
+
   cn_mat <- as.matrix(assay(sce, assay_name))
 
   cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale)
@@ -287,6 +298,11 @@ cnaHeatmap <- function(sce,
 
 #' @export
 cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
+
+  if (is.null(rownames(sce))) {
+    rownames(sce) <- 1:nrow(sce)
+  }
+
   orig_sce <- sce
 
   clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2)
