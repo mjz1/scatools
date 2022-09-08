@@ -10,7 +10,8 @@ add_hmmcopy(
   ncores = 1,
   assay_name = paste0("counts_gc_", sce@metadata$gc_cor_method),
   save_raw_hmm = NULL,
-  slot_suffix = NULL
+  slot_suffix = NULL,
+  ...
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ add_hmmcopy(
 \item{save_raw_hmm}{Path to save raw hmm data in an \code{rda} file}
 
 \item{slot_suffix}{Suffix to add to newly created \code{copy} and \code{state} assay slots.}
+
+\item{...}{Additional parameters to pass to \link{run_sc_hmmcopy}, such as \code{param}}
 }
 \value{
 an sce object with hmm copy metadata added to coldata, and new slots \code{copy} and \code{state}

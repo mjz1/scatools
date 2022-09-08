@@ -7,6 +7,7 @@
 #' @param save_raw_hmm Path to save raw hmm data in an `rda` file
 #' @param slot_suffix Suffix to add to newly created `copy` and `state` assay slots.
 #' @param assay_name Name of the assay with counts to input into HMMcopy. Ideally these are GC corrected.
+#' @param ... Additional parameters to pass to [run_sc_hmmcopy], such as `param`
 #'
 #' @return an sce object with hmm copy metadata added to coldata, and new slots `copy` and `state`
 #' @export
@@ -19,7 +20,8 @@ add_hmmcopy <- function(sce,
                         ncores = 1,
                         assay_name = paste0("counts_gc_", sce@metadata$gc_cor_method),
                         save_raw_hmm = NULL,
-                        slot_suffix = NULL) {
+                        slot_suffix = NULL,
+                        ...) {
   if (verbose) {
     logger::log_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")
   }
@@ -32,8 +34,18 @@ add_hmmcopy <- function(sce,
 
   # Get the matrices we need
   count_mat <- SummarizedExperiment::assay(sce, assay_name)
-  reads_mat <- SummarizedExperiment::assay(sce, "raw_counts")
-  ideal_mat <- SummarizedExperiment::assay(sce, "ideal_bins")
+
+  if ("raw_counts" %in% names(assays(sce))) {
+    reads_mat <- SummarizedExperiment::assay(sce, "raw_counts")
+  } else {
+    reads_mat <- SummarizedExperiment::assay(sce, assay_name)
+  }
+
+  if ("ideal_bins" %in% names(assays(sce))) {
+    ideal_mat <- SummarizedExperiment::assay(sce, "ideal_bins")
+  } else {
+    ideal_mat <- matrix(nrow = nrow(reads_mat), ncol = ncol(reads_mat), data = TRUE)
+  }
 
   chr <- as.factor(seqnames(rowRanges(sce)))
   start <- BiocGenerics::start(rowRanges(sce))
@@ -48,7 +60,8 @@ add_hmmcopy <- function(sce,
       reads = reads_mat[, i],
       ideal = ideal_mat[, i],
       cell_id = colnames(count_mat)[i],
-      return = "all"
+      return = "all",
+      ...
     ))
     return(res)
   })
