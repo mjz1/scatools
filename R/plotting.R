@@ -195,7 +195,7 @@ cnaHeatmap <- function(sce,
   if (!is.null(clone_name)) {
     if (clone_name %in% colnames(colData(sce))) {
       # If clone data is present use it
-      logger::log_info("Using {clone_name} as clones...")
+      logger::log_debug("Using {clone_name} as clones...")
     } else {
       logger::log_warn("{clone_name} not found in sce object. Reperforming clustering...")
       clone_name <- "clone"

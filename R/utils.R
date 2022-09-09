@@ -34,19 +34,22 @@ pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
 
 #' Calculate CNV Score
 #'
+#' Calculates the CNV score in a given assay using the absolute mean of CNV values.
+#'
 #' @param sce SingleCellExperiment object
 #' @param assay_name Name of assay
+#' @param name Name of new column to store cnv score
 #'
 #' @return SCE object with `cnv_score` appended
 #' @export
 #'
-calc_cnv_score <- function(sce, assay_name = "counts") {
+calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score") {
   dat <- assay(sce, assay_name)
 
   cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
-    cnv_score <- mean(abs(dat[, i]))
+    cnv_score <- mean(abs(dat[, i]), na.rm = TRUE)
   }))
-  sce$cnv_score <- cnv_scores
+  sce[[name]] <- cnv_scores
   return(sce)
 }
 

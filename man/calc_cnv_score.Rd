@@ -4,16 +4,18 @@
 \alias{calc_cnv_score}
 \title{Calculate CNV Score}
 \usage{
-calc_cnv_score(sce, assay_name = "counts")
+calc_cnv_score(sce, assay_name = "counts", name = "cnv_score")
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}
 
 \item{assay_name}{Name of assay}
+
+\item{name}{Name of new column to store cnv score}
 }
 \value{
 SCE object with \code{cnv_score} appended
 }
 \description{
-Calculate CNV Score
+Calculates the CNV score in a given assay using the absolute mean of CNV values.
 }
