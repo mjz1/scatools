@@ -43,16 +43,16 @@ cluster_seurat <- function(sce,
     reducedDim(sce, dim_name) <- NULL
   }
 
-  srt <- Seurat::as.Seurat(sce, counts = raw_counts, data = assay_name)
+  srt <- suppressWarnings(Seurat::as.Seurat(sce, counts = raw_counts, data = assay_name))
 
   srt <- Seurat::ScaleData(srt, do.scale = do.scale, do.center = do.center, verbose = verbose)
 
-  srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = verbose)
+  srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = FALSE)
 
   srt <- Seurat::FindNeighbors(srt, dims = 1:50, verbose = verbose)
   srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
 
-  # srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
+  srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
 
   srt <- Seurat::RunUMAP(srt, dims = 1:50, n.neighbors = n.neighbors, metric = metric, verbose = verbose)
 
@@ -60,6 +60,9 @@ cluster_seurat <- function(sce,
   reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings
   reducedDim(sce_orig, UMAP_name) <- srt@reductions$umap@cell.embeddings
   sce_orig[[cluster_name]] <- srt[[]]$seurat_clusters
+
+  sce_orig@metadata$srt_graphs <- srt@graphs
+
   return(sce_orig)
 }
 
