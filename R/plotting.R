@@ -100,9 +100,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
 #' Plot Psuedobulk cell CNA profiles
 #'
-#' @param sce SingleCellExperiment Object
-#' @param assay_name Name of the assay
-#' @param group_var Grouping variable to pseudobulk across. Default: "all"
+#' @inheritParams pseudobulk_sce
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
 #'
 #' @return ggplot
@@ -110,17 +108,9 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 #'
 plot_psuedobulk_cna <- function(sce, assay_name, group_var = "all", col_fun = NULL) {
 
-  if (group_var == "all") {
-    sce[[group_var]] <- "all"
-  }
+  avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
-  avg_exp <- scuttle::summarizeAssayByGroup(sce,
-                                            assay.type = assay_name,
-                                            ids = as.factor(sce[[group_var]]),
-                                            statistics = "mean")
-  rowRanges(avg_exp) <- rowRanges(sce)
-
-  plot_cell_cna(avg_exp, assay_name = "mean") + labs(title = group_var, y = assay_name)
+  plot_cell_cna(avg_exp, assay_name = assay_name) + labs(title = group_var, y = assay_name)
 
 }
 

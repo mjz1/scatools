@@ -1,3 +1,36 @@
+#' Pseudobulk cell CNA profiles
+#'
+#' @param sce SingleCellExperiment Object
+#' @param assay_name Name of the assay
+#' @param group_var Grouping variable to pseudobulk across. Default: "all"
+#' @param statistics 	Character vector specifying the type of statistics to be computed, see [scuttle::summarizeAssayByGroup].
+#'
+#' @return SingleCellExperiment object
+#' @export
+#'
+pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
+  if (group_var == "all") {
+    sce[[group_var]] <- "all"
+  }
+
+  avg_exp <- scuttle::summarizeAssayByGroup(sce,
+                                            assay.type = assay_name,
+                                            ids = as.factor(sce[[group_var]]),
+                                            statistics = statistics)
+  rowRanges(avg_exp) <- rowRanges(sce)
+
+  # Propagate the correct names
+  avg_exp[[group_var]] <- avg_exp[["ids"]]
+  assay(avg_exp, assay_name) <- assay(avg_exp, statistics)
+
+  # Remove generic names
+  assay(avg_exp, "mean") <- NULL
+  avg_exp[["ids"]] <- NULL
+
+  return(avg_exp)
+}
+
+
 #' Calculate CNV Score
 #'
 #' @param sce SingleCellExperiment object
