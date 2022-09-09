@@ -51,12 +51,14 @@ calc_cnv_score <- function(sce, assay_name = "counts") {
 }
 
 #' @export
-scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both"), verbose = FALSE) {
+scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both"), verbose = FALSE, new_assay = NULL, center = FALSE) {
   mat <- assay(sce, assay_name)
 
-  scaled_mat <- scale_mat(mat, log2 = log2, scale = scale)
+  scaled_mat <- scale_mat(mat, log2 = log2, scale = scale, center = center)
 
-  new_assay <- paste0(assay_name, "_scaled_", scale)
+  if (is.null(new_assay)) {
+    new_assay <- paste0(assay_name, "_scaled_", scale)
+  }
 
   sce <- sce[rownames(scaled_mat), colnames(scaled_mat)]
 
@@ -68,7 +70,7 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none"
 
 
 #' @export
-scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both")) {
+scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both"), center = FALSE) {
   mat <- as.matrix(mat)
 
   scale <- match.arg(scale)
@@ -100,15 +102,15 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
   }
 
   if (scale == "both") {
-    mat <- scale(t(scale(t(mat))))
+    mat <- scale(t(scale(t(mat), center = center)), center = center)
   }
 
   if (scale == "cells") {
-    mat <- scale(mat)
+    mat <- scale(mat, center = center)
   }
 
   if (scale == "bins") {
-    mat <- t(scale(t(mat)))
+    mat <- t(scale(t(mat), center = center))
   }
   return(as.matrix(mat))
 }
