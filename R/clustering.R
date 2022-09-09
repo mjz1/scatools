@@ -1,3 +1,68 @@
+
+#' Cluster using Seurat
+#'
+#' @param sce SingleCellExperiment object
+#' @param assay_name Assay name
+#' @param raw_counts Assay containing raw counts
+#' @param do.scale scale
+#' @param do.center center
+#' @param algorithm clustering algorithm
+#' @param resolution clustering resolution
+#' @param n.neighbors neighbors for umap
+#' @param metric metric for umap
+#' @param PCA_name Name to store PCA dimred
+#' @param UMAP_name Name to store UMAP dimred
+#' @param cluster_name Name to store seurat clusters
+#'
+#' @return SingleCellExperiment obj
+#' @export
+#'
+# TODO: Improve documentation of this function.
+# TODO: Return neighbors object if possible to allow future umap projection
+# TODO:
+cluster_seurat <- function(sce,
+                           assay_name,
+                           raw_counts = "counts",
+                           do.scale = FALSE,
+                           do.center = FALSE,
+                           algorithm = 1,
+                           resolution = 0.8,
+                           n.neighbors = 10,
+                           PCA_name = "PCA_seurat",
+                           UMAP_name = "UMAP_seurat",
+                           cluster_name = "seurat_clusters",
+                           metric = "correlation",
+                           verbose = FALSE) {
+  if (!requireNamespace("Seurat")) {
+    logger::log_error("Seurat not installed. Please install Seurat to use this function.")
+  }
+
+  sce_orig <- sce
+  # For safety, clear any reduced dims present before we process
+  for (dim_name in reducedDimNames(sce)) {
+    reducedDim(sce, dim_name) <- NULL
+  }
+
+  srt <- Seurat::as.Seurat(sce, counts = raw_counts, data = assay_name)
+
+  srt <- Seurat::ScaleData(srt, do.scale = do.scale, do.center = do.center, verbose = verbose)
+
+  srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = verbose)
+
+  srt <- Seurat::FindNeighbors(srt, dims = 1:50, verbose = verbose)
+  srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
+
+  # srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
+
+  srt <- Seurat::RunUMAP(srt, dims = 1:50, n.neighbors = n.neighbors, metric = metric, verbose = verbose)
+
+  # Put the PCA, UMAP, and clustering results into the original SCE
+  reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings
+  reducedDim(sce_orig, UMAP_name) <- srt@reductions$umap@cell.embeddings
+  sce_orig[[cluster_name]] <- srt[[]]$seurat_clusters
+  return(sce_orig)
+}
+
 #' Add UMAP clusters to SCE
 #'
 #' @param sce SCE object
