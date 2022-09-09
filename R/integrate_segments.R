@@ -86,8 +86,8 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
 
   # Drop bins that have any NA values
   if (drop_na) {
-    na_idx <- unique(which(is.na(mcols(x)[orig_colnames]), arr.ind = TRUE)[, 1])
-    x <- x[-na_idx, ]
+    keep_idx <- unique(which(!is.na(mcols(x)[orig_colnames]), arr.ind = TRUE)[, 1])
+    x <- x[keep_idx, ]
   }
 
   return(x)
