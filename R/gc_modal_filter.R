@@ -11,7 +11,7 @@
 #' @export
 #'
 gc_modal_qc_filter <- function(sce, assay = "counts_gc_modal", filter_prop = 0.05, verbose = TRUE) {
-  prop_na <- colSums(apply(assay(sce, assay), 2, is.na)) / nrow(samp_sce)
+  prop_na <- colSums(apply(assay(sce, assay), 2, is.na)) / nrow(sce)
 
   sce[["prop_na"]] <- prop_na
 
