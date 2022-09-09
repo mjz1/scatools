@@ -61,6 +61,8 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
 
   gr.comb.disjoin$binwidth <- width(gr.comb.disjoin)
   # EXPERIMENTAL: See if we can reaggregate the signal over set tile width of the input
+
+  # reaggregate the signal over set tile width of the input
   hits <- findOverlaps(x, gr.comb.disjoin)
 
   # Aggregate the mean score over the original bins
@@ -69,7 +71,7 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
 
   res <- lapply(unique(queryHits(hits)), FUN = function(idx) {
     # Get the index in the matrix
-    mat_idx <- which(queryHits(hits) == idx)
+    mat_idx <- subjectHits(hits)[which(queryHits(hits) == idx)]
 
     slice_binwidths <- gr.comb.disjoin$binwidth[mat_idx]
 
@@ -81,9 +83,7 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
 
   colnames(scores_df) <- orig_colnames
 
-
-
-  mcols(x)[orig_colnames] <- scores_df[orig_colnames]
+  mcols(x)[[orig_colnames]] <- scores_df[[orig_colnames]]
 
   # Drop bins that have any NA values
   if (drop_na) {
