@@ -82,7 +82,7 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
 
   colnames(scores_df) <- orig_colnames
 
-  mcols(x)[[orig_colnames]] <- scores_df[[orig_colnames]]
+  mcols(x)[orig_colnames] <- scores_df[orig_colnames]
 
   # Drop bins that have any NA values
   if (drop_na) {
