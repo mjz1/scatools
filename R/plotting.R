@@ -58,7 +58,6 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
   # Base plot
   base_p <- ggplot(plot_dat) +
-    geom_segment(aes(x = start, xend = end, y = counts, yend = counts), size = 1) +
     facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
     labs(x = NULL, y = assay_name, color = assay_name) +
     theme_bw() +
@@ -77,24 +76,29 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     plot_dat$counts <- dplyr::recode_factor(plot_dat$counts, "11" = "11+")
 
     p <- base_p +
+      geom_segment(aes(x = start, xend = end, y = counts, yend = counts, color = counts), size = 1) +
       scale_color_manual(values = cn_colors) +
       guides(colour = guide_legend(override.aes = list(size = 3)))
   } else if (!is.null(col_fun)) {
     cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
-
     p <- base_p +
+      geom_segment(aes(x = start, xend = end, y = counts, yend = counts, color = counts), size = 1) +
       scale_color_gradient2(
         low = attr(cn_colors, "colors")[1],
         mid = attr(cn_colors, "colors")[2],
         high = attr(cn_colors, "colors")[3],
+        midpoint = attr(cn_colors, "breaks")[2],
         limits = c(attr(cn_colors, "breaks")[1], attr(cn_colors, "breaks")[3])
       )
   } else {
-    # Attempt some intelligent color mapping
+    # Attempt some intelligent color mapping? For now, no.
     cn_colors <- NULL
 
-    p <- base_p
+    # base_p$mapping$colour <- NULL # remove color mapping
+
+    p <- base_p + geom_segment(aes(x = start, xend = end, y = counts, yend = counts), size = 1)
+
   }
 
   return(p)
@@ -112,7 +116,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 plot_psuedobulk_cna <- function(sce, assay_name, group_var = "all", col_fun = NULL) {
   avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
-  plot_cell_cna(avg_exp, assay_name = assay_name) + labs(title = group_var, y = assay_name)
+  plot_cell_cna(sce = avg_exp, assay_name = assay_name, col_fun = col_fun) + labs(title = group_var, y = assay_name)
 }
 
 #' Plot multiple cell assays together
@@ -155,7 +159,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
 #' @param clustering_results Clustering results to provide to inform cell ordering and cluster labelling. From [perform_umap_clustering]
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
-#' @param col_clones Optional: A named vector of clone colors.
+#' @param col_clones Optional: A named vector (or unnamed) of clone colors.
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
 #' @param verbose Logical: Message verbosity
@@ -255,6 +259,13 @@ cnaHeatmap <- function(sce,
   } else if (clust_annot) {
     if (is.null(col_clones)) {
       col_clones <- scales::hue_pal()(length(unique(cnv_clusters)))
+      names(col_clones) <- levels(factor(cnv_clusters))
+    }
+
+    # Code to allow passing of any length vector of unnamed colors to make it
+    # easier across plots/cluster lengths
+    if (is.null(names(col_clones))) {
+      col_clones <- col_clones[1:length(unique(cnv_clusters))]
       names(col_clones) <- levels(factor(cnv_clusters))
     }
 

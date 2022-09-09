@@ -9,6 +9,7 @@ cnaHeatmap(
   assay_name = "state",
   clone_name = NULL,
   cell_order = NULL,
+  cluster_rows = NULL,
   log2 = FALSE,
   scale = c("none", "cells", "bins", "both"),
   clustering_results = NULL,
@@ -37,7 +38,7 @@ cnaHeatmap(
 
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
 
-\item{col_clones}{Optional: A named vector of clone colors.}
+\item{col_clones}{Optional: A named vector (or unnamed) of clone colors.}
 
 \item{legend_name}{Name of the legend}
 
