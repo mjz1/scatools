@@ -16,18 +16,24 @@
 #'
 correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_counts", cn_granges, granges_signal_colname, drop_missing_bins = FALSE) {
 
+  # Get bin_ids to keep track in case of dropped bins
+  bin_ids <- get_bin_ids(rowRanges(sce))
+
   # Integrate the true CN data to our data
-  rowRanges(sce) <- integrate_segments(x = rowRanges(sce), y = cn_granges, granges_signal_colname = granges_signal_colname, drop_na = drop_missing_bins)
+  integ_ranges <- integrate_segments(x = rowRanges(sce), y = cn_granges, granges_signal_colname = granges_signal_colname, drop_na = drop_missing_bins)
+
+  new_bin_ids <- get_bin_ids(integ_ranges)
+
+  # Safely subset based on new bin ids
+  sce <- sce[new_bin_ids,]
+
+  rowRanges(sce) <- integ_ranges
 
   assay(sce, "bias") <- assay(sce, assay_name) / mcols(rowRanges(sce))[[granges_signal_colname]]
 
   mcols(rowRanges(sce))["mean_bias"] <- apply(assay(sce, "bias"), 1, mean)
 
-  assay(sce, corrected_name) <- assay(sce, assay_name) / mean_bias
-
-  if (drop_missing_bins) {
-    sce <- sce[!is.na(mcols(rowRanges(sce))[[granges_signal_colname]]), ]
-  }
+  assay(sce, corrected_name) <- assay(sce, assay_name) / mcols(rowRanges(sce))[["mean_bias"]]
 
   return(sce)
 }
