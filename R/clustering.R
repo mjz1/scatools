@@ -10,16 +10,15 @@
 #' @param resolution clustering resolution
 #' @param n.neighbors neighbors for umap
 #' @param metric metric for umap
+#' @param suffix Suffix name to add to the PCA, UMAP, and clusters
 #' @param PCA_name Name to store PCA dimred
 #' @param UMAP_name Name to store UMAP dimred
 #' @param cluster_name Name to store seurat clusters
+#' @param verbose Message verbosity
 #'
 #' @return SingleCellExperiment obj
 #' @export
 #'
-# TODO: Improve documentation of this function.
-# TODO: Return neighbors object if possible to allow future umap projection
-# TODO:
 cluster_seurat <- function(sce,
                            assay_name,
                            raw_counts = "counts",
@@ -28,11 +27,17 @@ cluster_seurat <- function(sce,
                            algorithm = 1,
                            resolution = 0.8,
                            n.neighbors = 10,
-                           PCA_name = "PCA_seurat",
-                           UMAP_name = "UMAP_seurat",
-                           cluster_name = "seurat_clusters",
+                           suffix = "seurat",
+                           PCA_name = paste("PCA", suffix, sep = "_"),
+                           UMAP_name = paste("UMAP", suffix, sep = "_"),
+                           cluster_name = paste("clusters", suffix, sep = "_"),
                            metric = "correlation",
                            verbose = FALSE) {
+
+  # TODO: Improve documentation of this function.
+  # TODO: Return neighbors object if possible to allow future umap projection
+  # TODO:
+
   if (!requireNamespace("Seurat")) {
     logger::log_error("Seurat not installed. Please install Seurat to use this function.")
   }
@@ -61,7 +66,8 @@ cluster_seurat <- function(sce,
   reducedDim(sce_orig, UMAP_name) <- srt@reductions$umap@cell.embeddings
   sce_orig[[cluster_name]] <- srt[[]]$seurat_clusters
 
-  sce_orig@metadata$srt_graphs <- srt@graphs
+  # Keep the graphs stored in the metadata
+  sce_orig@metadata[[paste("graphs", suffix, sep = "_")]] <- srt@graphs
 
   return(sce_orig)
 }

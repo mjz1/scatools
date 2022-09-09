@@ -13,9 +13,10 @@ cluster_seurat(
   algorithm = 1,
   resolution = 0.8,
   n.neighbors = 10,
-  PCA_name = "PCA_seurat",
-  UMAP_name = "UMAP_seurat",
-  cluster_name = "seurat_clusters",
+  suffix = "seurat",
+  PCA_name = paste("PCA", suffix, sep = "_"),
+  UMAP_name = paste("UMAP", suffix, sep = "_"),
+  cluster_name = paste("clusters", suffix, sep = "_"),
   metric = "correlation",
   verbose = FALSE
 )
@@ -37,6 +38,8 @@ cluster_seurat(
 
 \item{n.neighbors}{neighbors for umap}
 
+\item{suffix}{Suffix name to add to the PCA, UMAP, and clusters}
+
 \item{PCA_name}{Name to store PCA dimred}
 
 \item{UMAP_name}{Name to store UMAP dimred}
@@ -44,6 +47,8 @@ cluster_seurat(
 \item{cluster_name}{Name to store seurat clusters}
 
 \item{metric}{metric for umap}
+
+\item{verbose}{Message verbosity}
 }
 \value{
 SingleCellExperiment obj
