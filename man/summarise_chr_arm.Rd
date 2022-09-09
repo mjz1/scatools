@@ -2,14 +2,24 @@
 % Please edit documentation in R/summarise_chr_arm.R
 \name{summarise_chr_arm}
 \alias{summarise_chr_arm}
-\title{Summarise copu number signal over chromosome arms}
+\title{Summarise copy number signal over chromosome arms}
 \usage{
-summarise_chr_arm(sce, assay_name, genome_ver = "hg38")
+summarise_chr_arm(
+  sce,
+  assay_name,
+  cn_granges = NULL,
+  granges_signal_colname = NULL,
+  genome_ver = "hg38"
+)
 }
 \arguments{
 \item{sce}{SingleCellExperiment objet}
 
 \item{assay_name}{Name of assay}
+
+\item{cn_granges}{Optional: Copy number granges to integrate into the arm level bins}
+
+\item{granges_signal_colname}{Optional: Name of the column containing the CNA information in \code{cn_granges}}
 
 \item{genome_ver}{Genome version ("hg38" or "hg19")}
 }
@@ -17,5 +27,5 @@ summarise_chr_arm(sce, assay_name, genome_ver = "hg38")
 A chromosome arm level binned SingleCellExperiment
 }
 \description{
-Summarise copu number signal over chromosome arms
+Summarise copy number signal over chromosome arms
 }
