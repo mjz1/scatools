@@ -27,9 +27,6 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_count
   # Safely subset based on new bin ids
   sce <- sce[new_bin_ids, ]
 
-  # Keep rownames
-  rownames(sce) <- new_bin_ids
-
   rowRanges(sce) <- integ_ranges
 
   assay(sce, "bias") <- assay(sce, assay_name) / mcols(rowRanges(sce))[[granges_signal_colname]]
@@ -37,6 +34,9 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_count
   mcols(rowRanges(sce))["mean_bias"] <- apply(assay(sce, "bias"), 1, mean)
 
   assay(sce, corrected_name) <- assay(sce, assay_name) / mcols(rowRanges(sce))[["mean_bias"]]
+
+  # Keep rownames
+  rownames(sce) <- new_bin_ids
 
   return(sce)
 }
