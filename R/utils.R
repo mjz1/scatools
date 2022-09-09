@@ -101,7 +101,7 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
   colnames(mat) <- mat_names
 
   # Replace remaining NAs with 0?
-  mat[is.na(mat)] <- 0
+  # mat[is.na(mat)] <- 0
 
   if (log2) {
     mat <- log2(mat + 1e-5)
