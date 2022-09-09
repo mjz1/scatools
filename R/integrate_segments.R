@@ -5,11 +5,21 @@
 #' @param x granges object to integrate on
 #' @param y granges
 #' @param granges_signal_colname column containing cna signal in granges
+#' @param drop_na Logical. Drop bins with any NA values.
 #'
 #' @return `x` with averaged signal of `y` integrated over the bins
 #' @export
 #'
-integrate_segments <- function(x, y, granges_signal_colname) {
+integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
+
+  # Check and fix names if needed (in case the sample names are integer or invalid colnames)
+  # This fixes the error that can occur during df conversion
+  orig_colnames <- granges_signal_colname
+  granges_signal_colname <- make.names(granges_signal_colname)
+
+  # Ensure we use fixed column names from the outset
+  colnames(mcols(y))[match(orig_colnames, colnames(mcols(y)))] <- granges_signal_colname
+
   # Make sure chrs match to the input
   df_x <- as.data.frame(x)
   df_y <- as.data.frame(y)
@@ -55,13 +65,33 @@ integrate_segments <- function(x, y, granges_signal_colname) {
 
   # Aggregate the mean score over the original bins
   # Take the binwidth weighted mean across the bins
-  grange_agg_score <- aggregate(gr.comb.disjoin, hits,
-                                score = weighted.mean(x = eval(as.symbol(granges_signal_colname)), w = binwidth, na.rm = TRUE))
+  df <- as.data.frame(mcols(gr.comb.disjoin)[granges_signal_colname])
 
-  mcols(x)[granges_signal_colname] <- grange_agg_score$score
+  res <- lapply(unique(queryHits(hits)), FUN = function(idx) {
+    # Get the index in the matrix
+    mat_idx <- which(queryHits(hits) == idx)
+
+    slice_binwidths <- gr.comb.disjoin$binwidth[mat_idx]
+
+    # Apply the weighted mean calculation
+    slice_means <- apply(as.matrix(df[mat_idx,]), MARGIN = 2, FUN = function(x) {weighted.mean(x, w = slice_binwidths, na.rm = TRUE)})
+  })
+
+  scores_df <- data.frame(do.call("rbind", res))
+
+  colnames(scores_df) <- orig_colnames
+
+
+
+  mcols(x)[orig_colnames] <- scores_df[orig_colnames]
+
+  # Drop bins that have any NA values
+  if (drop_na) {
+    na_idx <- unique(which(is.na(mcols(x)[orig_colnames]), arr.ind=TRUE)[,1])
+    x <- x[-na_idx,]
+  }
 
   return(x)
-
 
   # This version get's the maximum overlaps
   # # Remove ranges that are NA for either the modal total CN or the clone data

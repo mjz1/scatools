@@ -4,7 +4,7 @@
 \alias{integrate_segments}
 \title{Integrate segments between assays}
 \usage{
-integrate_segments(x, y, granges_signal_colname)
+integrate_segments(x, y, granges_signal_colname, drop_na = TRUE)
 }
 \arguments{
 \item{x}{granges object to integrate on}
@@ -12,6 +12,8 @@ integrate_segments(x, y, granges_signal_colname)
 \item{y}{granges}
 
 \item{granges_signal_colname}{column containing cna signal in granges}
+
+\item{drop_na}{Logical. Drop bins with any NA values.}
 }
 \value{
 \code{x} with averaged signal of \code{y} integrated over the bins
