@@ -54,6 +54,10 @@ calc_cnv_score <- function(sce, assay_name = "counts") {
 scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both"), verbose = FALSE, new_assay = NULL, center = FALSE) {
   mat <- assay(sce, assay_name)
 
+  # Ensure we have matching rownames to index later
+  rownames(mat) <- get_bin_ids(rowRanges(sce))
+  rownames(sce) <- get_bin_ids(rowRanges(sce))
+
   scaled_mat <- scale_mat(mat, log2 = log2, scale = scale, center = center)
 
   if (is.null(new_assay)) {
