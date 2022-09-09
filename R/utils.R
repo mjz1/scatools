@@ -14,9 +14,10 @@ pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
   }
 
   avg_exp <- scuttle::summarizeAssayByGroup(sce,
-                                            assay.type = assay_name,
-                                            ids = as.factor(sce[[group_var]]),
-                                            statistics = statistics)
+    assay.type = assay_name,
+    ids = as.factor(sce[[group_var]]),
+    statistics = statistics
+  )
   rowRanges(avg_exp) <- rowRanges(sce)
 
   # Propagate the correct names
@@ -40,11 +41,10 @@ pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
 #' @export
 #'
 calc_cnv_score <- function(sce, assay_name = "counts") {
-
   dat <- assay(sce, assay_name)
 
   cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
-    cnv_score <- mean(abs(dat[,i]))
+    cnv_score <- mean(abs(dat[, i]))
   }))
   sce$cnv_score <- cnv_scores
   return(sce)
@@ -67,7 +67,9 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none"
   sce <- sce[rownames(scaled_mat), colnames(scaled_mat)]
 
   assay(sce, new_assay) <- scaled_mat
-  if (verbose) {logger::log_info("Scaled assay: {new_assay}")}
+  if (verbose) {
+    logger::log_info("Scaled assay: {new_assay}")
+  }
 
   return(sce)
 }

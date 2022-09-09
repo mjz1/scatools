@@ -23,7 +23,6 @@ add_umap_clusters <- function(sce,
                               metric = "correlation",
                               verbose = TRUE,
                               force = TRUE) {
-
   clust_results <- perform_umap_clustering(
     cn_matrix = assay(sce, assay_name),
     n_neighbors = n_neighbors,

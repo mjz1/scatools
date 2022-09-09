@@ -25,7 +25,7 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_count
   new_bin_ids <- get_bin_ids(integ_ranges)
 
   # Safely subset based on new bin ids
-  sce <- sce[new_bin_ids,]
+  sce <- sce[new_bin_ids, ]
 
   # Keep rownames
   rownames(sce) <- new_bin_ids

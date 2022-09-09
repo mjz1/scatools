@@ -5,8 +5,8 @@ library(ArchR)
 library(BSgenome.Hsapiens.UCSC.hg38)
 
 ncores <- parallelly::availableCores()[[1]]
-overwrite = TRUE
-verbose = TRUE
+overwrite <- TRUE
+verbose <- TRUE
 
 addArchRThreads(ncores)
 addArchRGenome("hg38")
@@ -17,9 +17,9 @@ fragment_file <- file.path(repo_dir, "/data-raw/fragments.bed.gz")
 names(fragment_file) <- "test_sample"
 
 # Set up example output directories
-arrow_dir = file.path(repo_dir, "/data-raw/example/ArrowFiles")
-bindepth_dir = file.path(repo_dir, "/data-raw/example/binned_depth")
-scatools_dir = file.path(repo_dir, "/data-raw/example/scatools_analysis")
+arrow_dir <- file.path(repo_dir, "/data-raw/example/ArrowFiles")
+bindepth_dir <- file.path(repo_dir, "/data-raw/example/binned_depth")
+scatools_dir <- file.path(repo_dir, "/data-raw/example/scatools_analysis")
 
 invisible(lapply(list(arrow_dir, bindepth_dir, scatools_dir), dir.create, showWarnings = FALSE, recursive = TRUE))
 
@@ -28,7 +28,7 @@ setwd(arrow_dir)
 ArrowFiles <- createArrowFiles(
   inputFiles = fragment_file,
   sampleNames = names(fragment_file),
-  minTSS = 4, #Dont set this too high because you can always increase later
+  minTSS = 4, # Dont set this too high because you can always increase later
   minFrags = 1000,
   addTileMat = TRUE,
   addGeneScoreMat = TRUE,
@@ -38,8 +38,8 @@ ArrowFiles <- createArrowFiles(
 # Calculate doublet scores
 doubScores <- addDoubletScores(
   input = ArrowFiles,
-  k = 10, #Refers to how many cells near a "pseudo-doublet" to count.
-  knnMethod = "LSI", #Refers to the embedding to use for nearest neighbor search.
+  k = 10, # Refers to how many cells near a "pseudo-doublet" to count.
+  knnMethod = "LSI", # Refers to the embedding to use for nearest neighbor search.
   LSIMethod = 1,
   force = FALSE
 )
@@ -48,7 +48,7 @@ doubScores <- addDoubletScores(
 proj <- ArchRProject(
   ArrowFiles = ArrowFiles,
   outputDirectory = "./",
-  copyArrows = FALSE #This is recommended so that you maintain an unaltered copy for later usage.
+  copyArrows = FALSE # This is recommended so that you maintain an unaltered copy for later usage.
 )
 
 proj <- filterDoublets(proj)

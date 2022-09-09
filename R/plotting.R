@@ -1,3 +1,6 @@
+# TODO: Separate out the single cell plot generation from data preprocessing to allow for more flexibility
+
+
 #' Plot Cell Copy Number
 #'
 #' @param sce sce object
@@ -17,7 +20,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   }
 
   if (is.numeric(cell_id)) {
-    cell_id <- colnames(sce[,cell_id])
+    cell_id <- colnames(sce[, cell_id])
   }
 
   # TODO: Try to intelligently find the start positions from the provided sce
@@ -80,7 +83,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
 
-    p <- base_p  +
+    p <- base_p +
       scale_color_gradient2(
         low = attr(cn_colors, "colors")[1],
         mid = attr(cn_colors, "colors")[2],
@@ -107,11 +110,9 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 #' @export
 #'
 plot_psuedobulk_cna <- function(sce, assay_name, group_var = "all", col_fun = NULL) {
-
   avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
   plot_cell_cna(avg_exp, assay_name = assay_name) + labs(title = group_var, y = assay_name)
-
 }
 
 #' Plot multiple cell assays together
@@ -127,7 +128,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
   plots <- vector(mode = "list")
 
   if (is.numeric(cell_id)) {
-    cell_id <- colnames(sce[,cell_id])
+    cell_id <- colnames(sce[, cell_id])
   }
 
   for (cell in cell_id) {
@@ -177,7 +178,6 @@ cnaHeatmap <- function(sce,
                        clust_annot = TRUE,
                        verbose = TRUE,
                        ...) {
-
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
   }
@@ -194,10 +194,10 @@ cnaHeatmap <- function(sce,
       logger::log_info("Using {clone_name} as clones...")
     } else {
       logger::log_warn("{clone_name} not found in sce object. Reperforming clustering...")
-      clone_name = "clone"
+      clone_name <- "clone"
     }
   } else if (is.null(cell_order) & is.null(clustering_results)) {
-    clone_name = "clone"
+    clone_name <- "clone"
 
     clustering_results <- perform_umap_clustering(cn_matrix = cn_mat, verbose = verbose)
 
@@ -205,9 +205,8 @@ cnaHeatmap <- function(sce,
     # cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
 
     sce[[clone_name]] <- clustering_results$clustering$clone_id[match(colnames(sce), clustering_results$clustering$cell_id)]
-
   } else if (!is.null(clustering_results)) {
-    clone_name = "clone"
+    clone_name <- "clone"
 
     sce[[clone_name]] <- clustering_results$clustering$clone_id[match(colnames(sce), clustering_results$clustering$cell_id)]
 
@@ -223,13 +222,14 @@ cnaHeatmap <- function(sce,
   # TODO: Separate the below into a separate function
   # First get the average per clone signal to order the clones properly
   avg_exp <- scuttle::summarizeAssayByGroup(sce,
-                                            assay.type = assay_name,
-                                            ids = sce[[clone_name]],
-                                            statistics = "mean")
+    assay.type = assay_name,
+    ids = sce[[clone_name]],
+    statistics = "mean"
+  )
   rowRanges(avg_exp) <- rowRanges(sce)
 
   # Compute the distance based on correlation
-  d <- as.dist(1-cor(assay(avg_exp, 'mean')))
+  d <- as.dist(1 - cor(assay(avg_exp, "mean")))
   hc <- hclust(d, method = "complete")
 
   # Pull out the order from the hc object
@@ -240,7 +240,7 @@ cnaHeatmap <- function(sce,
 
   cell_order <- order(match(sce[[clone_name]], clone_order))
 
-  ordered_cell_ids <- as.character(colData(sce)[cell_order, 'cell_id'])
+  ordered_cell_ids <- as.character(colData(sce)[cell_order, "cell_id"])
 
   cnv_clusters <- colData(sce)[cell_order, clone_name]
 
@@ -288,8 +288,8 @@ cnaHeatmap <- function(sce,
   if (is.null(cluster_rows)) {
     cluster_rows <- FALSE
   } else if (class(cluster_rows) == "dendrogram") {
-    row_split = length(levels(cnv_clusters))
-    row_title = hc$labels[hc$order]
+    row_split <- length(levels(cnv_clusters))
+    row_title <- hc$labels[hc$order]
   }
 
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
@@ -315,7 +315,6 @@ cnaHeatmap <- function(sce,
 
 #' @export
 cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
-
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
   }
@@ -379,7 +378,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 
   # Get dendrogram
   # Compute the distance based on correlation
-  d <- as.dist(1-cor(assay(avg_exp, 'mean')))
+  d <- as.dist(1 - cor(assay(avg_exp, "mean")))
   hc <- hclust(d, method = "complete")
 
   tree <- as.dendrogram(hc)

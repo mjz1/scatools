@@ -25,9 +25,9 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
   df_y <- as.data.frame(y)
 
   if (all(grepl("chr", df_x$seqnames))) {
-    no_chr = FALSE
+    no_chr <- FALSE
   } else {
-    no_chr = TRUE
+    no_chr <- TRUE
   }
 
   # If x is no_chr and y is not
@@ -60,13 +60,10 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
   mcols(gr.comb.disjoin[queryHits(olaps2)])[granges_signal_colname] <- mcols(y[subjectHits(olaps2)])[granges_signal_colname]
 
   gr.comb.disjoin$binwidth <- width(gr.comb.disjoin)
-  # EXPERIMENTAL: See if we can reaggregate the signal over set tile width of the input
 
   # reaggregate the signal over set tile width of the input
   hits <- findOverlaps(x, gr.comb.disjoin)
 
-  # Aggregate the mean score over the original bins
-  # Take the binwidth weighted mean across the bins
   df <- as.data.frame(mcols(gr.comb.disjoin)[granges_signal_colname])
 
   res <- lapply(unique(queryHits(hits)), FUN = function(idx) {
@@ -76,7 +73,9 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
     slice_binwidths <- gr.comb.disjoin$binwidth[mat_idx]
 
     # Apply the weighted mean calculation
-    slice_means <- apply(as.matrix(df[mat_idx,]), MARGIN = 2, FUN = function(x) {weighted.mean(x, w = slice_binwidths, na.rm = TRUE)})
+    slice_means <- apply(as.matrix(df[mat_idx, ]), MARGIN = 2, FUN = function(x) {
+      weighted.mean(x, w = slice_binwidths, na.rm = TRUE)
+    })
   })
 
   scores_df <- data.frame(do.call("rbind", res))
@@ -87,8 +86,8 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
 
   # Drop bins that have any NA values
   if (drop_na) {
-    na_idx <- unique(which(is.na(mcols(x)[orig_colnames]), arr.ind=TRUE)[,1])
-    x <- x[-na_idx,]
+    na_idx <- unique(which(is.na(mcols(x)[orig_colnames]), arr.ind = TRUE)[, 1])
+    x <- x[-na_idx, ]
   }
 
   return(x)
