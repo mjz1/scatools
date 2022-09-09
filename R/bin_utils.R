@@ -493,3 +493,12 @@ is_valid_bin <- function(counts, n_freq, min_reads = 0, max_N_freq = 0.05) {
   # Only valid if having both min reads and min n_freq
   counts > min_reads & n_freq <= max_N_freq
 }
+
+#' @export
+get_bin_ids <- function(granges) {
+  # get the bin_ids
+  bin_ids <- as.data.frame(granges) %>%
+    dplyr::select(seqnames, start, end) %>%
+    tidyr::unite("bin_id") %>%
+    dplyr::pull()
+  return(bin_ids)
