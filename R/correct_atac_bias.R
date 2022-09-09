@@ -17,7 +17,7 @@
 correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_counts", cn_granges, granges_signal_colname, drop_missing_bins = FALSE) {
 
   # Integrate the true CN data to our data
-  rowRanges(sce) <- integrate_segments(x = rowRanges(sce), y = cn_granges, granges_signal_colname = granges_signal_colname)
+  rowRanges(sce) <- integrate_segments(x = rowRanges(sce), y = cn_granges, granges_signal_colname = granges_signal_colname, drop_na = drop_missing_bins)
 
   assay(sce, "bias") <- assay(sce, assay_name) / mcols(rowRanges(sce))[[granges_signal_colname]]
 
