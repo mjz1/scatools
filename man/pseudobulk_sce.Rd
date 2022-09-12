@@ -4,7 +4,7 @@
 \alias{pseudobulk_sce}
 \title{Pseudobulk cell CNA profiles}
 \usage{
-pseudobulk_sce(sce, assay_name, group_var, statistics = "mean")
+pseudobulk_sce(sce, assay_name, group_var = "all", statistics = "mean")
 }
 \arguments{
 \item{sce}{SingleCellExperiment Object}

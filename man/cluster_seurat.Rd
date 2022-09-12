@@ -18,7 +18,7 @@ cluster_seurat(
   UMAP_name = paste("UMAP", suffix, sep = "_"),
   cluster_name = paste("clusters", suffix, sep = "_"),
   metric = "correlation",
-  verbose = FALSE
+  verbose = TRUE
 )
 }
 \arguments{

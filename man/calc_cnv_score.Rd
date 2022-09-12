@@ -4,7 +4,7 @@
 \alias{calc_cnv_score}
 \title{Calculate CNV Score}
 \usage{
-calc_cnv_score(sce, assay_name = "counts", name = "cnv_score", method = "rms")
+calc_cnv_score(sce, assay_name = "counts", name = "cnv_score", method = "abs")
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}

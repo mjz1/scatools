@@ -9,3 +9,13 @@ state_cn_colors <- function() {
   )
   return(cn_colors)
 }
+
+
+
+logr_col_fun <- function(breaks = c(-2, 0, 2), colors = c("blue", "white", "red")) {
+  circlize::colorRamp2(breaks = breaks, colors = colors)
+}
+
+counts_col_fun <- function(breaks = c(0, 2, 8), colors = c("blue", "white", "red")) {
+  circlize::colorRamp2(breaks = breaks, colors = colors)
+}

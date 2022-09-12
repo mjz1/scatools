@@ -8,7 +8,7 @@
 #' @return SingleCellExperiment object
 #' @export
 #'
-pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
+pseudobulk_sce <- function(sce, assay_name, group_var = "all", statistics = "mean") {
   if (group_var == "all") {
     sce[[group_var]] <- "all"
   }
@@ -44,7 +44,7 @@ pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
 #' @return SCE object with `cnv_score` appended
 #' @export
 #'
-calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score", method = "rms") {
+calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score", method = "abs") {
   dat <- assay(sce, assay_name)
 
   if (method == "abs") {
@@ -312,3 +312,4 @@ prettyMb <- function(x, places = 3) {
 chr_reorder <- function(chrs) {
   gtools::mixedsort(chrs)
 }
+
