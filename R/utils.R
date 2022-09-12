@@ -39,16 +39,26 @@ pseudobulk_sce <- function(sce, assay_name, group_var, statistics = "mean") {
 #' @param sce SingleCellExperiment object
 #' @param assay_name Name of assay
 #' @param name Name of new column to store cnv score
+#' @param method 'rms' for root mean square or 'abs' for absolute mean
 #'
 #' @return SCE object with `cnv_score` appended
 #' @export
 #'
-calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score") {
+calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score", method = "rms") {
   dat <- assay(sce, assay_name)
 
-  cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
-    cnv_score <- mean(abs(dat[, i]), na.rm = TRUE)
-  }))
+  if (method == "abs") {
+    cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
+      cnv_score <- mean(abs(dat[, i]), na.rm = TRUE)
+    }))
+  }
+
+  if (method == "rms") {
+    cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
+      cnv_score <- mean(dat[, i]**2, na.rm = TRUE)
+    }))
+  }
+
   sce[[name]] <- cnv_scores
   return(sce)
 }

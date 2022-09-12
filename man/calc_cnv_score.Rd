@@ -4,7 +4,7 @@
 \alias{calc_cnv_score}
 \title{Calculate CNV Score}
 \usage{
-calc_cnv_score(sce, assay_name = "counts", name = "cnv_score")
+calc_cnv_score(sce, assay_name = "counts", name = "cnv_score", method = "rms")
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}
@@ -12,6 +12,8 @@ calc_cnv_score(sce, assay_name = "counts", name = "cnv_score")
 \item{assay_name}{Name of assay}
 
 \item{name}{Name of new column to store cnv score}
+
+\item{method}{'rms' for root mean square or 'abs' for absolute mean}
 }
 \value{
 SCE object with \code{cnv_score} appended
