@@ -157,6 +157,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param assay_name Name of the assay to plot
 #' @param clone_name Name of clone_id column in sce object
 #' @param cell_order Optional: Order of the cells
+#' @param cluster_rows If the value is a logical, it controls whether to make cluster on rows. The value can also be a `stats::hclust` or a `stats::dendrogram` which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.
 #' @param log2 Logical: Log2 transform the matrix prior to plotting
 #' @param center logical: center the matrix prior to plotting
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
@@ -190,15 +191,12 @@ cnaHeatmap <- function(sce,
                        clust_annot = TRUE,
                        verbose = TRUE,
                        ...) {
-  if (is.null(rownames(sce))) {
-    rownames(sce) <- 1:nrow(sce)
-  }
+  # if (is.null(rownames(sce))) {
+  #   rownames(sce) <- 1:nrow(sce)
+  # }
 
-  cn_mat <- as.matrix(assay(sce, assay_name))
-
-  cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale, center = center)
-
-  sce <- sce[rownames(cn_mat), colnames(cn_mat)]
+  sce <- scale_sub(sce = sce, assay_name = assay_name, log2 = log2,
+                   scale = scale, new_assay = "heatmat", center = center)
 
   if (!is.null(clone_name)) {
     if (clone_name %in% colnames(colData(sce))) {
@@ -251,38 +249,43 @@ cnaHeatmap <- function(sce,
     clone_order <- as.character(sort(unique(sce[[clone_name]])))
   }
 
+  # Do we want to reorder the sce now?
+  orig_order <- colnames(sce)
+
   cell_order <- order(match(sce[[clone_name]], clone_order))
 
-  ordered_cell_ids <- as.character(colData(sce)[cell_order, "cell_id"])
+  sce <- sce[,cell_order]
 
-  cnv_clusters <- colData(sce)[cell_order, clone_name]
+  # ordered_cell_ids <- as.character(colData(sce)[cell_order, "cell_id"])
+
+  # cnv_clusters <- colData(sce)[cell_order, clone_name]
 
   # row_split <- factor(cnv_clusters, levels = as.character(hc$labels[hc$order]))
   # row_title <- hc$labels[hc$order]
 
-  row_split <- factor(cnv_clusters, levels = clone_order)
+  row_split <- factor(sce[[clone_name]], levels = clone_order)
   row_title <- clone_order
 
   # Reorder cells
-  cn_mat <- cn_mat[, ordered_cell_ids]
+  # cn_mat <- cn_mat[, ordered_cell_ids]
 
   if (class(clust_annot) == "HeatmapAnnotation") {
     left_annot <- clust_annot
   } else if (clust_annot) {
     if (is.null(col_clones)) {
-      col_clones <- scales::hue_pal()(length(unique(cnv_clusters)))
-      names(col_clones) <- levels(factor(cnv_clusters))
+      col_clones <- scales::hue_pal()(length(unique(sce[[clone_name]])))
+      names(col_clones) <- levels(factor(sce[[clone_name]]))
     }
 
     # Code to allow passing of any length vector of unnamed colors to make it
     # easier across plots/cluster lengths
     if (is.null(names(col_clones))) {
-      col_clones <- col_clones[1:length(unique(cnv_clusters))]
-      names(col_clones) <- levels(factor(cnv_clusters))
+      col_clones <- col_clones[1:length(unique(sce[[clone_name]]))]
+      names(col_clones) <- levels(factor(sce[[clone_name]]))
     }
 
     left_annot <- ComplexHeatmap::HeatmapAnnotation(
-      Clone = cnv_clusters,
+      Clone = sce[[clone_name]],
       # Sample = sce[, ordered_cell_ids]$Sample,
       col = list(Clone = col_clones),
       which = "row",
@@ -295,8 +298,14 @@ cnaHeatmap <- function(sce,
   # Label genes
   if (!is.null(label_genes)) {
     if (is.null(sce@metadata$gene_overlap)) {
-      logger::log_warn("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
-      break
+      # Attempt to perform the overlaps on the fly
+      if (requireNamespace("EnsDb.Hsapiens.v86")) {
+        logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
+        sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
+      } else {
+        logger::log_warn("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+        break
+      }
     }
     # Now create a heatmap where genes are highlighted in the bottom panel
     match_idx <- match(label_genes, sce@metadata$gene_overlap$symbol)
@@ -337,16 +346,27 @@ cnaHeatmap <- function(sce,
   chrs <- as.vector(gsub("chr", "", GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce))))
   col_split <- factor(chrs, levels = unique(gtools::mixedsort(chrs)))
 
-  if (is.null(cluster_rows)) {
+  if (class(cluster_rows) %in% c("dendrogram", "hclust") || cluster_rows == TRUE) {
+    # Revert to original ordering
+    # Maybe there is a better way to handle this
+    sce <- sce[,orig_order]
+
+    row_split <- length(unique(sce[[clone_name]]))
+    row_title <- NULL
+
+    left_annot <- ComplexHeatmap::HeatmapAnnotation(
+      Clone = sce[[clone_name]],
+      col = list(Clone = col_clones),
+      which = "row",
+      show_legend = c(TRUE, FALSE)
+    )
+  } else {
     cluster_rows <- FALSE
-  } else if (class(cluster_rows) == "dendrogram") {
-    row_split <- length(levels(cnv_clusters))
-    row_title <- hc$labels[hc$order]
   }
 
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
     name = legend_name,
-    matrix = t(cn_mat),
+    matrix = t(assay(sce, "heatmat")),
     show_row_names = FALSE,
     col = cn_colors,
     cluster_columns = FALSE,

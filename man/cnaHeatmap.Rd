@@ -33,6 +33,8 @@ cnaHeatmap(
 
 \item{cell_order}{Optional: Order of the cells}
 
+\item{cluster_rows}{If the value is a logical, it controls whether to make cluster on rows. The value can also be a \code{stats::hclust} or a \code{stats::dendrogram} which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.}
+
 \item{log2}{Logical: Log2 transform the matrix prior to plotting}
 
 \item{center}{logical: center the matrix prior to plotting}

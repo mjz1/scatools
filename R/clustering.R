@@ -32,7 +32,7 @@ cluster_seurat <- function(sce,
                            UMAP_name = paste("UMAP", suffix, sep = "_"),
                            cluster_name = paste("clusters", suffix, sep = "_"),
                            metric = "correlation",
-                           verbose = FALSE) {
+                           verbose = TRUE) {
 
   # TODO: Improve documentation of this function.
   # TODO: Return neighbors object if possible to allow future umap projection
