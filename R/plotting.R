@@ -62,9 +62,11 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     labs(x = NULL, y = assay_name, color = assay_name) +
     theme_bw() +
     theme(
-      panel.spacing = unit(0, "lines"),
+      panel.spacing.x = unit(0, "lines"),
       panel.border = element_rect(fill = NA),
-      axis.text.x = element_blank()
+      panel.grid = element_blank(),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
     )
 
   # check for assay type and add colors
@@ -156,12 +158,14 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param clone_name Name of clone_id column in sce object
 #' @param cell_order Optional: Order of the cells
 #' @param log2 Logical: Log2 transform the matrix prior to plotting
+#' @param center logical: center the matrix prior to plotting
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
 #' @param clustering_results Clustering results to provide to inform cell ordering and cluster labelling. From [perform_umap_clustering]
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
 #' @param col_clones Optional: A named vector (or unnamed) of clone colors.
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
+#' @param cluster_clones Logical: Whether or not to order the clones by clustering
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
 #'
@@ -174,10 +178,12 @@ cnaHeatmap <- function(sce,
                        cell_order = NULL,
                        cluster_rows = NULL,
                        log2 = FALSE,
+                       center = FALSE,
                        scale = c("none", "cells", "bins", "both"),
                        clustering_results = NULL,
                        col_fun = NULL,
                        col_clones = NULL,
+                       cluster_clones = FALSE,
                        legend_name = assay_name,
                        clust_annot = TRUE,
                        verbose = TRUE,
@@ -188,7 +194,7 @@ cnaHeatmap <- function(sce,
 
   cn_mat <- as.matrix(assay(sce, assay_name))
 
-  cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale)
+  cn_mat <- scale_mat(cn_mat, log2 = log2, scale = scale, center = center)
 
   sce <- sce[rownames(cn_mat), colnames(cn_mat)]
 
@@ -223,24 +229,25 @@ cnaHeatmap <- function(sce,
     ordered_cell_ids <- cell_order
   }
 
-  # TODO: Separate the below into a separate function
-  # First get the average per clone signal to order the clones properly
-  avg_exp <- scuttle::summarizeAssayByGroup(sce,
-    assay.type = assay_name,
-    ids = sce[[clone_name]],
-    statistics = "mean"
-  )
-  rowRanges(avg_exp) <- rowRanges(sce)
+  if (cluster_clones) {
+    # First get the average per clone signal to order the clones properly
+    avg_exp <- scuttle::summarizeAssayByGroup(sce,
+                                              assay.type = assay_name,
+                                              ids = sce[[clone_name]],
+                                              statistics = "mean"
+    )
+    rowRanges(avg_exp) <- rowRanges(sce)
 
-  # Compute the distance based on correlation
-  d <- as.dist(1 - cor(assay(avg_exp, "mean")))
-  hc <- hclust(d, method = "complete")
+    # Compute the distance based on correlation
+    d <- as.dist(1 - cor(assay(avg_exp, "mean")))
+    hc <- hclust(d, method = "complete")
 
-  # Pull out the order from the hc object
-  clone_order <- hc$labels[hc$order]
-
-  # clone_order <- names(sort(table(sce[[clone_name]]),
-  #                           decreasing = TRUE))
+    # Pull out the order from the hc object
+    clone_order <- hc$labels[hc$order]
+  } else {
+    # Default to ordering by name
+    clone_order <- as.character(sort(unique(sce[[clone_name]])))
+  }
 
   cell_order <- order(match(sce[[clone_name]], clone_order))
 
@@ -248,8 +255,11 @@ cnaHeatmap <- function(sce,
 
   cnv_clusters <- colData(sce)[cell_order, clone_name]
 
-  row_split <- factor(cnv_clusters, levels = as.character(hc$labels[hc$order]))
-  row_title <- hc$labels[hc$order]
+  # row_split <- factor(cnv_clusters, levels = as.character(hc$labels[hc$order]))
+  # row_title <- hc$labels[hc$order]
+
+  row_split <- factor(cnv_clusters, levels = clone_order)
+  row_title <- clone_order
 
   # Reorder cells
   cn_mat <- cn_mat[, ordered_cell_ids]
@@ -325,14 +335,14 @@ cnaHeatmap <- function(sce,
 }
 
 #' @export
-cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
+cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
   }
 
   orig_sce <- sce
 
-  clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2)
+  clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2, center = center)
 
   # Subset the SCE to the same dimensions
   sce <- sce[rownames(clust_mat), colnames(clust_mat)]
@@ -389,10 +399,10 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 
   # Get dendrogram
   # Compute the distance based on correlation
-  d <- as.dist(1 - cor(assay(avg_exp, "mean")))
-  hc <- hclust(d, method = "complete")
-
-  tree <- as.dendrogram(hc)
+  # d <- as.dist(1 - cor(assay(avg_exp, "mean")))
+  # hc <- hclust(d, method = "complete")
+  #
+  # tree <- as.dendrogram(hc)
 
   # Pull out the order from the hc object
   # clone_order <- hc$labels[hc$order]

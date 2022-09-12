@@ -11,10 +11,12 @@ cnaHeatmap(
   cell_order = NULL,
   cluster_rows = NULL,
   log2 = FALSE,
+  center = FALSE,
   scale = c("none", "cells", "bins", "both"),
   clustering_results = NULL,
   col_fun = NULL,
   col_clones = NULL,
+  cluster_clones = FALSE,
   legend_name = assay_name,
   clust_annot = TRUE,
   verbose = TRUE,
@@ -32,6 +34,8 @@ cnaHeatmap(
 
 \item{log2}{Logical: Log2 transform the matrix prior to plotting}
 
+\item{center}{logical: center the matrix prior to plotting}
+
 \item{scale}{One of \verb{'cells', 'bins', 'both' or 'none'}. Determines what kind of scaling is done.}
 
 \item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
@@ -39,6 +43,8 @@ cnaHeatmap(
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
 
 \item{col_clones}{Optional: A named vector (or unnamed) of clone colors.}
+
+\item{cluster_clones}{Logical: Whether or not to order the clones by clustering}
 
 \item{legend_name}{Name of the legend}
 
