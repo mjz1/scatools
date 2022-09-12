@@ -583,3 +583,61 @@ get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/canc
                    col.names = colnames_cleaned, fill = F, skip = 1)
 
   return(df)
+}
+
+
+#' Get Cancer Gene Copies
+#'
+#' Calculate per group copy number for a list of cancer genes.
+#'
+#' @param sce Single cell experiment object
+#' @param assay_name Name of the assay from which to pull copy number
+#' @param group_var Grouping variable (defaults to all)
+#'
+#' @return Data frame containing gene copies
+#' @export
+#'
+get_cancer_gene_copy <- function(sce, assay_name, group_var = "all") {
+
+  # Check for the overlaps and create if possible
+  if (is.null(sce@metadata$gene_overlap)) {
+    # Attempt to perform the overlaps on the fly
+    if (requireNamespace("EnsDb.Hsapiens.v86")) {
+      logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
+      sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
+    } else {
+      logger::log_warn("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+      break
+    }
+  }
+
+
+  bulk <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
+
+  # Calculate average copy per cluster so that we can highlight gains a losses from
+  # uninteresting events
+  mean_copies <- apply(assay(bulk), 2, mean)
+  # median_copies <- apply(assay(bulk), 2, median)
+
+  oncokb_idx <- which(sce@metadata$gene_overlap$onco_kb_annotated == "Yes" &
+                        !is.na(sce@metadata$gene_overlap$bin_id))
+
+  onco_ranges <- sce@metadata$gene_overlap[oncokb_idx]
+
+  bulk_idx <- match(onco_ranges$bin_id, get_bin_ids(rowRanges(bulk)))
+
+  if (group_var != "all") {
+    new_colnames <- paste(group_var, colnames(bulk), assay_name, sep = "_")
+    rel_colnames <- paste(group_var, colnames(bulk), "relative_copies", sep = "_")
+  } else {
+    new_colnames = paste(group_var, assay_name, sep = "_")
+    rel_colnames <- paste(group_var, "relative_copies", sep = "_")
+  }
+
+  mcols(onco_ranges)[new_colnames] <- assay(bulk[bulk_idx,], assay_name)
+  mcols(onco_ranges)[rel_colnames] <- assay(bulk[bulk_idx,], assay_name) / mean_copies
+
+  df <- as.data.frame(onco_ranges)
+
+  return(df)
+}
