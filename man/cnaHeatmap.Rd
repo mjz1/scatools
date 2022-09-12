@@ -14,6 +14,7 @@ cnaHeatmap(
   center = FALSE,
   scale = c("none", "cells", "bins", "both"),
   clustering_results = NULL,
+  label_genes = NULL,
   col_fun = NULL,
   col_clones = NULL,
   cluster_clones = FALSE,
@@ -39,6 +40,8 @@ cnaHeatmap(
 \item{scale}{One of \verb{'cells', 'bins', 'both' or 'none'}. Determines what kind of scaling is done.}
 
 \item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
+
+\item{label_genes}{Optional: Vector of gene names to label in the heatmap. Note: \link{overlap_genes} must be run prior to labelling genes.}
 
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
 

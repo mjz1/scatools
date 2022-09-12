@@ -161,6 +161,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param center logical: center the matrix prior to plotting
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
 #' @param clustering_results Clustering results to provide to inform cell ordering and cluster labelling. From [perform_umap_clustering]
+#' @param label_genes Optional: Vector of gene names to label in the heatmap. Note: [overlap_genes] must be run prior to labelling genes.
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
 #' @param col_clones Optional: A named vector (or unnamed) of clone colors.
 #' @param legend_name Name of the legend
@@ -181,6 +182,7 @@ cnaHeatmap <- function(sce,
                        center = FALSE,
                        scale = c("none", "cells", "bins", "both"),
                        clustering_results = NULL,
+                       label_genes = NULL,
                        col_fun = NULL,
                        col_clones = NULL,
                        cluster_clones = FALSE,
@@ -290,6 +292,35 @@ cnaHeatmap <- function(sce,
     left_annot <- NULL
   }
 
+  # Label genes
+  if (!is.null(label_genes)) {
+    if (is.null(sce@metadata$gene_overlap)) {
+      logger::log_warn("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+      break
+    }
+    # Now create a heatmap where genes are highlighted in the bottom panel
+    match_idx <- match(label_genes, sce@metadata$gene_overlap$symbol)
+
+    # Remove and warn about missing genes
+    na_idx <- which(is.na(match_idx))
+    missing_g <- label_genes[na_idx]
+    if (length(na_idx) > 0) {
+      logger::log_warn("Genes not found: {paste(missing_g, collapse = '; ')}")
+    }
+
+    label_genes <- label_genes[!is.na(match_idx)]
+    match_idx <- match_idx[!is.na(match_idx)]
+
+    gene_bins <- mcols(sce@metadata$gene_overlap[match_idx])[["bin_id"]]
+    gene_bins_idx <- match(gene_bins, get_bin_ids(rowRanges(sce)))
+
+    # Label genes
+    bottom_ha_genes <- HeatmapAnnotation(genes = anno_mark(at = c(gene_bins_idx), labels = label_genes, which = "column", side = "bottom", link_width = unit(3, "mm")))
+
+  } else {
+    # Make null so we can pass to heatmap function regardless
+    bottom_ha_genes <- NULL
+  }
 
 
   if (grepl("state", assay_name)) {
@@ -328,6 +359,7 @@ cnaHeatmap <- function(sce,
     left_annotation = left_annot,
     row_split = row_split,
     row_title = row_title,
+    bottom_annotation = bottom_ha_genes,
     ...
   ))
 
@@ -392,6 +424,11 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 
   avg_exp$cell_id <- avg_exp$ids
 
+  # If gene overlaps are present propagate to the pseudobulked
+  if (!is.null(sce@metadata$gene_overlap)) {
+    avg_exp@metadata$gene_overlap <- sce@metadata$gene_overlap
+  }
+
   # TODO: Figure out how to handle returning the avg exp data and plot
   # Ideally want to replace the SCE in the parent environment while also returning the plot
 
@@ -431,5 +468,5 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", border = TRUE, ...)
 
   # print(ht_plot)
-  return(list(plot = ht_plot, sce = orig_sce))
+  return(ht_plot)
 }
