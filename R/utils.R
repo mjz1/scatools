@@ -88,9 +88,9 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
 
   logger::log_debug("Scaling: {scale}")
 
-  if (scale == "none") {
-    scale <- FALSE
-  }
+  # if (scale == "none") {
+  #   scale <- FALSE
+  # }
 
   # Remove fully NA or 0 columns
   keep_bins <- apply(mat, 1, FUN = function(x) !all(is.na(x)) & !all(x == 0))
@@ -121,6 +121,12 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
   if (scale == "bins") {
     mat <- t(scale(t(mat), center = center))
   }
+
+  # Make sure we allow for center if scale is none
+  if (scale == "none") {
+    mat <- scale(mat, scale = FALSE, center = center)
+  }
+
   return(as.matrix(mat))
 }
 
