@@ -502,3 +502,84 @@ get_bin_ids <- function(granges) {
     tidyr::unite("bin_id") %>%
     dplyr::pull()
   return(bin_ids)
+}
+
+#' Overlap genes with bins
+#'
+#' Given an annotation object, this function will overlap genes with bins and place the results in the metadata slot `gene_overlaps`. This function will also attempt to annotate cancer genes using OncoKB.
+#'
+#' @param sce SingleCellExperiment object
+#' @param ensDb EnsemblDb object such as [EnsDb.Hsapiens.v86]
+#' @param gene_biotype Gene biotypes to overlap. Defaults to "all". Use "protein_coding" to keep only protein coding genes
+#'
+#' @return SingleCellExperiment object with gene overlaps in `sce@metadata$gene_overlaps`
+#' @export
+#'
+overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
+
+  bin_ranges <- rowRanges(sce)
+
+  # Pull genes
+  g <- GenomicFeatures::genes(ensDb)
+  g <- GenomeInfoDb::keepStandardChromosomes(g, pruning.mode="coarse")
+
+  # Keep the chromosome naming styles consistent prior to overlapping
+  GenomeInfoDb::seqlevelsStyle(g) <- "UCSC"
+  GenomeInfoDb::seqlevelsStyle(bin_ranges) <- "UCSC"
+
+  # Subset g for chr levels in bin_ranges
+  seqlevels(bin_ranges)
+  g <- keepSeqlevels(x = g, value = seqlevels(bin_ranges), pruning.mode = "coarse")
+
+  if (gene_biotype != "all") {
+    logger::log_info("Filtering for gene_biotypes: {paste(gene_biotype, collapse = '; ')}")
+    g <- g[which(mcols(g)$gene_biotype %in% gene_biotype)]
+  }
+
+  hits <- findOverlaps(bin_ranges, g)
+
+  # Want to attach this as a metadata granges to the sce where the new range for
+  # each gene is the bin in which it resides
+
+  mcols(g)["bin_id"] <- NA
+
+  mcols(g[subjectHits(hits)])["bin_id"] <- get_bin_ids(bin_ranges[queryHits(hits)])
+
+  # Label oncogenes and TS
+  oncokb_df <- get_oncokb_genelist()
+
+  # Match using both symbol and entrez for maximum overlap
+  match_idx1 <- match(oncokb_df$hugo_symbol, g$gene_name)
+  match_idx2 <- match(oncokb_df$entrez_gene_id, g$entrezid)
+  # take from idx2
+  match_idx1[is.na(match_idx1)] = match_idx2[is.na(match_idx1)]
+
+  oncokb_df$match_idx <- match_idx1
+  # Log oncogenes which are missing from the match
+  missing_g <-  oncokb_df[is.na(oncokb_df$match_idx), 'hugo_symbol']
+  if (length(missing_g > 0)) {
+    logger::log_warn("Cancer genes missing from overlap: {paste(missing_g, collapse = '; ')}")
+  }
+
+  # Filter down to non-na to facilate merging
+  oncokb_df <- oncokb_df[!is.na(oncokb_df$match_idx),]
+
+  # Perform the merge
+  mcols(g)[oncokb_df$match_idx, colnames(oncokb_df)] <- oncokb_df
+
+  sce@metadata$gene_overlap <- g
+
+  return(sce)
+}
+
+#' @export
+get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/cancerGeneList.txt") {
+  # Column names are problematic. Load these first
+  colnames_cleaned <- read.table(file = link, header = F, sep = "\t",
+                          check.names = TRUE, nrows = 1, comment.char = "")
+  colnames_cleaned <- janitor::make_clean_names(colnames_cleaned[1,])
+
+  df <- read.table(file = link, header = FALSE, sep = "\t",
+                   col.names = colnames_cleaned, fill = F, skip = 1)
+
+  return(df)
