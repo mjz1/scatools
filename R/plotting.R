@@ -115,7 +115,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 #' @return ggplot
 #' @export
 #'
-plot_psuedobulk_cna <- function(sce, assay_name, group_var = "all", col_fun = NULL) {
+plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", col_fun = NULL) {
   avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
   plot_cell_cna(sce = avg_exp, assay_name = assay_name, col_fun = col_fun) + labs(title = group_var, y = assay_name)
@@ -178,11 +178,10 @@ cnaHeatmap <- function(sce,
                        assay_name = "state",
                        clone_name = NULL,
                        cell_order = NULL,
-                       cluster_rows = NULL,
+                       cluster_cells = FALSE,
                        log2 = FALSE,
                        center = FALSE,
                        scale = c("none", "cells", "bins", "both"),
-                       clustering_results = NULL,
                        label_genes = NULL,
                        col_fun = NULL,
                        col_clones = NULL,
@@ -198,80 +197,49 @@ cnaHeatmap <- function(sce,
   sce <- scale_sub(sce = sce, assay_name = assay_name, log2 = log2,
                    scale = scale, new_assay = "heatmat", center = center)
 
-  if (!is.null(clone_name)) {
-    if (clone_name %in% colnames(colData(sce))) {
-      # If clone data is present use it
-      logger::log_debug("Using {clone_name} as clones...")
-    } else {
-      logger::log_warn("{clone_name} not found in sce object. Reperforming clustering...")
-      clone_name <- "clone"
-    }
-  } else if (is.null(cell_order) & is.null(clustering_results)) {
-    clone_name <- "clone"
-
-    clustering_results <- perform_umap_clustering(cn_matrix = cn_mat, verbose = verbose)
-
-    # ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
-    # cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
-
-    sce[[clone_name]] <- clustering_results$clustering$clone_id[match(colnames(sce), clustering_results$clustering$cell_id)]
-  } else if (!is.null(clustering_results)) {
-    clone_name <- "clone"
-
-    sce[[clone_name]] <- clustering_results$clustering$clone_id[match(colnames(sce), clustering_results$clustering$cell_id)]
-
-    # ordered_cell_ids <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "cell_id"]
-    # cnv_clusters <- clustering_results$clustering[order(clustering_results$clustering$clone_size, decreasing = TRUE), "clone_id"]
-  } else {
-    if (!all(cell_order %in% colnames(cn_mat))) {
-      logger::log_error("Provided cell ordering contains cells not contained in the input")
-    }
-    ordered_cell_ids <- cell_order
-  }
-
-  if (cluster_clones) {
-    # First get the average per clone signal to order the clones properly
-    avg_exp <- scuttle::summarizeAssayByGroup(sce,
-                                              assay.type = assay_name,
-                                              ids = sce[[clone_name]],
-                                              statistics = "mean"
-    )
-    rowRanges(avg_exp) <- rowRanges(sce)
-
-    # Compute the distance based on correlation
-    d <- as.dist(1 - cor(assay(avg_exp, "mean")))
-    hc <- hclust(d, method = "complete")
-
-    # Pull out the order from the hc object
-    clone_order <- hc$labels[hc$order]
-  } else {
-    # Default to ordering by name
-    clone_order <- as.character(sort(unique(sce[[clone_name]])))
-  }
-
-  # Do we want to reorder the sce now?
   orig_order <- colnames(sce)
 
-  cell_order <- order(match(sce[[clone_name]], clone_order))
+  if (!is.null(clone_name)) {
+    if (!clone_name %in% colnames(colData(sce))) {
+      logger::log_warn("{clone_name} not found in sce object")
+    }
+  }
 
-  sce <- sce[,cell_order]
+  if (!is.null(clone_name)) {
+    if (cluster_clones) {
+      # First get the average per clone signal to order the clones properly
+      avg_exp <- scuttle::summarizeAssayByGroup(sce,
+                                                assay.type = assay_name,
+                                                ids = sce[[clone_name]],
+                                                statistics = "mean"
+      )
+      rowRanges(avg_exp) <- rowRanges(sce)
 
-  # ordered_cell_ids <- as.character(colData(sce)[cell_order, "cell_id"])
+      # Compute the distance based on correlation
+      d <- as.dist(1 - cor(assay(avg_exp, "mean")))
+      hc <- hclust(d, method = "complete")
 
-  # cnv_clusters <- colData(sce)[cell_order, clone_name]
+      # Pull out the order from the hc object
+      clone_order <- hc$labels[hc$order]
+    } else {
+      clone_order <- as.character(sort(unique(sce[[clone_name]])))
+    }
 
-  # row_split <- factor(cnv_clusters, levels = as.character(hc$labels[hc$order]))
-  # row_title <- hc$labels[hc$order]
+    # Do we want to reorder the sce now?
+    cell_order <- order(match(sce[[clone_name]], clone_order))
 
-  row_split <- factor(sce[[clone_name]], levels = clone_order)
-  row_title <- clone_order
+    sce <- sce[,cell_order]
 
-  # Reorder cells
-  # cn_mat <- cn_mat[, ordered_cell_ids]
+    row_split <- factor(sce[[clone_name]], levels = clone_order)
+    row_title <- clone_order
+  } else {
+    row_split <- NULL
+    row_title <- NULL
+  }
 
   if (class(clust_annot) == "HeatmapAnnotation") {
     left_annot <- clust_annot
-  } else if (clust_annot) {
+  } else if (clust_annot & !is.null(clone_name)) {
     if (is.null(col_clones)) {
       col_clones <- scales::hue_pal()(length(unique(sce[[clone_name]])))
       names(col_clones) <- levels(factor(sce[[clone_name]]))
@@ -286,7 +254,6 @@ cnaHeatmap <- function(sce,
 
     left_annot <- ComplexHeatmap::HeatmapAnnotation(
       Clone = sce[[clone_name]],
-      # Sample = sce[, ordered_cell_ids]$Sample,
       col = list(Clone = col_clones),
       which = "row",
       show_legend = c(TRUE, FALSE)
@@ -331,7 +298,6 @@ cnaHeatmap <- function(sce,
     bottom_ha_genes <- NULL
   }
 
-
   if (grepl("state", assay_name)) {
     cn_mat[cn_mat >= 11] <- "11+"
     cn_colors <- state_cn_colors()
@@ -346,7 +312,7 @@ cnaHeatmap <- function(sce,
   chrs <- as.vector(gsub("chr", "", GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce))))
   col_split <- factor(chrs, levels = unique(gtools::mixedsort(chrs)))
 
-  if (class(cluster_rows) %in% c("dendrogram", "hclust") || cluster_rows == TRUE) {
+  if (class(cluster_cells) %in% c("dendrogram", "hclust") || cluster_cells == TRUE) {
     # Revert to original ordering
     # Maybe there is a better way to handle this
     sce <- sce[,orig_order]
@@ -360,8 +326,6 @@ cnaHeatmap <- function(sce,
       which = "row",
       show_legend = c(TRUE, FALSE)
     )
-  } else {
-    cluster_rows <- FALSE
   }
 
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
@@ -370,7 +334,7 @@ cnaHeatmap <- function(sce,
     show_row_names = FALSE,
     col = cn_colors,
     cluster_columns = FALSE,
-    cluster_rows = cluster_rows,
+    cluster_rows = cluster_cells,
     show_column_names = FALSE,
     na_col = "white",
     use_raster = TRUE,

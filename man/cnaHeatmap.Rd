@@ -9,11 +9,10 @@ cnaHeatmap(
   assay_name = "state",
   clone_name = NULL,
   cell_order = NULL,
-  cluster_rows = NULL,
+  cluster_cells = FALSE,
   log2 = FALSE,
   center = FALSE,
   scale = c("none", "cells", "bins", "both"),
-  clustering_results = NULL,
   label_genes = NULL,
   col_fun = NULL,
   col_clones = NULL,
@@ -33,15 +32,11 @@ cnaHeatmap(
 
 \item{cell_order}{Optional: Order of the cells}
 
-\item{cluster_rows}{If the value is a logical, it controls whether to make cluster on rows. The value can also be a \code{stats::hclust} or a \code{stats::dendrogram} which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.}
-
 \item{log2}{Logical: Log2 transform the matrix prior to plotting}
 
 \item{center}{logical: center the matrix prior to plotting}
 
 \item{scale}{One of \verb{'cells', 'bins', 'both' or 'none'}. Determines what kind of scaling is done.}
-
-\item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
 
 \item{label_genes}{Optional: Vector of gene names to label in the heatmap. Note: \link{overlap_genes} must be run prior to labelling genes.}
 
@@ -58,6 +53,10 @@ cnaHeatmap(
 \item{verbose}{Logical: Message verbosity}
 
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
+
+\item{cluster_rows}{If the value is a logical, it controls whether to make cluster on rows. The value can also be a \code{stats::hclust} or a \code{stats::dendrogram} which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.}
+
+\item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
 }
 \value{
 A heatmap
