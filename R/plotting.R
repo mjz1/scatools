@@ -317,15 +317,17 @@ cnaHeatmap <- function(sce,
     # Maybe there is a better way to handle this
     sce <- sce[,orig_order]
 
-    row_split <- length(unique(sce[[clone_name]]))
-    row_title <- NULL
+    if (!is.null(clone_name)) {
+      row_split <- length(unique(sce[[clone_name]]))
+      row_title <- NULL
 
-    left_annot <- ComplexHeatmap::HeatmapAnnotation(
-      Clone = sce[[clone_name]],
-      col = list(Clone = col_clones),
-      which = "row",
-      show_legend = c(TRUE, FALSE)
-    )
+      left_annot <- ComplexHeatmap::HeatmapAnnotation(
+        Clone = sce[[clone_name]],
+        col = list(Clone = col_clones),
+        which = "row",
+        show_legend = c(TRUE, FALSE)
+      )
+    }
   }
 
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
