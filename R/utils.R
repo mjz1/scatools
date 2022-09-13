@@ -63,7 +63,19 @@ calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score", metho
   return(sce)
 }
 
+#' Scale and subset SCE assays
+#'
+#' @param sce SingleCellExperiment
+#' @param assay_name Assay to transform
+#' @param log2 Logical: log transform
+#' @param scale One of :c("none", "cells", "bins", "both"). Specifies how scaling should be dome
+#' @param verbose Message verbosity
+#' @param new_assay New assay name
+#' @param center Center the matrix
+#'
+#' @return A single cell experiment object
 #' @export
+#'
 scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both"), verbose = FALSE, new_assay = NULL, center = FALSE) {
   mat <- assay(sce, assay_name)
 
@@ -91,6 +103,7 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none"
 #' @export
 scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both"), center = FALSE) {
   mat <- as.matrix(mat)
+
 
   scale <- match.arg(scale)
 
