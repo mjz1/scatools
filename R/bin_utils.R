@@ -606,17 +606,19 @@ get_cancer_gene_copy <- function(sce, assay_name, group_var = "all") {
       logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
       sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
     } else {
-      logger::log_warn("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
-      break
+      logger::log_error("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
     }
   }
 
 
+  bulk_all <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = "all")
+
   bulk <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
-  # Calculate average copy per cluster so that we can highlight gains a losses from
+  # Calculate average copy per sample and cluster so that we can highlight gains a losses from
   # uninteresting events
-  mean_copies <- apply(assay(bulk), 2, mean)
+  mean_copies <- apply(assay(bulk_all), 2, mean)
+  mean_copies_group <- apply(assay(bulk), 2, mean)
   # median_copies <- apply(assay(bulk), 2, median)
 
   oncokb_idx <- which(sce@metadata$gene_overlap$onco_kb_annotated == "Yes" &
@@ -635,7 +637,8 @@ get_cancer_gene_copy <- function(sce, assay_name, group_var = "all") {
   }
 
   mcols(onco_ranges)[new_colnames] <- assay(bulk[bulk_idx,], assay_name)
-  mcols(onco_ranges)[rel_colnames] <- assay(bulk[bulk_idx,], assay_name) / mean_copies
+  mcols(onco_ranges)[rel_colnames] <- assay(bulk[bulk_idx,], assay_name) / mean_copies_group
+  mcols(onco_ranges)["relative_copies_all"] <- assay(bulk_all[bulk_idx,], assay_name) / mean_copies
 
   df <- as.data.frame(onco_ranges)
 
