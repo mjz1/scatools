@@ -27,10 +27,10 @@ cluster_seurat <- function(sce,
                            algorithm = 1,
                            resolution = 0.8,
                            n.neighbors = 10,
-                           suffix = "seurat",
-                           PCA_name = paste("PCA", suffix, sep = "_"),
-                           UMAP_name = paste("UMAP", suffix, sep = "_"),
-                           cluster_name = paste("clusters", suffix, sep = "_"),
+                           suffix = "",
+                           PCA_name = paste0("PCA", suffix),
+                           UMAP_name = paste0("UMAP", suffix),
+                           cluster_name = paste0("clusters", suffix),
                            metric = "correlation",
                            verbose = TRUE) {
 
@@ -151,10 +151,6 @@ add_umap_clusters <- function(sce,
 #'
 #' @inheritParams cnaHeatmap
 #' @inheritParams uwot::umap
-#'
-#' @examples
-#' clust_results <- perform_umap_clustering(cn_matrix = assay(test_sce, "counts"))
-#'
 perform_umap_clustering <- function(cn_matrix,
                                     n_neighbors = 10,
                                     min_dist = 0.1,

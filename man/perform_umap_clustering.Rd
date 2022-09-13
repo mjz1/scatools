@@ -89,7 +89,3 @@ A list with the clustering results
 \description{
 Clusters a copy number matrix using \code{hdbscan}.
 }
-\examples{
-clust_results <- perform_umap_clustering(cn_matrix = assay(test_sce, "counts"))
-
-}

@@ -270,8 +270,7 @@ cnaHeatmap <- function(sce,
         logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
         sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
       } else {
-        logger::log_warn("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
-        break
+        logger::log_error("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
       }
     }
     # Now create a heatmap where genes are highlighted in the bottom panel

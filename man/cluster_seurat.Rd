@@ -13,10 +13,10 @@ cluster_seurat(
   algorithm = 1,
   resolution = 0.8,
   n.neighbors = 10,
-  suffix = "seurat",
-  PCA_name = paste("PCA", suffix, sep = "_"),
-  UMAP_name = paste("UMAP", suffix, sep = "_"),
-  cluster_name = paste("clusters", suffix, sep = "_"),
+  suffix = "",
+  PCA_name = paste0("PCA", suffix),
+  UMAP_name = paste0("UMAP", suffix),
+  cluster_name = paste0("clusters", suffix),
   metric = "correlation",
   verbose = TRUE
 )
