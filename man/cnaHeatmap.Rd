@@ -8,7 +8,6 @@ cnaHeatmap(
   sce,
   assay_name = "state",
   clone_name = NULL,
-  cell_order = NULL,
   cluster_cells = FALSE,
   log2 = FALSE,
   center = FALSE,
@@ -30,7 +29,7 @@ cnaHeatmap(
 
 \item{clone_name}{Name of clone_id column in sce object}
 
-\item{cell_order}{Optional: Order of the cells}
+\item{cluster_cells}{If the value is a logical, it controls whether to make cluster on rows. The value can also be a \code{stats::hclust} or a \code{stats::dendrogram} which already contains clustering. Note this will override ordering of specified clones. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.}
 
 \item{log2}{Logical: Log2 transform the matrix prior to plotting}
 
@@ -53,10 +52,6 @@ cnaHeatmap(
 \item{verbose}{Logical: Message verbosity}
 
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
-
-\item{cluster_rows}{If the value is a logical, it controls whether to make cluster on rows. The value can also be a \code{stats::hclust} or a \code{stats::dendrogram} which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.}
-
-\item{clustering_results}{Clustering results to provide to inform cell ordering and cluster labelling. From \link{perform_umap_clustering}}
 }
 \value{
 A heatmap

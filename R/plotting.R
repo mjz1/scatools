@@ -156,18 +156,16 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param sce A SingleCellExperiment object
 #' @param assay_name Name of the assay to plot
 #' @param clone_name Name of clone_id column in sce object
-#' @param cell_order Optional: Order of the cells
-#' @param cluster_rows If the value is a logical, it controls whether to make cluster on rows. The value can also be a `stats::hclust` or a `stats::dendrogram` which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.
+#' @param cluster_cells If the value is a logical, it controls whether to make cluster on rows. The value can also be a `stats::hclust` or a `stats::dendrogram` which already contains clustering. Note this will override ordering of specified clones. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.
 #' @param log2 Logical: Log2 transform the matrix prior to plotting
 #' @param center logical: center the matrix prior to plotting
 #' @param scale One of `'cells', 'bins', 'both' or 'none'`. Determines what kind of scaling is done.
-#' @param clustering_results Clustering results to provide to inform cell ordering and cluster labelling. From [perform_umap_clustering]
 #' @param label_genes Optional: Vector of gene names to label in the heatmap. Note: [overlap_genes] must be run prior to labelling genes.
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
 #' @param col_clones Optional: A named vector (or unnamed) of clone colors.
+#' @param cluster_clones Logical: Whether or not to order the clones by clustering
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
-#' @param cluster_clones Logical: Whether or not to order the clones by clustering
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
 #'
@@ -177,7 +175,6 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 cnaHeatmap <- function(sce,
                        assay_name = "state",
                        clone_name = NULL,
-                       cell_order = NULL,
                        cluster_cells = FALSE,
                        log2 = FALSE,
                        center = FALSE,
@@ -303,7 +300,7 @@ cnaHeatmap <- function(sce,
   } else if (!is.null(col_fun)) {
     cn_colors <- col_fun
   } else {
-    # Attempt some intelligent color mapping
+    # Attempt some intelligent color mapping?
     cn_colors <- NULL
   }
 
@@ -316,9 +313,14 @@ cnaHeatmap <- function(sce,
     # Maybe there is a better way to handle this
     sce <- sce[,orig_order]
 
-    if (!is.null(clone_name)) {
+    # if (!is.null(clone_name)) {
       row_split <- length(unique(sce[[clone_name]]))
       row_title <- NULL
+
+      # Catch single row split
+      if (row_split == 1) {
+        row_split = NULL
+      }
 
       left_annot <- ComplexHeatmap::HeatmapAnnotation(
         Clone = sce[[clone_name]],
@@ -326,7 +328,7 @@ cnaHeatmap <- function(sce,
         which = "row",
         show_legend = c(TRUE, FALSE)
       )
-    }
+    # }
   }
 
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
