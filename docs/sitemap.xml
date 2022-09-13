@@ -46,10 +46,22 @@
     <loc>https://mjz1.github.io/scatools/reference/calc_cnv_score.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/cluster_seurat.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/cnaHeatmap.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/correct_atac_bias.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/gc_cor_modal.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/gc_modal_qc_filter.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/get_cancer_gene_copy.html</loc>
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/get_chr_arm_bins.html</loc>
@@ -79,6 +91,9 @@
     <loc>https://mjz1.github.io/scatools/reference/index.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/integrate_segments.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/is_ideal_bin.html</loc>
   </url>
   <url>
@@ -86,6 +101,9 @@
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/load_atac_bins.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/overlap_genes.html</loc>
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/params_sc_hmm.html</loc>
@@ -106,6 +124,15 @@
     <loc>https://mjz1.github.io/scatools/reference/plot_cell_multi.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/plot_cell_psuedobulk_cna.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/plot_psuedobulk_cna.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/pseudobulk_sce.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/read_vartrix.html</loc>
   </url>
   <url>
@@ -113,5 +140,8 @@
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/scatools-package.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/summarise_chr_arm.html</loc>
   </url>
 </urlset>

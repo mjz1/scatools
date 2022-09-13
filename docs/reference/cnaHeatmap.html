@@ -56,11 +56,14 @@
 <span>  assay_name <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>  clone_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cell_order <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cluster_cells <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  log2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  center <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"cells"</span>, <span class="st">"bins"</span>, <span class="st">"both"</span><span class="op">)</span>,</span>
-<span>  clustering_results <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  label_genes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  col_fun <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  col_clones <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cluster_clones <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  legend_name <span class="op">=</span> <span class="va">assay_name</span>,</span>
 <span>  clust_annot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -90,12 +93,16 @@
 <dd><p>Logical: Log2 transform the matrix prior to plotting</p></dd>
 
 
+<dt>center</dt>
+<dd><p>logical: center the matrix prior to plotting</p></dd>
+
+
 <dt>scale</dt>
 <dd><p>One of <code>'cells', 'bins', 'both' or 'none'</code>. Determines what kind of scaling is done.</p></dd>
 
 
-<dt>clustering_results</dt>
-<dd><p>Clustering results to provide to inform cell ordering and cluster labelling. From <a href="perform_umap_clustering.html">perform_umap_clustering</a></p></dd>
+<dt>label_genes</dt>
+<dd><p>Optional: Vector of gene names to label in the heatmap. Note: <a href="overlap_genes.html">overlap_genes</a> must be run prior to labelling genes.</p></dd>
 
 
 <dt>col_fun</dt>
@@ -103,7 +110,11 @@
 
 
 <dt>col_clones</dt>
-<dd><p>Optional: A named vector of clone colors.</p></dd>
+<dd><p>Optional: A named vector (or unnamed) of clone colors.</p></dd>
+
+
+<dt>cluster_clones</dt>
+<dd><p>Logical: Whether or not to order the clones by clustering</p></dd>
 
 
 <dt>legend_name</dt>
@@ -120,6 +131,14 @@
 
 <dt>...</dt>
 <dd><p>Additional parameters that can be passed to <code><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">ComplexHeatmap::Heatmap()</a></code></p></dd>
+
+
+<dt>cluster_rows</dt>
+<dd><p>If the value is a logical, it controls whether to make cluster on rows. The value can also be a <code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust</a></code> or a <code><a href="https://rdrr.io/r/stats/dendrogram.html" class="external-link">stats::dendrogram</a></code> which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.</p></dd>
+
+
+<dt>clustering_results</dt>
+<dd><p>Clustering results to provide to inform cell ordering and cluster labelling. From <a href="perform_umap_clustering.html">perform_umap_clustering</a></p></dd>
 
 </dl></div>
     <div class="section level2">
