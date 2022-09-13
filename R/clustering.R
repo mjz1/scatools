@@ -3,7 +3,6 @@
 #'
 #' @param sce SingleCellExperiment object
 #' @param assay_name Assay name
-#' @param raw_counts Assay containing raw counts
 #' @param do.scale scale
 #' @param do.center center
 #' @param algorithm clustering algorithm
@@ -22,7 +21,6 @@
 #'
 cluster_seurat <- function(sce,
                            assay_name,
-                           raw_counts = "counts",
                            do.scale = FALSE,
                            do.center = FALSE,
                            algorithm = 1,
@@ -50,8 +48,7 @@ cluster_seurat <- function(sce,
     reducedDim(sce, dim_name) <- NULL
   }
 
-  # srt <- suppressWarnings(Seurat::as.Seurat(x = sce, counts = raw_counts, data = assay_name))
-  srt <- Seurat::CreateSeuratObject(counts = assay(sce, raw_counts), data = assay(sce, assay_name))
+  srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name), data = assay(sce, assay_name))
 
 
   srt <- Seurat::ScaleData(srt, do.scale = do.scale, do.center = do.center, verbose = verbose)

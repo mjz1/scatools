@@ -7,7 +7,6 @@
 cluster_seurat(
   sce,
   assay_name,
-  raw_counts = "counts",
   do.scale = FALSE,
   do.center = FALSE,
   algorithm = 1,
@@ -26,8 +25,6 @@ cluster_seurat(
 \item{sce}{SingleCellExperiment object}
 
 \item{assay_name}{Assay name}
-
-\item{raw_counts}{Assay containing raw counts}
 
 \item{do.scale}{scale}
 
