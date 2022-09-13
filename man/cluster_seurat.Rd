@@ -13,6 +13,7 @@ cluster_seurat(
   algorithm = 1,
   resolution = 0.8,
   n.neighbors = 10,
+  dims = 1:50,
   suffix = "",
   PCA_name = paste0("PCA", suffix),
   UMAP_name = paste0("UMAP", suffix),
@@ -37,6 +38,8 @@ cluster_seurat(
 \item{resolution}{clustering resolution}
 
 \item{n.neighbors}{neighbors for umap}
+
+\item{dims}{Number of reduced dimensions to use for FindNeighbors and UMAP}
 
 \item{suffix}{Suffix name to add to the PCA, UMAP, and clusters}
 

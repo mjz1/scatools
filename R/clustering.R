@@ -9,6 +9,7 @@
 #' @param algorithm clustering algorithm
 #' @param resolution clustering resolution
 #' @param n.neighbors neighbors for umap
+#' @param dims Number of reduced dimensions to use for FindNeighbors and UMAP
 #' @param metric metric for umap
 #' @param suffix Suffix name to add to the PCA, UMAP, and clusters
 #' @param PCA_name Name to store PCA dimred
@@ -27,6 +28,7 @@ cluster_seurat <- function(sce,
                            algorithm = 1,
                            resolution = 0.8,
                            n.neighbors = 10,
+                           dims = 1:50,
                            suffix = "",
                            PCA_name = paste0("PCA", suffix),
                            UMAP_name = paste0("UMAP", suffix),
@@ -48,18 +50,20 @@ cluster_seurat <- function(sce,
     reducedDim(sce, dim_name) <- NULL
   }
 
-  srt <- suppressWarnings(Seurat::as.Seurat(sce, counts = raw_counts, data = assay_name))
+  # srt <- suppressWarnings(Seurat::as.Seurat(x = sce, counts = raw_counts, data = assay_name))
+  srt <- Seurat::CreateSeuratObject(counts = assay(sce, raw_counts), data = assay(sce, assay_name))
+
 
   srt <- Seurat::ScaleData(srt, do.scale = do.scale, do.center = do.center, verbose = verbose)
 
   srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = FALSE)
 
-  srt <- Seurat::FindNeighbors(srt, dims = 1:50, verbose = verbose)
+  srt <- Seurat::FindNeighbors(srt, dims = dims, verbose = verbose)
   srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
 
   srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
 
-  srt <- Seurat::RunUMAP(srt, dims = 1:50, n.neighbors = n.neighbors, metric = metric, verbose = verbose)
+  srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = metric, verbose = verbose)
 
   # Put the PCA, UMAP, and clustering results into the original SCE
   reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings
