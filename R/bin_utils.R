@@ -637,10 +637,18 @@ get_cancer_gene_copy <- function(sce, assay_name, group_var = "all") {
   }
 
   mcols(onco_ranges)[new_colnames] <- assay(bulk[bulk_idx,], assay_name)
-  mcols(onco_ranges)[rel_colnames] <- assay(bulk[bulk_idx,], assay_name) / mean_copies_group
-  mcols(onco_ranges)["relative_copies_all"] <- assay(bulk_all[bulk_idx,], assay_name) / mean_copies
+
+  assay(bulk[bulk_idx,], assay_name) - mean_copies_group
+
+  # Use sweep to subtract from each column
+  mcols(onco_ranges)[rel_colnames] <- sweep(assay(bulk[bulk_idx,], assay_name), 2, mean_copies_group, `-`)
+  mcols(onco_ranges)["relative_copies_all"] <- assay(bulk_all[bulk_idx,], assay_name) - mean_copies
 
   df <- as.data.frame(onco_ranges)
+
+  df$mean_copy <- mean_copies
+
+  df[paste0("mean_copy_", names(mean_copies_group))] <- mean_copies_group
 
   return(df)
 }
