@@ -31,7 +31,7 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_count
 
   assay(sce, "bias") <- assay(sce, assay_name) / mcols(rowRanges(sce))[[granges_signal_colname]]
 
-  mcols(rowRanges(sce))["mean_bias"] <- apply(assay(sce, "bias"), 1, mean)
+  mcols(rowRanges(sce))["mean_bias"] <- apply(assay(sce, "bias"), 1, mean, na.rm = TRUE)
 
   assay(sce, corrected_name) <- assay(sce, assay_name) / mcols(rowRanges(sce))[["mean_bias"]]
 
