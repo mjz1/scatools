@@ -7,7 +7,7 @@
 correct_atac_bias(
   sce,
   assay_name,
-  corrected_name = "corrected_counts",
+  corrected_name = "counts_corrected",
   cn_granges,
   granges_signal_colname,
   drop_missing_bins = FALSE
@@ -27,7 +27,7 @@ correct_atac_bias(
 \item{drop_missing_bins}{Logical: Drop bins missing information in \code{cn_granges}.}
 }
 \value{
-A \code{SingleCellExperiment} object containing slots \code{bias} and \code{corrected_counts}.
+A \code{SingleCellExperiment} object containing slots \code{bias} and \code{counts_corrected}.
 }
 \description{
 Correct the ATAC signal bias in a cancer sample using a bulk copy number profile. First, the copy number profile of interest (in granges format) is integrated with the bin sizes provided in the input \code{SingleCellExperiment} object. The copy number profile is then divided out of the input counts and averaged across all cells to approximate the amount of atac specific bias. The input counts are then divided by this bias measure to yield corrected counts.

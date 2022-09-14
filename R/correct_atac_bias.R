@@ -11,10 +11,10 @@
 #' @param granges_signal_colname Column in `cn_granges` that contains the copy number information.
 #' @param drop_missing_bins Logical: Drop bins missing information in `cn_granges`.
 #'
-#' @return A `SingleCellExperiment` object containing slots `bias` and `corrected_counts`.
+#' @return A `SingleCellExperiment` object containing slots `bias` and `counts_corrected`.
 #' @export
 #'
-correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_counts", cn_granges, granges_signal_colname, drop_missing_bins = FALSE) {
+correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_corrected", cn_granges, granges_signal_colname, drop_missing_bins = FALSE) {
 
   # Get bin_ids to keep track in case of dropped bins
   bin_ids <- get_bin_ids(rowRanges(sce))
@@ -33,7 +33,7 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "corrected_count
 
   mcols(rowRanges(sce))["mean_bias"] <- apply(assay(sce, "bias"), 1, mean, na.rm = TRUE)
 
-  assay(sce, corrected_name) <- assay(sce, assay_name) / mcols(rowRanges(sce))[["mean_bias"]]
+  assay(sce, corrected_name) <- sweep(x = assay(sce, assay_name), MARGIN = 1, STATS = mcols(rowRanges(sce))[["mean_bias"]], FUN = "/")
 
   # Keep rownames
   rownames(sce) <- new_bin_ids
