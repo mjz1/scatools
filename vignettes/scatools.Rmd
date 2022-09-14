@@ -167,7 +167,7 @@ sce <- test_sce
 
 Use Seurat to cluster and dimensionality reduce
 ```{r}
-sce <- cluster_seurat(sce, assay_name = "counts_gc_modal", raw_counts = "counts_gc_modal", resolution = 0.5, do.scale = TRUE, do.center = TRUE, suffix = "", verbose = FALSE)
+sce <- cluster_seurat(sce, assay_name = "counts_gc_modal", resolution = 0.5, do.scale = TRUE, do.center = TRUE, suffix = "", verbose = FALSE)
 sce <- calc_cnv_score(sce, assay_name = "counts_gc_modal")
 ```
 
