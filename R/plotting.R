@@ -100,7 +100,6 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     # base_p$mapping$colour <- NULL # remove color mapping
 
     p <- base_p + geom_segment(aes(x = start, xend = end, y = counts, yend = counts), size = 1)
-
   }
 
   return(p)
@@ -191,8 +190,10 @@ cnaHeatmap <- function(sce,
   #   rownames(sce) <- 1:nrow(sce)
   # }
 
-  sce <- scale_sub(sce = sce, assay_name = assay_name, log2 = log2,
-                   scale = scale, new_assay = "heatmat", center = center)
+  sce <- scale_sub(
+    sce = sce, assay_name = assay_name, log2 = log2,
+    scale = scale, new_assay = "heatmat", center = center
+  )
 
   orig_order <- colnames(sce)
 
@@ -206,9 +207,9 @@ cnaHeatmap <- function(sce,
     if (cluster_clones) {
       # First get the average per clone signal to order the clones properly
       avg_exp <- scuttle::summarizeAssayByGroup(sce,
-                                                assay.type = assay_name,
-                                                ids = sce[[clone_name]],
-                                                statistics = "mean"
+        assay.type = assay_name,
+        ids = sce[[clone_name]],
+        statistics = "mean"
       )
       rowRanges(avg_exp) <- rowRanges(sce)
 
@@ -225,7 +226,7 @@ cnaHeatmap <- function(sce,
     # Do we want to reorder the sce now?
     cell_order <- order(match(sce[[clone_name]], clone_order))
 
-    sce <- sce[,cell_order]
+    sce <- sce[, cell_order]
 
     row_split <- factor(sce[[clone_name]], levels = clone_order)
     row_title <- clone_order
@@ -288,7 +289,6 @@ cnaHeatmap <- function(sce,
 
     # Label genes
     bottom_ha_genes <- HeatmapAnnotation(genes = anno_mark(at = c(gene_bins_idx), labels = label_genes, which = "column", side = "bottom", link_width = unit(3, "mm")))
-
   } else {
     # Make null so we can pass to heatmap function regardless
     bottom_ha_genes <- NULL
@@ -311,23 +311,23 @@ cnaHeatmap <- function(sce,
   if (class(cluster_cells) %in% c("dendrogram", "hclust") || cluster_cells == TRUE) {
     # Revert to original ordering
     # Maybe there is a better way to handle this
-    sce <- sce[,orig_order]
+    sce <- sce[, orig_order]
 
     # if (!is.null(clone_name)) {
-      row_split <- length(unique(sce[[clone_name]]))
-      row_title <- NULL
+    row_split <- length(unique(sce[[clone_name]]))
+    row_title <- NULL
 
-      # Catch single row split
-      if (row_split == 1) {
-        row_split = NULL
-      }
+    # Catch single row split
+    if (row_split == 1) {
+      row_split <- NULL
+    }
 
-      left_annot <- ComplexHeatmap::HeatmapAnnotation(
-        Clone = sce[[clone_name]],
-        col = list(Clone = col_clones),
-        which = "row",
-        show_legend = c(TRUE, FALSE)
-      )
+    left_annot <- ComplexHeatmap::HeatmapAnnotation(
+      Clone = sce[[clone_name]],
+      col = list(Clone = col_clones),
+      which = "row",
+      show_legend = c(TRUE, FALSE)
+    )
     # }
   }
 

@@ -325,4 +325,3 @@ prettyMb <- function(x, places = 3) {
 chr_reorder <- function(chrs) {
   gtools::mixedsort(chrs)
 }
-

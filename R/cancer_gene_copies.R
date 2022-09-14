@@ -70,9 +70,11 @@ get_cancer_gene_copy <- function(sce, assay_name, group_var = "all", gain_cutoff
 
 
   df_long <- df %>%
-    pivot_longer(cols = c(starts_with(assay_name), starts_with("relative_copies")),
-                 names_to = c(".value", "clone"),
-                 names_pattern = "(.+)_(.+)") %>%
+    pivot_longer(
+      cols = c(starts_with(assay_name), starts_with("relative_copies")),
+      names_to = c(".value", "clone"),
+      names_pattern = "(.+)_(.+)"
+    ) %>%
     mutate(
       cn_cat = factor(ifelse(relative_copies >= gain_cutoff, "gain",
         ifelse(relative_copies <= loss_cutoff, "loss", "neutral")

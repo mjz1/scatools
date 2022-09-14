@@ -516,12 +516,11 @@ get_bin_ids <- function(granges) {
 #' @export
 #'
 overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
-
   bin_ranges <- rowRanges(sce)
 
   # Pull genes
   g <- GenomicFeatures::genes(ensDb)
-  g <- GenomeInfoDb::keepStandardChromosomes(g, pruning.mode="coarse")
+  g <- GenomeInfoDb::keepStandardChromosomes(g, pruning.mode = "coarse")
 
   # Keep the chromosome naming styles consistent prior to overlapping
   GenomeInfoDb::seqlevelsStyle(g) <- "UCSC"
@@ -552,17 +551,17 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
   match_idx1 <- match(oncokb_df$hugo_symbol, g$gene_name)
   match_idx2 <- match(oncokb_df$entrez_gene_id, g$entrezid)
   # take from idx2
-  match_idx1[is.na(match_idx1)] = match_idx2[is.na(match_idx1)]
+  match_idx1[is.na(match_idx1)] <- match_idx2[is.na(match_idx1)]
 
   oncokb_df$match_idx <- match_idx1
   # Log oncogenes which are missing from the match
-  missing_g <-  oncokb_df[is.na(oncokb_df$match_idx), 'hugo_symbol']
+  missing_g <- oncokb_df[is.na(oncokb_df$match_idx), "hugo_symbol"]
   if (length(missing_g > 0)) {
     logger::log_warn("Cancer genes missing from overlap: {paste(missing_g, collapse = '; ')}")
   }
 
   # Filter down to non-na to facilate merging
-  oncokb_df <- oncokb_df[!is.na(oncokb_df$match_idx),]
+  oncokb_df <- oncokb_df[!is.na(oncokb_df$match_idx), ]
 
   # Perform the merge
   mcols(g)[oncokb_df$match_idx, colnames(oncokb_df)] <- oncokb_df
@@ -575,14 +574,17 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
 #' @export
 get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/cancerGeneList.txt") {
   # Column names are problematic. Load these first
-  colnames_cleaned <- read.table(file = link, header = F, sep = "\t",
-                          check.names = TRUE, nrows = 1, comment.char = "")
-  colnames_cleaned <- janitor::make_clean_names(colnames_cleaned[1,])
+  colnames_cleaned <- read.table(
+    file = link, header = F, sep = "\t",
+    check.names = TRUE, nrows = 1, comment.char = ""
+  )
+  colnames_cleaned <- janitor::make_clean_names(colnames_cleaned[1, ])
 
-  df <- read.table(file = link, header = FALSE, sep = "\t",
-                   col.names = colnames_cleaned, fill = F, skip = 1)
+  df <- read.table(
+    file = link, header = FALSE, sep = "\t",
+    col.names = colnames_cleaned, fill = F, skip = 1
+  )
 
   return(df)
 }
-
 
