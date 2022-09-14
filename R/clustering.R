@@ -56,7 +56,15 @@ cluster_seurat <- function(sce,
   srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = FALSE)
 
   srt <- Seurat::FindNeighbors(srt, dims = dims, verbose = verbose)
-  srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
+
+  if (algorithm == 4) {
+    # Set method to igraph for leiden
+    logger::log_info("Finding clusters using leiden algorithm")
+    srt <- suppressWarnings(Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose))
+    logger::log_success("Found ", length(unique(srt$seurat_clusters)), " communities")
+  } else {
+    srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
+  }
 
   srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
 
