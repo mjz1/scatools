@@ -55,7 +55,6 @@
 <span>  <span class="va">sce</span>,</span>
 <span>  assay_name <span class="op">=</span> <span class="st">"state"</span>,</span>
 <span>  clone_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cell_order <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cluster_cells <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  log2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  center <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -85,8 +84,8 @@
 <dd><p>Name of clone_id column in sce object</p></dd>
 
 
-<dt>cell_order</dt>
-<dd><p>Optional: Order of the cells</p></dd>
+<dt>cluster_cells</dt>
+<dd><p>If the value is a logical, it controls whether to make cluster on rows. The value can also be a <code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust</a></code> or a <code><a href="https://rdrr.io/r/stats/dendrogram.html" class="external-link">stats::dendrogram</a></code> which already contains clustering. Note this will override ordering of specified clones. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.</p></dd>
 
 
 <dt>log2</dt>
@@ -131,14 +130,6 @@
 
 <dt>...</dt>
 <dd><p>Additional parameters that can be passed to <code><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">ComplexHeatmap::Heatmap()</a></code></p></dd>
-
-
-<dt>cluster_rows</dt>
-<dd><p>If the value is a logical, it controls whether to make cluster on rows. The value can also be a <code><a href="https://rdrr.io/r/stats/hclust.html" class="external-link">stats::hclust</a></code> or a <code><a href="https://rdrr.io/r/stats/dendrogram.html" class="external-link">stats::dendrogram</a></code> which already contains clustering. Check https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html#clustering.</p></dd>
-
-
-<dt>clustering_results</dt>
-<dd><p>Clustering results to provide to inform cell ordering and cluster labelling. From <a href="perform_umap_clustering.html">perform_umap_clustering</a></p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -241,8 +241,10 @@ bins.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p>Use Seurat to cluster and dimensionality reduce</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_seurat.html">cluster_seurat</a></span><span class="op">(</span><span class="va">sce</span>, assay_name <span class="op">=</span> <span class="st">"counts_gc_modal"</span>, raw_counts <span class="op">=</span> <span class="st">"counts_gc_modal"</span>, resolution <span class="op">=</span> <span class="fl">0.5</span>, do.scale <span class="op">=</span> <span class="cn">TRUE</span>, do.center <span class="op">=</span> <span class="cn">TRUE</span>, suffix <span class="op">=</span> <span class="st">""</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_seurat.html">cluster_seurat</a></span><span class="op">(</span><span class="va">sce</span>, assay_name <span class="op">=</span> <span class="st">"counts_gc_modal"</span>, resolution <span class="op">=</span> <span class="fl">0.5</span>, do.scale <span class="op">=</span> <span class="cn">TRUE</span>, do.center <span class="op">=</span> <span class="cn">TRUE</span>, suffix <span class="op">=</span> <span class="st">""</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required namespace: Seurat</span></span>
+<span><span class="co">#&gt; Warning: Feature names cannot have underscores ('_'), replacing with dashes</span></span>
+<span><span class="co">#&gt; ('-')</span></span>
 <span><span class="co">#&gt; Warning in irlba(A = t(x = object), nv = npcs, ...): You're computing too large</span></span>
 <span><span class="co">#&gt; a percentage of total singular values, use a standard svd instead.</span></span>
 <span><span class="co">#&gt; Loading required package: Seurat</span></span>
