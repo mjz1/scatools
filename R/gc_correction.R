@@ -31,15 +31,34 @@ add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method 
     valid_mat <- NULL
   }
 
-  assay(sce, gc_slot) <- perform_gc_cor(
-    mat = assay(sce, assay_name),
-    gc = gc,
-    valid_mat = valid_mat,
-    method = method,
-    ncores = ncores,
-    verbose = verbose,
-    ...
-  )
+  if (method == "modal") {
+    res <- perform_gc_cor(
+      mat = assay(sce, assay_name),
+      gc = gc,
+      valid_mat = valid_mat,
+      method = method,
+      ncores = ncores,
+      verbose = verbose,
+      results = "default",
+      ...
+    )
+
+    assay(sce, gc_slot) <- res$counts
+
+    sce$modal_quantile <- as.integer(gsub("q", "", res$modal_quantiles))
+
+  } else {
+    assay(sce, gc_slot) <- perform_gc_cor(
+      mat = assay(sce, assay_name),
+      gc = gc,
+      valid_mat = valid_mat,
+      method = method,
+      ncores = ncores,
+      verbose = verbose,
+      ...
+    )
+  }
+
   metadata(sce)$gc_cor_method <- method
 
   return(sce)
@@ -102,12 +121,29 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
     logger::log_success("GC correction completed!")
   }
 
+  if (method == "modal") {
+    modal_quantiles <- lapply(X = counts_gc_list, FUN = function(df) {
+      unique(na.omit(df$modal_quantile))
+    }) %>% unlist
+    corrected <- lapply(X = counts_gc_list, FUN = function(df) {
+      df$modal_corrected
+    })
+    corrected <- matrix(unlist(corrected), ncol = length(corrected), byrow = FALSE)
 
-  corrected <- matrix(unlist(counts_gc_list), ncol = length(counts_gc_list), byrow = FALSE)
+    colnames(corrected) <- colnames(mat)
+    rownames(corrected) <- rownames(mat)
 
-  colnames(corrected) <- colnames(mat)
-  rownames(corrected) <- rownames(mat)
-  return(corrected)
+    return(list(counts = corrected, modal_quantiles = modal_quantiles))
+
+  } else {
+    corrected <- matrix(unlist(counts_gc_list), ncol = length(counts_gc_list), byrow = FALSE)
+
+    colnames(corrected) <- colnames(mat)
+    rownames(corrected) <- rownames(mat)
+    return(corrected)
+  }
+
+
 }
 
 
