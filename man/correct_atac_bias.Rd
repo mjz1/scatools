@@ -8,7 +8,7 @@ correct_atac_bias(
   sce,
   assay_name,
   corrected_name = "counts_corrected",
-  cn_granges,
+  cn_granges = NULL,
   granges_signal_colname,
   drop_missing_bins = FALSE
 )
@@ -20,7 +20,7 @@ correct_atac_bias(
 
 \item{corrected_name}{Name of corrected assay}
 
-\item{cn_granges}{GRanges object containing bulk sample copy number information}
+\item{cn_granges}{GRanges object containing bulk sample copy number information. Only required if data was not already integrated.}
 
 \item{granges_signal_colname}{Column in \code{cn_granges} that contains the copy number information.}
 

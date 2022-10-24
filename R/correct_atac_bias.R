@@ -7,27 +7,29 @@
 #' @param sce Single cell experiment object
 #' @param assay_name Name of assay to correct
 #' @param corrected_name Name of corrected assay
-#' @param cn_granges GRanges object containing bulk sample copy number information
+#' @param cn_granges GRanges object containing bulk sample copy number information. Only required if data was not already integrated.
 #' @param granges_signal_colname Column in `cn_granges` that contains the copy number information.
 #' @param drop_missing_bins Logical: Drop bins missing information in `cn_granges`.
 #'
 #' @return A `SingleCellExperiment` object containing slots `bias` and `counts_corrected`.
 #' @export
 #'
-correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_corrected", cn_granges, granges_signal_colname, drop_missing_bins = FALSE) {
+correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_corrected", cn_granges = NULL, granges_signal_colname, drop_missing_bins = FALSE) {
 
   # Get bin_ids to keep track in case of dropped bins
   bin_ids <- get_bin_ids(rowRanges(sce))
 
   # Integrate the true CN data to our data
-  integ_ranges <- integrate_segments(x = rowRanges(sce), y = cn_granges, granges_signal_colname = granges_signal_colname, drop_na = drop_missing_bins)
+  if (!is.null(cn_granges)) {
+    integ_ranges <- integrate_segments(x = rowRanges(sce), y = cn_granges, granges_signal_colname = granges_signal_colname, drop_na = drop_missing_bins)
 
-  new_bin_ids <- get_bin_ids(integ_ranges)
+    new_bin_ids <- get_bin_ids(integ_ranges)
 
-  # Safely subset based on new bin ids
-  sce <- sce[new_bin_ids, ]
+    # Safely subset based on new bin ids
+    sce <- sce[new_bin_ids, ]
 
-  rowRanges(sce) <- integ_ranges
+    rowRanges(sce) <- integ_ranges
+  }
 
   assay(sce, "bias") <- assay(sce, assay_name) / mcols(rowRanges(sce))[[granges_signal_colname]]
 
@@ -36,7 +38,7 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_correcte
   assay(sce, corrected_name) <- sweep(x = assay(sce, assay_name), MARGIN = 1, STATS = mcols(rowRanges(sce))[["mean_bias"]], FUN = "/")
 
   # Keep rownames
-  rownames(sce) <- new_bin_ids
+  rownames(sce) <- get_bin_ids(rowRanges(sce))
 
   return(sce)
 }

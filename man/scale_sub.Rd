@@ -8,7 +8,7 @@ scale_sub(
   sce,
   assay_name = "counts",
   log2 = FALSE,
-  scale = c("none", "cells", "bins", "both"),
+  scale = "none",
   verbose = FALSE,
   new_assay = NULL,
   center = FALSE
