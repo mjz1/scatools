@@ -165,6 +165,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @param cluster_clones Logical: Whether or not to order the clones by clustering
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
+#' @param bulk_cn_col Name of column in `rowRanges(sce)` that contains bulk copy number data to plot on top of heatmap
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
 #'
@@ -185,6 +186,8 @@ cnaHeatmap <- function(sce,
                        legend_name = assay_name,
                        clust_annot = TRUE,
                        verbose = TRUE,
+                       top_annotation = NULL,
+                       bulk_cn_col = NULL,
                        ...) {
   # if (is.null(rownames(sce))) {
   #   rownames(sce) <- 1:nrow(sce)
@@ -313,22 +316,35 @@ cnaHeatmap <- function(sce,
     # Maybe there is a better way to handle this
     sce <- sce[, orig_order]
 
-    # if (!is.null(clone_name)) {
-    row_split <- length(unique(sce[[clone_name]]))
-    row_title <- NULL
+    if (!is.null(clone_name)) {
+      row_split <- length(unique(sce[[clone_name]]))
+      row_title <- NULL
 
-    # Catch single row split
-    if (row_split == 1) {
-      row_split <- NULL
+      # Catch single row split
+      if (row_split == 1) {
+        row_split <- NULL
+      }
+
+      left_annot <- ComplexHeatmap::HeatmapAnnotation(
+        Clone = sce[[clone_name]],
+        col = list(Clone = col_clones),
+        which = "row",
+        show_legend = c(TRUE, FALSE)
+      )
     }
+  }
 
-    left_annot <- ComplexHeatmap::HeatmapAnnotation(
-      Clone = sce[[clone_name]],
-      col = list(Clone = col_clones),
-      which = "row",
-      show_legend = c(TRUE, FALSE)
-    )
-    # }
+  # Add bulk CN annotation
+  if (!is.null(bulk_cn_col)) {
+    if (!bulk_cn_col %in% colnames(mcols(rowRanges(sce)))) {
+      logger::log_warn("{bulk_cn_col} not found in provided object. Not plotting...")
+      top_annotation = NULL
+    } else {
+      cn_dat = mcols(rowRanges(sce))[,bulk_cn_col]
+      top_annotation = ComplexHeatmap::HeatmapAnnotation(bulk_cn_col = ComplexHeatmap::anno_points(cn_dat, border = T, pch = 15, size = unit(1, "mm")))
+      # Need to figure out how to rename the anno.
+      # top_annotation@anno_list$bulk_cn_col@name <- bulk_cn_col
+    }
   }
 
   suppressMessages(ht_plot <- ComplexHeatmap::Heatmap(
@@ -347,6 +363,7 @@ cnaHeatmap <- function(sce,
     row_split = row_split,
     row_title = row_title,
     bottom_annotation = bottom_ha_genes,
+    top_annotation = top_annotation,
     ...
   ))
 

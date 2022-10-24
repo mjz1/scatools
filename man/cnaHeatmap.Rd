@@ -19,6 +19,8 @@ cnaHeatmap(
   legend_name = assay_name,
   clust_annot = TRUE,
   verbose = TRUE,
+  top_annotation = NULL,
+  bulk_cn_col = NULL,
   ...
 )
 }
@@ -50,6 +52,8 @@ cnaHeatmap(
 \item{clust_annot}{Annotate cluster and sample labels}
 
 \item{verbose}{Logical: Message verbosity}
+
+\item{bulk_cn_col}{Name of column in \code{rowRanges(sce)} that contains bulk copy number data to plot on top of heatmap}
 
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
 }
