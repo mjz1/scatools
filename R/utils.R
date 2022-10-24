@@ -76,7 +76,7 @@ calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score", metho
 #' @return A single cell experiment object
 #' @export
 #'
-scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = c("none", "cells", "bins", "both"), verbose = FALSE, new_assay = NULL, center = FALSE) {
+scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = "none", verbose = FALSE, new_assay = NULL, center = FALSE) {
   mat <- assay(sce, assay_name)
 
   # Ensure we have matching rownames to index later
