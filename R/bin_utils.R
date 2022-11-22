@@ -236,6 +236,7 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 #' @param bs_genome A BSgenome object
 #' @param tilewidth Bin size
 #' @param select_chrs Vector of chromosomes to include
+#' @param respect_chr_arms logical If `TRUE`, bins will be created with respect to chromosome arms (ie. not crossing arm boundries)
 #'
 #' @return A GRanges object of bins
 #' @export
@@ -244,17 +245,42 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 #' \dontrun{
 #' bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
 #' }
-get_tiled_bins <- function(bs_genome, tilewidth = 500000, select_chrs = NULL) {
+get_tiled_bins <- function(bs_genome = NULL, tilewidth = 500000, select_chrs = NULL, respect_chr_arms = TRUE) {
+
+  if (is.null(bs_genome)) {
+    logger::log_error("Must provide 'bs_genome'")
+    stop(call. = F)
+  }
+
   stopifnot(class(bs_genome) %in% "BSgenome")
 
   if (is.null(select_chrs)) {
     select_chrs <- paste("chr", c(1:22, "X"), sep = "")
   }
 
-  bins <- GenomicRanges::tileGenome(BSgenome::seqinfo(bs_genome)[select_chrs],
-    tilewidth = tilewidth,
-    cut.last.tile.in.chrom = TRUE
-  )
+  logger::log_info("Creating chromosome bins for {unique(genome(bs_genome))[1]}")
+  logger::log_info("respect_chr_arms = {respect_chr_arms}")
+  logger::log_info("Chromosomes: {paste(select_chrs, collapse = ';')}")
+  logger::log_info("Binwidth = {prettyMb(tilewidth)}")
+
+  if (respect_chr_arms) {
+    # Get arm bins
+    arm_bins <- get_chr_arm_bins(genome = unique(genome(bs_genome))[1])
+    bins <- lapply(X = seq_along(arm_bins), FUN = function(i) {
+      r <- arm_bins[i]
+
+      starts = seq(start(r), end(r), by = tilewidth)
+      ends = c(starts[2:(length(starts))] - 1, end(r))
+
+      r_new <- GRanges(seqnames = seqnames(r), ranges = IRanges(start = starts, end = ends), arm = r$arm)
+    }) %>% GRangesList() %>% unlist()
+  } else {
+    bins <- GenomicRanges::tileGenome(BSgenome::seqinfo(bs_genome)[select_chrs],
+                                      tilewidth = tilewidth,
+                                      cut.last.tile.in.chrom = TRUE
+    )
+  }
+
   bins$binwidth <- IRanges::width(bins)
 
   bins$bin_id <- paste(seqnames(bins), start(bins), end(bins), sep = "_")
