@@ -4,7 +4,12 @@
 \alias{get_tiled_bins}
 \title{Get tiled bins}
 \usage{
-get_tiled_bins(bs_genome, tilewidth = 500000, select_chrs = NULL)
+get_tiled_bins(
+  bs_genome = NULL,
+  tilewidth = 500000,
+  select_chrs = NULL,
+  respect_chr_arms = TRUE
+)
 }
 \arguments{
 \item{bs_genome}{A BSgenome object}
@@ -12,6 +17,8 @@ get_tiled_bins(bs_genome, tilewidth = 500000, select_chrs = NULL)
 \item{tilewidth}{Bin size}
 
 \item{select_chrs}{Vector of chromosomes to include}
+
+\item{respect_chr_arms}{logical If \code{TRUE}, bins will be created with respect to chromosome arms (ie. not crossing arm boundries)}
 }
 \value{
 A GRanges object of bins

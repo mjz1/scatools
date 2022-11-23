@@ -7,6 +7,7 @@
 bin_atac_frags(
   ArrowFiles,
   bins,
+  blacklist = NULL,
   outdir,
   bin_name = prettyMb(getmode(width(bins))),
   ncores = 1,

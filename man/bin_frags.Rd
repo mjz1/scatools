@@ -7,6 +7,7 @@
 bin_frags(
   ArrowFile,
   bins,
+  blacklist = NULL,
   outdir = NULL,
   ncores = 1,
   bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),

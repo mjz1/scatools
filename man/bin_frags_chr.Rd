@@ -4,7 +4,7 @@
 \alias{bin_frags_chr}
 \title{Bin scATAC fragments}
 \usage{
-bin_frags_chr(chr, bins, ArrowFile)
+bin_frags_chr(chr, bins, blacklist = NULL, ArrowFile)
 }
 \arguments{
 \item{chr}{A single chromsome to compute depth information}
@@ -21,6 +21,6 @@ Sparse matrix of binned fragment counts
 }
 \examples{
 \dontrun{
-dp_mat <- bin_frags_chr("chr1", get_chr_arm_bins("hg38"), ArrowFile)
+dp_mat <- bin_frags_chr(chr = "chr1", bins = get_chr_arm_bins("hg38"), ArrowFile = ArrowFile)
 }
 }
