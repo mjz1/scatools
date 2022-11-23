@@ -114,8 +114,8 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
     variants <- file.path(dir_path, "variants.tsv")
   }
 
-  ref <- as(Matrix::readMM(mtx_ref), "dgCMatrix")
-  alt <- as(Matrix::readMM(mtx_alt), "dgCMatrix")
+  ref <- as(Matrix::readMM(mtx_ref), "CsparseMatrix")
+  alt <- as(Matrix::readMM(mtx_alt), "CsparseMatrix")
   cells <- read.table(barcodes, header = FALSE, col.names = "barcodes")
   snps <- read.table(variants, header = FALSE, col.names = "pos") %>%
     tidyr::separate(pos, into = c("chr", "pos"), sep = "_") %>%
