@@ -107,6 +107,7 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
 
   # Parallel apply over the matrix
   if (requireNamespace("pbmcapply", quietly = TRUE)) {
+    # Bug here for perform_gc_cor with method copykit if cores == 1 returns list with warning
     counts_gc_list <- pbmcapply::pbmclapply(X = seq_len(ncol(mat)), mc.cores = ncores, FUN = function(i) {
       FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
     })
@@ -168,7 +169,14 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
 #'
 #' @export
 #'
-gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids = names(counts), lowess_frac = 0.2, q = c(0.1, 0.9), g = c(0.1, 0.9), results = c("counts", "default", "full")) {
+gc_cor_modal <- function(counts,
+                         gc,
+                         valid = rep(TRUE, length(counts)),
+                         bin_ids = names(counts),
+                         lowess_frac = 0.2,
+                         q = c(0.1, 0.9),
+                         g = c(0.1, 0.9),
+                         results = c("counts", "default", "full")) {
   if (length(counts) != length(gc)) {
     stop("Length of counts and gc vectors are not identical")
   }
@@ -276,9 +284,9 @@ gc_cor_modal <- function(counts, gc, valid = rep(TRUE, length(counts)), bin_ids 
 }
 
 # Copykit method of GC correction (Really https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3378858/) -- this ref also suggests a different model which corrects GC based on fragment length which may be better for atac data?
-gc_cor_copykit <- function(counts, gc, span = 0.05) {
+gc_cor_copykit <- function(counts, gc, span = 0.05, valid = NULL, bin_ids = NULL) {
   counts <- as.vector(counts)
-  gc_cor <- lowess(gc, log(counts + 1e-3), f = span)
+  gc_cor <- stats::lowess(gc, log(counts + 1e-3), f = span)
   gc_cor_z <- approx(gc_cor$x, gc_cor$y, gc)
   counts_cor <- exp(log(counts) - gc_cor_z$y) * median(counts)
   return(counts_cor)
@@ -286,7 +294,7 @@ gc_cor_copykit <- function(counts, gc, span = 0.05) {
 
 # Different way similar to HMMcopy
 # Code adapated from `HMMcopy` package
-gc_cor_hmm <- function(counts, gc, span1 = 0.03, span2 = 0.3) {
+gc_cor_hmm <- function(counts, gc, span1 = 0.03, span2 = 0.3, valid = NULL, bin_ids = NULL) {
   counts <- as.vector(counts)
   rough <- loess(counts ~ gc, span = span1)
   idx <- seq(0, 1, by = 0.001)
