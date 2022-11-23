@@ -13,7 +13,7 @@
 #' @return If `return_mat=TRUE`, returns a sparse binned depth matrix. Otherwise returns `NULL`
 #'
 #' @export
-bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode(width(bins))), ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), overwrite = FALSE, return_mat = FALSE, ...) {
+bin_atac_frags <- function(ArrowFiles, bins, blacklist = NULL, outdir, bin_name = prettyMb(getmode(width(bins))), ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), overwrite = FALSE, return_mat = FALSE, ...) {
   # TODO: optional outdir if we don't want to save
 
   stopifnot(class(bins) %in% "GRanges")
@@ -27,7 +27,7 @@ bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode
     # Only bin frags if not done already
     if (!file.exists(file.path(sample_outdir, "matrix.mtx.gz")) | overwrite) {
       logger::log_info("Computing fragments for ", sample_name)
-      tmp <- bin_frags(ArrowFile = ArrowFile, bins = bins, outdir = sample_outdir, ncores = ncores, ...)
+      tmp <- bin_frags(ArrowFile = ArrowFile, bins = bins, blacklist = blacklist, outdir = sample_outdir, ncores = ncores, ...)
       return(tmp)
     } else {
       logger::log_info("Fragments files already found for ", sample_name)
@@ -59,7 +59,7 @@ bin_atac_frags <- function(ArrowFiles, bins, outdir, bin_name = prettyMb(getmode
 #'
 #' @return Binned depth sparse matrix
 #' @export
-bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), verbose = FALSE, ...) {
+bin_frags <- function(ArrowFile, bins, blacklist = NULL, outdir = NULL, ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), verbose = FALSE, ...) {
   requireNamespace("BiocParallel")
 
   stopifnot(class(bins) %in% "GRanges")
@@ -72,6 +72,7 @@ bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = Bio
     X = levels(BSgenome::seqnames(bins)),
     FUN = bin_frags_chr,
     bins = bins,
+    blacklist = blacklist,
     ArrowFile = ArrowFile,
     BPPARAM = bpparams
   ))
@@ -101,9 +102,9 @@ bin_frags <- function(ArrowFile, bins, outdir = NULL, ncores = 1, bpparams = Bio
 #'
 #' @examples
 #' \dontrun{
-#' dp_mat <- bin_frags_chr("chr1", get_chr_arm_bins("hg38"), ArrowFile)
+#' dp_mat <- bin_frags_chr(chr = "chr1", bins = get_chr_arm_bins("hg38"), ArrowFile = ArrowFile)
 #' }
-bin_frags_chr <- function(chr, bins, ArrowFile) {
+bin_frags_chr <- function(chr, bins, blacklist = NULL, ArrowFile) {
   if (!requireNamespace("ArchR", quietly = TRUE)) {
     stop("Package \"ArchR\" must be installed to use this function.")
   }
@@ -141,7 +142,20 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
   fragments <- .getFragsFromArrow(ArrowFile, chr = chr, out = "GRanges", cellNames = cellNames)
 
 
-  # TODO: Remove fragments in blacklist regions?
+  # Remove fragments in blacklist regions
+  if (!is.null(blacklist)) {
+    if (!class(blacklist) %in% "GRanges") {
+      logger::log_warn("Blacklist must be of class 'GRanges'. Provided: {class(blacklist)}")
+    } else {
+      blacklisted <- GenomicRanges::findOverlaps(subject = fragments, query = blacklist)
+
+      fragments$blacklist <- FALSE
+      mcols(fragments)[S4Vectors::to(blacklisted), "blacklist"] <- TRUE
+
+      fragments <- fragments[!fragments$blacklist]
+    }
+  }
+
 
   # Chromosome bins
   bins_chr <- bins[BSgenome::seqnames(bins) == chr]
@@ -175,7 +189,7 @@ bin_frags_chr <- function(chr, bins, ArrowFile) {
 
   # Create Sparse Matrix
   mat <- Matrix::sparseMatrix(
-    i = c(to(start_hits), to(end_hits)),
+    i = c(S4Vectors::to(start_hits), S4Vectors::to(end_hits)),
     j = as.vector(c(matchID, matchID)),
     x = rep(1, 2 * length(fragments)),
     dims = c(length(bins_chr), length(cellNames))
