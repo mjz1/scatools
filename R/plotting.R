@@ -297,7 +297,7 @@ cnaHeatmap <- function(sce,
     bottom_ha_genes <- NULL
   }
 
-  if (grepl("state", assay_name)) {
+  if (grepl("state", assay_name) || length(col_fun) == length(state_cn_colors())) {
     assay(sce, "heatmat")[assay(sce, "heatmat") >= 11] <- "11+"
     cn_colors <- state_cn_colors()
   } else if (!is.null(col_fun)) {
