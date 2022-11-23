@@ -298,7 +298,7 @@ cnaHeatmap <- function(sce,
   }
 
   if (grepl("state", assay_name)) {
-    cn_mat[cn_mat >= 11] <- "11+"
+    assay(sce, "heatmat")[assay(sce, "heatmat") >= 11] <- "11+"
     cn_colors <- state_cn_colors()
   } else if (!is.null(col_fun)) {
     cn_colors <- col_fun
