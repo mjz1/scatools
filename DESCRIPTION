@@ -15,6 +15,7 @@ Imports:
     BiocParallel,
     Biostrings,
     BSgenome,
+    DNAcopy,
     dplyr,
     DropletUtils,
     GenomicRanges,
