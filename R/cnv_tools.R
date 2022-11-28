@@ -68,6 +68,45 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   return(sce)
 }
 
+#' @export
+merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segment_merged", ncores = 1) {
+  smooth_counts <- log2(assay(sce, smooth_assay))
+
+  segment_df <- as.data.frame(assay(sce, segment_assay))
+  segment_df[segment_df == 0] <- 1e-4
+  segment_df <- log2(segment_df)
+
+  logger::log_info("Merging segments using {ncores} cores for {ncol(segment_df)} cells")
+
+  seg_ml_list <- pbmcapply::pbmclapply(seq_along(segment_df), mc.cores = ncores, function(i) {
+    cell_name <- names(segment_df)[i]
+    seg_means_ml <- copykit::mergeLevels(vecObs = smooth_counts[, i],
+                                         vecPred = segment_df[, i],
+                                         verbose = 0,
+                                         pv.thres = 1e-4
+    )$vecMerged
+  })
+
+  names(seg_ml_list) <- names(segment_df)
+  seg_ml_df <- dplyr::bind_cols(seg_ml_list)
+  seg_ml_df <- round(2^seg_ml_df, 2)
+  rownames(seg_ml_df) <- rownames(sce)
+  assay(sce, new_assay) <- seg_ml_df
+
+  # saving as segment ratios
+  seg_ratios <- sweep(seg_ml_df, 2, apply(seg_ml_df, 2, mean), "/")
+  rownames(seg_ratios) <- rownames(sce)
+  assay(sce, paste(new_assay, "ratios", sep = "_")) <- as.matrix(round(seg_ratios, 2))
+
+  sce <- copykit::logNorm(sce, assay = paste(new_assay, "ratios", sep = "_"), name = paste(new_assay, "logratios", sep = "_"))
+
+  logger::log_info("Merged segments in: {new_assay}")
+  logger::log_info("Merged segments ratios in: {paste(new_assay, 'ratios', sep = '_')}")
+  logger::log_info("Merged segments logratios in: {paste(new_assay, 'logratios', sep = '_')}")
+
+  return(sce)
+}
+
 
 #' @export
 calc_ratios <- function (sce, assay_name, fun = c("mean", "median"), new_assay = paste(assay_name, "ratios", sep = "_")) {
