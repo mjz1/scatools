@@ -94,7 +94,7 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
   assay(sce, new_assay) <- seg_ml_df
 
   # saving as segment ratios
-  seg_ratios <- sweep(seg_ml_df, 2, apply(seg_ml_df, 2, mean), "/")
+  seg_ratios <- sweep(seg_ml_df, 2, apply(seg_ml_df, 2, mean, na.rm = T), "/")
   rownames(seg_ratios) <- rownames(sce)
   assay(sce, paste(new_assay, "ratios", sep = "_")) <- as.matrix(round(seg_ratios, 2))
 
@@ -107,6 +107,31 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
   return(sce)
 }
 
+#' @export
+identify_normal <- function(sce, assay_name, group_by = "clusters", n_normal_clusts = 1) {
+  sce$seg_sd <- colSdDiffs(assay(sce, assay_name), na.rm = TRUE)
+
+  # Use pairwise t tests between groups?
+  # comps <- colData(sce) %>%
+  #   as.data.frame() %>%
+  #   rstatix::pairwise_t_test(as.formula(paste0("seg_sd ~ ", group_by)), pool.sd = TRUE, p.adjust.method = "bonferroni")
+
+  # Simply identify grou with lowest median sequential segmental difference
+  normal_clust <- colData(sce) %>%
+    as.data.frame() %>%
+    dplyr::group_by(!!as.symbol(group_by)) %>%
+    dplyr::summarise(med = median(seg_sd)) %>%
+    dplyr::slice_min(med, n = n_normal_clusts) %>%
+    pull(var = 1)
+
+  sce$tumor_cell <- FALSE
+
+  sce$tumor_cell[which(!sce[[group_by]] %in% normal_clust)] <- TRUE
+
+  logger::log_info("{table(sce$tumor_cell)[[1]]} normal cells identified in clusters: {paste(normal_clust, collapse =', ')}")
+
+  return(sce)
+}
 
 #' @export
 calc_ratios <- function (sce, assay_name, fun = c("mean", "median"), new_assay = paste(assay_name, "ratios", sep = "_")) {
