@@ -628,3 +628,23 @@ get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/canc
   return(df)
 }
 
+#' @export
+pseudo_groups <- function(sce, assay_name, ids, FUN = mean, ...) {
+
+  by.group <- split(seq_along(ids), ids, drop=TRUE)
+
+  res <- lapply(X = by.group, FUN = function(X) {
+    # rowm <- rowMeans(assay(sce, assay_name)[,X], na.rm = T)
+
+    apply(assay(sce, assay_name)[,X], MARGIN = 1, FUN = FUN, ...)
+  })
+
+  res <- SingleCellExperiment(list("pseudo" = do.call("cbind", res)))
+
+  rowRanges(res) <- rowRanges(sce)
+  rownames(res) <- rownames(sce)
+  res$ncells <- unlist(lapply(by.group, length))
+  res$ids <- colnames(res)
+
+  return(res)
+}
