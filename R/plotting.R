@@ -371,7 +371,7 @@ cnaHeatmap <- function(sce,
 }
 
 #' @export
-cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clustering_results = NULL, clust_lab = TRUE, ...) {
+cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clustering_results = NULL, clust_lab = TRUE, aggr_fun = mean, round = FALSE, ...) {
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
   }
@@ -397,17 +397,19 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 
   # sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), "clone_id"]
 
-  avg_exp <- scuttle::summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
-  rowRanges(avg_exp) <- rowRanges(sce)
+  # avg_exp <- scuttle::summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
+  # rowRanges(avg_exp) <- rowRanges(sce)
+
+  avg_exp <- pseudo_groups(sce, assay_name = new_assay, ids = sce[[clone_name]], FUN = aggr_fun, na.rm = TRUE)
 
   # Order by clone size
   avg_exp <- avg_exp[, order(avg_exp$ncells, decreasing = TRUE)]
 
-  if (grepl("state", new_assay)) {
+  if (round) {
     # Round to integers
-    assay(avg_exp, new_assay) <- round(assay(avg_exp, "mean"))
+    assay(avg_exp, new_assay) <- round(assay(avg_exp, "pseudo"))
   } else {
-    assay(avg_exp, new_assay) <- assay(avg_exp, "mean")
+    assay(avg_exp, new_assay) <- assay(avg_exp, "pseudo")
   }
 
   # if (clust_lab) {
