@@ -70,7 +70,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     )
 
   # check for assay type and add colors
-  if (grepl("state", assay_name)) {
+  if (!is.null(col_fun) && grepl("state", assay_name)) {
     cn_colors <- state_cn_colors()
     # Clip counts to 11
     plot_dat[plot_dat$counts > 11, "counts"] <- 11

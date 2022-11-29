@@ -29,6 +29,7 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_correcte
     sce <- sce[new_bin_ids, ]
 
     rowRanges(sce) <- integ_ranges
+    rownames(sce) <- new_bin_ids
   }
 
   assay(sce, "bias") <- assay(sce, assay_name) / mcols(rowRanges(sce))[[granges_signal_colname]]
@@ -38,7 +39,7 @@ correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_correcte
   assay(sce, corrected_name) <- sweep(x = assay(sce, assay_name), MARGIN = 1, STATS = mcols(rowRanges(sce))[["mean_bias"]], FUN = "/")
 
   # Keep rownames
-  rownames(sce) <- get_bin_ids(rowRanges(sce))
+  # rownames(sce) <- get_bin_ids(rowRanges(sce))
 
   return(sce)
 }

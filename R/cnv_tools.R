@@ -39,6 +39,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   starts <- start(rowRanges(sce))
   sample_ids <- colnames(sce)
   # Perform segmentation
+  # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
   segmented_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = 8, FUN = function(i) {
     x <- as.vector(assay(sce, assay_name)[,i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
