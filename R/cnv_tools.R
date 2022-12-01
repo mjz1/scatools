@@ -180,7 +180,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
   logger::log_info("{table(sce$tumor_cell)[[1]]} normal cells identified in {length(normal_clust)} clusters using {method} method. Clusters = {paste(normal_clust, collapse =', ')}")
 
   if (plot) {
-    print(suppressWarnings(qplot(x = sce[[group_by]], y = sce[["seg_sd"]], geom = "boxplot", fill = sce[["tumor_cell"]]) + scale_fill_manual(values = col_tumor_cells) + labs(x = paste0(group_by), y = paste0(assay_name, " cell sd"), fill = "Tumor cell")))
+    print(suppressWarnings(qplot(x = sce[[group_by]], y = sce[["seg_sd"]], geom = "boxplot", fill = sce[["tumor_cell"]]) + scale_fill_manual(values = col_tumor_cells()) + labs(x = paste0(group_by), y = paste0(assay_name, " cell sd"), fill = "Tumor cell")))
   }
   return(sce)
 }

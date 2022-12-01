@@ -1,4 +1,3 @@
-
 state_cn_colors <- function() {
   cn_colors <- structure(
     c(
@@ -19,4 +18,9 @@ logr_col_fun <- function(breaks = c(-2, 0, 2), colors = c("blue", "white", "red"
 #' @export
 counts_col_fun <- function(breaks = c(0, 2, 8), colors = c("blue", "white", "red")) {
   circlize::colorRamp2(breaks = breaks, colors = colors)
+}
+
+#' @export
+col_tumor_cells <- function() {
+  c(`TRUE` = "#5E5E5E", `FALSE` = "#FF9A85")
 }
