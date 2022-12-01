@@ -24,6 +24,7 @@ Imports:
     logger,
     magrittr,
     Matrix,
+    mclust,
     methods,
     patchwork,
     polynom,

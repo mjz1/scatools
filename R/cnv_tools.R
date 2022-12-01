@@ -109,13 +109,35 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
   return(sce)
 }
 
+
+#' Identify normal cells from scATAC data
+#'
+#' Uses the standard deviation of the difference between each bin to estimate tumor and normal cell clusters. Using method `gmm` will calculate the per cluster median of the sd, and then fit a two-component GMM to determine tumor cells. If method `min_sd` is specified (or if only two clusters are provided), simply uses the `n_normal_clusts` with the lowest median sd.
+#'
+#'
+#' @param sce SingleCellExperiment Object
+#' @param assay_name Name of assay to calculate variance from
+#' @param group_by Name of column containing the grouping information
+#' @param method One of `gmm` or `min_sd`
+#' @param n_normal_clusts Number of expected normal clusters (only for method `min_sd`)
+#'
+#' @return SingleCellExperiment object with column `tumor_cell`
 #' @export
-identify_normal <- function(sce, assay_name, group_by = "clusters", n_normal_clusts = 1) {
+#'
+identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("gmm", "min_sd"), n_normal_clusts = NULL, plot = TRUE) {
+
+  method = match.arg(method, choices = c("min_sd", "gmm"))
 
   if (length(unique(sce[[group_by]])) == 1) {
-    logger::log_error("Only one group detected")
+    logger::log_warn("Only one group detected. Cannot identify normal cells")
     sce$tumor_cell <- NA
     return(sce)
+  }
+
+  if (length(unique(sce[[group_by]])) == 2) {
+    logger::log_warn("Only two groups detected. Defaulting to method = 'min_sd'")
+    method = "min_sd"
+    n_normal_clusts = 1
   }
 
   sce$seg_sd <- colSdDiffs(assay(sce, assay_name), na.rm = TRUE)
@@ -125,20 +147,41 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", n_normal_clu
   #   as.data.frame() %>%
   #   rstatix::pairwise_t_test(as.formula(paste0("seg_sd ~ ", group_by)), pool.sd = TRUE, p.adjust.method = "bonferroni")
 
+  if (method == "gmm") {
+    # Take the per cluster means
+    s <- split(sce[["seg_sd"]], sce[[group_by]])
+
+    mus <- lapply(s, median) %>% unlist
+
+
+    mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
+
+    normal_clust <- names(which(mod$classification == 1))
+  }
+
   # Simply identify grou with lowest median sequential segmental difference
-  normal_clust <- colData(sce) %>%
-    as.data.frame() %>%
-    dplyr::group_by(!!as.symbol(group_by)) %>%
-    dplyr::summarise(med = median(seg_sd)) %>%
-    dplyr::slice_min(med, n = n_normal_clusts) %>%
-    pull(var = 1)
+  if (method == "min_sd") {
+    if (n_normal_clusts >= length(unique(sce[[group_by]]))) {
+      logger::log_warn("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
+      n_normal_clusts = length(unique(sce[[group_by]])) - 1
+    }
+    normal_clust <- colData(sce) %>%
+      as.data.frame() %>%
+      dplyr::group_by(!!as.symbol(group_by)) %>%
+      dplyr::summarise(med = median(seg_sd)) %>%
+      dplyr::slice_min(med, n = n_normal_clusts) %>%
+      pull(var = 1)
+  }
 
   sce$tumor_cell <- FALSE
 
   sce$tumor_cell[which(!sce[[group_by]] %in% normal_clust)] <- TRUE
 
-  logger::log_info("{table(sce$tumor_cell)[[1]]} normal cells identified in clusters: {paste(normal_clust, collapse =', ')}")
+  logger::log_info("{table(sce$tumor_cell)[[1]]} normal cells identified in {length(normal_clust)} clusters using {method} method. Clusters = {paste(normal_clust, collapse =', ')}")
 
+  if (plot) {
+    print(suppressWarnings(qplot(x = sce[[group_by]], y = sce[["seg_sd"]], geom = "boxplot", fill = sce[["tumor_cell"]]) + scale_fill_manual(values = col_tumor_cells) + labs(x = paste0(group_by), y = paste0(assay_name, " cell sd"), fill = "Tumor cell")))
+  }
   return(sce)
 }
 
