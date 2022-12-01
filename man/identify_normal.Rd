@@ -10,19 +10,24 @@ identify_normal(
   group_by = "clusters",
   method = c("gmm", "min_sd"),
   n_normal_clusts = NULL,
-  plot = TRUE
+  plot = TRUE,
+  use_cnv_score = TRUE
 )
 }
 \arguments{
 \item{sce}{SingleCellExperiment Object}
 
-\item{assay_name}{Name of assay to calculate variance from}
+\item{assay_name}{Name of assay from which to calculate metrics from. It is highly recommended that these are segmented and merged data.}
 
 \item{group_by}{Name of column containing the grouping information}
 
 \item{method}{One of \code{gmm} or \code{min_sd}}
 
 \item{n_normal_clusts}{Number of expected normal clusters (only for method \code{min_sd})}
+
+\item{plot}{Plot cluster scores and tumor/normal identifications}
+
+\item{use_cnv_score}{Also use CNV score (absolute mean of the assay)}
 }
 \value{
 SingleCellExperiment object with column \code{tumor_cell}

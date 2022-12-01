@@ -116,15 +116,20 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
 #'
 #'
 #' @param sce SingleCellExperiment Object
-#' @param assay_name Name of assay to calculate variance from
+#' @param assay_name Name of assay from which to calculate metrics from. It is highly recommended that these are segmented and merged data.
 #' @param group_by Name of column containing the grouping information
 #' @param method One of `gmm` or `min_sd`
 #' @param n_normal_clusts Number of expected normal clusters (only for method `min_sd`)
+#' @param plot Plot cluster scores and tumor/normal identifications
+#' @param use_cnv_score Also use CNV score (absolute mean of the assay)
 #'
 #' @return SingleCellExperiment object with column `tumor_cell`
 #' @export
 #'
-identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("gmm", "min_sd"), n_normal_clusts = NULL, plot = TRUE) {
+identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("gmm", "min_sd"), n_normal_clusts = NULL, plot = TRUE, use_cnv_score = TRUE) {
+
+  # TODO: Need a fallback when all clusters are very close or not sure if tumor or normal. Perhaps spike in normal distribution assumed based on reference population
+  # TODO: See if we can apply this without pre-clustering
 
   method = match.arg(method, choices = c("min_sd", "gmm"))
 
@@ -142,21 +147,30 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
 
   sce$seg_sd <- colSdDiffs(assay(sce, assay_name), na.rm = TRUE)
 
-  # Use pairwise t tests between groups?
-  # comps <- colData(sce) %>%
-  #   as.data.frame() %>%
-  #   rstatix::pairwise_t_test(as.formula(paste0("seg_sd ~ ", group_by)), pool.sd = TRUE, p.adjust.method = "bonferroni")
+
+  # Take the per cluster medians
+  s <- split(sce[["seg_sd"]], sce[[group_by]])
+
+  mus <- lapply(s, median) %>% unlist
 
   if (method == "gmm") {
-    # Take the per cluster means
-    s <- split(sce[["seg_sd"]], sce[[group_by]])
+    if (use_cnv_score) {
+      sce$cnv_score <- apply(assay(sce, assay_name), MARGIN = 2, FUN = function(X) abs(mean(X, na.rm = T)))
+      s2 <- split(sce[["cnv_score"]], sce[[group_by]])
 
-    mus <- lapply(s, median) %>% unlist
+      mus2 <- lapply(s2, median) %>% unlist
 
+      mus <- cbind(mus, mus2)
 
-    mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
+      mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
 
-    normal_clust <- names(which(mod$classification == 1))
+      normal_clust <- names(which(mod$classification == 2))
+    } else {
+      mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
+
+      normal_clust <- names(which(mod$classification == 1))
+    }
+
   }
 
   # Simply identify grou with lowest median sequential segmental difference
@@ -165,12 +179,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
       logger::log_warn("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
       n_normal_clusts = length(unique(sce[[group_by]])) - 1
     }
-    normal_clust <- colData(sce) %>%
-      as.data.frame() %>%
-      dplyr::group_by(!!as.symbol(group_by)) %>%
-      dplyr::summarise(med = median(seg_sd)) %>%
-      dplyr::slice_min(med, n = n_normal_clusts) %>%
-      pull(var = 1)
+    normal_clust <- names(sort(mus)[1:n_normal_clusts])
   }
 
   sce$tumor_cell <- FALSE
@@ -180,7 +189,18 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
   logger::log_info("{table(sce$tumor_cell)[[1]]} normal cells identified in {length(normal_clust)} clusters using {method} method. Clusters = {paste(normal_clust, collapse =', ')}")
 
   if (plot) {
-    print(suppressWarnings(qplot(x = sce[[group_by]], y = sce[["seg_sd"]], geom = "boxplot", fill = sce[["tumor_cell"]]) + scale_fill_manual(values = col_tumor_cells()) + labs(x = paste0(group_by), y = paste0(assay_name, " cell sd"), fill = "Tumor cell")))
+    p1 <- suppressWarnings(qplot(x = sce[[group_by]], y = sce[["seg_sd"]], geom = "boxplot", fill = sce[["tumor_cell"]]) + scale_fill_manual(values = col_tumor_cells()) + labs(x = paste0(group_by), y = paste0(assay_name, " cell sd"), fill = "Tumor cell"))
+    if (use_cnv_score) {
+      p2 <- colData(sce) %>%
+        as.data.frame() %>%
+        ggplot(aes(x = seg_sd, y = cnv_score, color = tumor_cell)) +
+        geom_density_2d() +
+        labs(x = "Cell sd", y = "CNV score", color = "Tumor cell")
+
+      print(p1 + p2)
+    } else {
+      print(p1)
+    }
   }
   return(sce)
 }
