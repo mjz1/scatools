@@ -70,7 +70,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     )
 
   # check for assay type and add colors
-  if (!is.null(col_fun) && grepl("state", assay_name)) {
+  if ((!is.null(col_fun) && grepl("state", assay_name))) {
     cn_colors <- state_cn_colors()
     # Clip counts to 11
     plot_dat[plot_dat$counts > 11, "counts"] <- 11
@@ -114,10 +114,17 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 #' @return ggplot
 #' @export
 #'
-plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", col_fun = NULL) {
-  avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
+plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", FUN = mean, col_fun = NULL) {
 
-  plot_cell_cna(sce = avg_exp, assay_name = assay_name, col_fun = col_fun) + labs(title = group_var, y = assay_name)
+  if (group_var == "all") {
+    sce[[group_var]] <- "all"
+  }
+
+  # avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
+
+  avg_exp <- pseudo_groups(sce, assay_name = assay_name, ids = sce[[group_var]], FUN = FUN, na.rm = TRUE)
+
+  plot_cell_cna(sce = avg_exp, assay_name = "pseudo", col_fun = col_fun) + labs(title = group_var, y = assay_name)
 }
 
 #' Plot multiple cell assays together

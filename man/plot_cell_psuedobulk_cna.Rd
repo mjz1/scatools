@@ -4,7 +4,13 @@
 \alias{plot_cell_psuedobulk_cna}
 \title{Plot Psuedobulk cell CNA profiles}
 \usage{
-plot_cell_psuedobulk_cna(sce, assay_name, group_var = "all", col_fun = NULL)
+plot_cell_psuedobulk_cna(
+  sce,
+  assay_name,
+  group_var = "all",
+  FUN = mean,
+  col_fun = NULL
+)
 }
 \arguments{
 \item{sce}{SingleCellExperiment Object}

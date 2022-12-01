@@ -8,8 +8,8 @@ length_normalize(
   sce,
   assay_name = "counts",
   assay_to = "counts_lenNorm",
-  binwidth,
-  by_factor = getmode(binwidth),
+  binwidths = width(rowRanges(sce)),
+  by_factor = getmode(binwidths),
   verbose = FALSE
 )
 }
@@ -18,11 +18,11 @@ length_normalize(
 
 \item{assay_name}{Name of assay to normalize}
 
-\item{binwidth}{Bin width}
-
 \item{by_factor}{Multiplication factor for counts}
 
 \item{verbose}{Print verbose (TRUE/FALSE)}
+
+\item{binwidth}{Vector of binwidths}
 }
 \value{
 An sce object with counts length normalized in \code{assay(sce, 'counts_permb')}

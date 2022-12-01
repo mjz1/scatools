@@ -34,13 +34,13 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
 }
 
 #' @export
-segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, ...) {
+segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, ncores = 1, ...) {
   chrs <- as.vector(seqnames(rowRanges(sce)))
   starts <- start(rowRanges(sce))
   sample_ids <- colnames(sce)
   # Perform segmentation
   # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
-  segmented_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = 8, FUN = function(i) {
+  segmented_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
     x <- as.vector(assay(sce, assay_name)[,i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
     res <- withr::with_seed(3, smoothed_CNA_counts <- DNAcopy::segment(obj,
@@ -51,12 +51,13 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
                                                                        verbose = verbose
     ))
 
-    test0 <- res$segRows[[2]] + 1 - res$segRows[[1]]
+    # test0 <- res$segRows[[2]] + 1 - res$segRows[[1]]
 
     df <- data.frame(idx = 1:length(x), seg.mean = NA)
 
     for (j in 1:nrow(res$segRows)) {
-      df[res$segRows[j,1]:res$segRows[j,2], 'seg.mean'] <- res$output[j, 'seg.mean']
+      # Fails if no counts on final segments so we put try
+      try(df[res$segRows[j,1]:res$segRows[j,2], 'seg.mean'] <- res$output[j, 'seg.mean'])
     }
     return(df$seg.mean)
   })
@@ -110,6 +111,13 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
 
 #' @export
 identify_normal <- function(sce, assay_name, group_by = "clusters", n_normal_clusts = 1) {
+
+  if (length(unique(sce[[group_by]])) == 1) {
+    logger::log_error("Only one group detected")
+    sce$tumor_cell <- NA
+    return(sce)
+  }
+
   sce$seg_sd <- colSdDiffs(assay(sce, assay_name), na.rm = TRUE)
 
   # Use pairwise t tests between groups?

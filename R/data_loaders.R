@@ -85,6 +85,7 @@ load_atac_bins <- function(samples,
 
   if (verbose) {
     logger::log_success("Fragments loaded successfully!")
+    print(sce)
   }
 
   return(sce)

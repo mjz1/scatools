@@ -30,7 +30,7 @@ bin_atac_frags <- function(ArrowFiles, bins, blacklist = NULL, outdir, bin_name 
       tmp <- bin_frags(ArrowFile = ArrowFile, bins = bins, blacklist = blacklist, outdir = sample_outdir, ncores = ncores, ...)
       return(tmp)
     } else {
-      logger::log_info("Fragments files already found for ", sample_name)
+      logger::log_info("Binned counts file already found for ", sample_name)
     }
   })
 
@@ -422,14 +422,14 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
 #'
 #' @param sce SCE object
 #' @param assay_name Name of assay to normalize
-#' @param binwidth Bin width
+#' @param binwidth Vector of binwidths
 #' @param by_factor Multiplication factor for counts
 #' @param verbose Print verbose (TRUE/FALSE)
 #'
 #' @return An sce object with counts length normalized in `assay(sce, 'counts_permb')`
 #' @export
 #'
-length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenNorm", binwidth, by_factor = getmode(binwidth), verbose = FALSE) {
+length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenNorm", binwidths = width(rowRanges(sce)), by_factor = getmode(binwidths), verbose = FALSE) {
   if (verbose) {
     logger::log_info("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
   }
@@ -438,7 +438,7 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
   # Mainly necessary for our chr arm analysis where bins are variable in size
   # This is effectively an reads per Megabase (RPBMb) calculation. For reminder: https://www.rna-seqblog.com/rpkm-fpkm-and-tpm-clearly-explained/
 
-  assay(sce, assay_to) <- assay(sce, assay_name) / binwidth * by_factor
+  assay(sce, assay_to) <- assay(sce, assay_name) / binwidths * by_factor
 
   return(sce)
 }
