@@ -505,29 +505,38 @@ clone_cna_comp_plot <- function(sce,
                                 assay_name = "segment_merged_logratios",
                                 center_point = 0,
                                 pseudobulk_fun = mean) {
-  if (!is.null(subset_clones)) {
-    sce <- sce[,sce[[clone_column]] %in% subset_clones]
-    sce[[clone_column]] <- factor(sce[[clone_column]])
-  }
 
-  if (!is.null(subset_chr)) {
-    sce <- sce[as.vector(seqnames(rowRanges(sce))) %in% subset_chr,]
-  }
+  # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
+
 
   avg_exp <- pseudo_groups(sce,
                            assay_name = assay_name,
                            ids = sce[[clone_column]],
                            FUN = pseudobulk_fun,
                            na.rm = TRUE) %>%
-    assay() %>%
+    assay()
+
+  # Get the range prior to subsetting
+  xy_range = range(avg_exp, na.rm = TRUE)
+
+  # Subset if specified
+  if (!is.null(subset_clones)) {
+    avg_exp <- avg_exp[,as.character(subset_clones)]
+  }
+
+  if (!is.null(subset_chr)) {
+    avg_exp <- avg_exp[grepl(paste(paste0(subset_chr, "_"), collapse = "|"), rownames(avg_exp)),]
+  }
+
+  columns <- colnames(avg_exp)
+
+  # Convert to data frame and join with range information
+  avg_exp <- avg_exp %>%
     as.data.frame() %>%
     rownames_to_column(var = "ID") %>%
     left_join(as.data.frame(rowRanges(sce)))
 
-  columns <- sort(as.character(unique(sce[[clone_column]])))
-
-  xy_range = range(avg_exp[,columns])
-
+  # Plot
   pcomb <- GGally::ggpairs(data = avg_exp,
                            columns = columns, legend = length(columns) + 1,
                            lower = list(continuous = GGally::wrap(my_cont, limits = xy_range, size = 0.75),
