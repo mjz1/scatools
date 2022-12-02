@@ -12,7 +12,7 @@ read_vartrix(
   variants = NULL,
   input_vcf = NULL,
   phased_vcf = NULL,
-  verbose = TRUE
+  verbose = FALSE
 )
 }
 \arguments{

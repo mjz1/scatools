@@ -108,7 +108,7 @@ load_atac_bins <- function(samples,
 #'
 #' @return A `SingleCellExperiment` object
 #' @export
-read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcodes = NULL, variants = NULL, input_vcf = NULL, phased_vcf = NULL, verbose = TRUE) {
+read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcodes = NULL, variants = NULL, input_vcf = NULL, phased_vcf = NULL, verbose = FALSE) {
   if (!is.null(dir_path)) {
     mtx_ref <- dir(dir_path, pattern = "ref", full.names = TRUE)
     mtx_alt <- dir(dir_path, pattern = "alt", full.names = TRUE)
@@ -137,10 +137,6 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
 
   # Load phasing if provided
   if (!is.null(phased_vcf)) {
-    if (verbose) {
-      logger::log_info("Loading phasing information from: {phased_vcf}")
-    }
-
     logger::log_info("Reading input vcf: {input_vcf}")
     vcf_df <- vcf_to_df(input_vcf)
     logger::log_info("Reading phased vcf: {phased_vcf}")

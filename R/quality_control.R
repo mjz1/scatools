@@ -62,6 +62,88 @@ filter_sce <- function(sce, assay_name = "counts", which = c("bins", "cells"), m
 }
 
 
+#' Flag doublets
+#'
+#' This function is modified from `ArchR::filterDoublets` to enable flagging of doublets prior to removal.
+#'
+#' @param sce A `SingleCellExperiment` object.
+#' @param cutEnrich The minimum numeric cutoff for `DoubletEnrichment`. This number is equivalent to the number of simulated
+#' doublets identified as a nearest neighbor to the cell divided by the expected number given a random uniform distribution.
+#' @param cutScore The minimum numeric cutoff for `DoubletScore` which represents the `-log10(binomial adjusted p-value)` for the `DoubletEnrichment`.
+#' @param filterRatio The maximum ratio of predicted doublets to filter based on the number of pass-filter cells.
+#' For example, if there are 5000 cells, the maximum would be `filterRatio * 5000^2 / (100000)` (which simplifies to `filterRatio * 5000 * 0.05`).
+#' This `filterRatio` allows you to apply a consistent filter across multiple different samples that may have different
+#' percentages of doublets because they were run with different cell loading concentrations.
+#' The higher the `filterRatio`, the greater the number of cells potentially removed as doublets.
+#' @param remove Logical. Whether to remove doublets from the object.
+#'
+#'
+#' @export
+flagDoublets <- function(sce, cutEnrich = 1, cutScore = -Inf, filterRatio = 1, remove = FALSE) {
+
+  sce$doublet <- NA
+
+  df <- colData(sce)[,c("Sample", "DoubletEnrichment", "DoubletScore")]
+  splitDF <- split(seq_len(nrow(df)), as.character(df$Sample))
+
+  cellsFilter <- lapply(splitDF, function(y){
+
+    x <- df[y, ,drop = FALSE]
+
+    n <- nrow(x)
+
+    x <- x[order(x$DoubletEnrichment, decreasing = TRUE), ]
+
+    if(!is.null(cutEnrich)){
+      x <- x[which(x$DoubletEnrichment >= cutEnrich), ]
+    }
+
+    if(!is.null(cutScore)){
+      x <- x[which(x$DoubletScore >= cutScore), ]
+    }
+
+    if(nrow(x) > 0){
+      head(rownames(x), filterRatio * n * (n / 100000))
+    }else{
+      NULL
+    }
+
+  }) %>% unlist(use.names=FALSE)
+
+  logger::log_info("Identified {length(cellsFilter)} doublet cells across all samples")
+  tabRemove <- table(df[cellsFilter,]$Sample)
+  tabAll <- table(df$Sample)
+  samples <- unique(df$Sample)
+  for(i in seq_along(samples)){
+    if(!is.na(tabRemove[samples[i]])){
+      message("\t", samples[i], " : ", tabRemove[samples[i]], " of ", tabAll[samples[i]], " (", round(100 * tabRemove[samples[i]] / tabAll[samples[i]], 1),"%)")
+    }else{
+      message("\t", samples[i], " : ", 0, " of ", tabAll[samples[i]], " (0%)")
+    }
+  }
+
+  if(length(cellsFilter) > 0){
+
+    sce[,colnames(sce) %in% cellsFilter]$doublet <- TRUE
+    sce[,!colnames(sce) %in% cellsFilter]$doublet <- FALSE
+  } else {
+    sce$doublet <- FALSE
+  }
+
+  if (remove) {
+    logger::log_info("Removing doublets!")
+    sce[,!sce$doublet]
+  } else {
+    logger::log_warn("Doublets flagged but not removed!")
+  }
+
+  return(sce)
+
+}
+
+
+
+
 #' GC modal QC filter
 #'
 #' Removes cells that have high numbers of NA bins after GC modal correction
