@@ -33,7 +33,20 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
   return(sce)
 }
 
+#' scATAC CBS CNV segmentation
+#'
+#' @param sce A `SingleCellExperiment` object
+#' @param assay_name Name of the assay to segment
+#' @param new_assay Name of the new assay
+#' @param verbose Verbosity
+#' @param ncores Number of cores to use
+#' @param ... Additional parameters to pass to [DNAcopy::segment]
+#'
+#' @inheritParams DNAcopy::segment
+#'
+#' @return A `SingleCellExperiment` object
 #' @export
+#'
 segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, ncores = 1, ...) {
   chrs <- as.vector(seqnames(rowRanges(sce)))
   starts <- start(rowRanges(sce))
@@ -49,7 +62,8 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
                                                                        nperm = nperm,
                                                                        min.width = min.width,
                                                                        undo.splits = undo.splits,
-                                                                       verbose = verbose
+                                                                       verbose = verbose,
+                                                                       ...
     ))
 
     # test0 <- res$segRows[[2]] + 1 - res$segRows[[1]]
@@ -72,7 +86,18 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   return(sce)
 }
 
+
+#' Merge segment levels
+#'
+#' Wrapper for [copykit::mergeLevels] to merge segments
+#'
+#' @inheritParams segment_cnv
+#' @param smooth_assay name of assay with smoothed counts
+#' @param segment_assay name of assay with segmented counts
+#'
+#' @return A `SingleCellExperiment` object
 #' @export
+#'
 merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segment_merged", ncores = 1) {
   smooth_counts <- log2(assay(sce, smooth_assay))
 
