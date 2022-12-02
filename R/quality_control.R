@@ -132,7 +132,7 @@ flagDoublets <- function(sce, cutEnrich = 1, cutScore = -Inf, filterRatio = 1, r
 
   if (remove) {
     logger::log_info("Removing doublets!")
-    sce[,!sce$doublet]
+    sce <- sce[,!sce$doublet]
   } else {
     logger::log_warn("Doublets flagged but not removed!")
   }
