@@ -40,6 +40,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   sample_ids <- colnames(sce)
   # Perform segmentation
   # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
+  logger::log_info("Segmenting CNVs")
   segmented_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
     x <- as.vector(assay(sce, assay_name)[,i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
@@ -59,6 +60,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
       # Fails if no counts on final segments so we put try
       try(df[res$segRows[j,1]:res$segRows[j,2], 'seg.mean'] <- res$output[j, 'seg.mean'])
     }
+    logger::log_success("Segmentation completed!")
     return(df$seg.mean)
   })
 
@@ -157,24 +159,28 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
     if (use_cnv_score) {
       sce$cnv_score <- apply(assay(sce, assay_name), MARGIN = 2, FUN = function(X) abs(mean(X, na.rm = T)))
       s2 <- split(sce[["cnv_score"]], sce[[group_by]])
-
       mus2 <- lapply(s2, median) %>% unlist
-
       mus <- cbind(mus, mus2)
-
       mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
-
-      normal_clust <- names(which(mod$classification == 2))
     } else {
       mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
-
-      normal_clust <- names(which(mod$classification == 1))
     }
 
+    # Pick the classifications with lower mus
+    mus <- as.data.frame(mus)
+
+    m1 <- mean(mus[which(mod$classification == 1),1])
+    m2 <- mean(mus[which(mod$classification == 2),1])
+
+    normal_class <- ifelse(test = (m1 < m2), yes = 1, no = 2)
+    normal_clust <- names(which(mod$classification == normal_class))
   }
 
   # Simply identify grou with lowest median sequential segmental difference
   if (method == "min_sd") {
+    if (is.null(n_normal_clusts)) {
+      n_normal_clusts <- 1
+    }
     if (n_normal_clusts >= length(unique(sce[[group_by]]))) {
       logger::log_warn("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
       n_normal_clusts = length(unique(sce[[group_by]])) - 1
