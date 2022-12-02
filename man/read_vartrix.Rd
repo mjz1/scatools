@@ -10,6 +10,7 @@ read_vartrix(
   mtx_alt = NULL,
   barcodes = NULL,
   variants = NULL,
+  input_vcf = NULL,
   phased_vcf = NULL,
   verbose = TRUE
 )
@@ -24,13 +25,16 @@ read_vartrix(
 \item{barcodes}{Path to barcodes file}
 
 \item{variants}{Path to variants file}
+
+\item{input_vcf}{Germline VCF before phasing}
+
+\item{phased_vcf}{Phased VCF}
+
+\item{verbose}{Verbosity}
 }
 \value{
 A \code{SingleCellExperiment} object
 }
 \description{
-Reads in \code{Vartix} scSNP pileups. Assumes Vartrix is run in \verb{-s coverage} mode, outputting barcodes and variants table.
-}
-\details{
-If no \code{dir_path} is provided, then user must provide individual file paths for each file.
+Reads in \code{Vartix} scSNP pileups. Assumes Vartrix is run in \verb{-s coverage} mode, outputting barcodes and variants table. If no \code{dir_path} is provided, then user must provide individual file paths for each file. If phased VCF and input VCF is provided this function will also remove any non-heterozygous loci, and indels.
 }
