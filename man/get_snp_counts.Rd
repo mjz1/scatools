@@ -17,10 +17,13 @@ get_snp_counts(sce, variables = "all", target_assays = c("ref", "alt"))
 A \code{SingleCellExperiment} object with named counts for each assay in the \code{rowData(sce)} slot.
 }
 \description{
-Count ref and alt snps in sce.
+Computes per feature counts across the dataset. Equivalent to pseudobulk summarization.
 }
 \examples{
 \dontrun{
-sce <- get_snp_counts(sce, variables = c("all", "Sample", "Condition"), target_assays = c("ref", "alt"))
+sce <- get_snp_counts(sce,
+  variables = c("all", "Sample", "Condition"),
+  target_assays = c("ref", "alt")
+)
 }
 }

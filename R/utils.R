@@ -59,6 +59,19 @@ calc_cnv_score <- function(sce, assay_name = "counts", name = "cnv_score", metho
     }))
   }
 
+  # TODO: Explore the values here. make sure a haploid genome and CN losses are
+  # well balanced with the scores that would come from genome doubling
+  if (method == "diffnorm") {
+    # We bound the lowest possible negative value by the top 95th percentile of
+    # high CN values
+    # max_score <- max(abs(log2(quantile(dat, c(0.01, 0.99)))))
+    # This limit basically makes it so any copy above 8 is squished down to 2
+    min_cn <- -pmin(2, log2(quantile(dat, 0.95) / 2))
+    cnv_scores <- unlist(lapply(X = seq_len(ncol(dat)), FUN = function(i) {
+      cnv_score <- mean(abs(pmax(min_cn, log2(dat[, i] / 2))))
+    }))
+  }
+
   sce[[name]] <- cnv_scores
   return(sce)
 }

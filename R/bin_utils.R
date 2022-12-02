@@ -629,13 +629,22 @@ get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/canc
 }
 
 #' @export
+remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
+  zeroes <- colSums(apply(assay(sce, assay_name), 1, function(x) x == 0))
+
+  zeroes_prop <- zeroes / ncol(sce)
+
+  keep <- zeroes_prop < threshold
+
+  return(sce[names(which(keep)), ])
+}
+
+#' @export
 pseudo_groups <- function(sce, assay_name, ids, FUN = mean, ...) {
 
   by.group <- split(seq_along(ids), ids, drop=TRUE)
 
   res <- lapply(X = by.group, FUN = function(X) {
-    # rowm <- rowMeans(assay(sce, assay_name)[,X], na.rm = T)
-
     apply(assay(sce, assay_name)[,X], MARGIN = 1, FUN = FUN, ...)
   })
 
@@ -648,3 +657,4 @@ pseudo_groups <- function(sce, assay_name, ids, FUN = mean, ...) {
 
   return(res)
 }
+
