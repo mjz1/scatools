@@ -483,3 +483,73 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # print(ht_plot)
   return(ht_plot)
 }
+
+
+#' Clone Copy Number Comparison Plot
+#'
+#' @param sce sce object
+#' @param clone_column column name with clone information
+#' @param subset_clones optional vector of clones to subset for comparison
+#' @param subset_chr optional vector of chromosomes to subset for comparison
+#' @param assay_name name of assay to use
+#' @param center_point Center point of the assay for drawing dashed lines
+#' @param pseudobulk_fun mean or median
+#'
+#' @return ggapply plot
+#' @export
+#'
+clone_cna_comp_plot <- function(sce,
+                                clone_column = "clusters",
+                                subset_clones = NULL,
+                                subset_chr = NULL,
+                                assay_name = "segment_merged_logratios",
+                                center_point = 0,
+                                pseudobulk_fun = mean) {
+  if (!is.null(subset_clones)) {
+    sce <- sce[,sce[[clone_column]] %in% subset_clones]
+    sce[[clone_column]] <- factor(sce[[clone_column]])
+  }
+
+  if (!is.null(subset_chr)) {
+    sce <- sce[as.vector(seqnames(rowRanges(sce))) %in% subset_chr,]
+  }
+
+  avg_exp <- pseudo_groups(sce,
+                           assay_name = assay_name,
+                           ids = sce[[clone_column]],
+                           FUN = pseudobulk_fun,
+                           na.rm = TRUE) %>%
+    assay() %>%
+    as.data.frame() %>%
+    rownames_to_column(var = "ID") %>%
+    left_join(as.data.frame(rowRanges(sce)))
+
+  columns <- sort(as.character(unique(sce[[clone_column]])))
+
+  xy_range = range(avg_exp[,columns])
+
+  pcomb <- GGally::ggpairs(data = avg_exp,
+                           columns = columns, legend = length(columns) + 1,
+                           lower = list(continuous = GGally::wrap(my_cont, limits = xy_range, size = 0.75),
+                                        mapping = aes(color = seqnames)),
+                           diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point))) +
+    theme_bw() +
+    theme(legend.position = "right") + labs(color = "Chromosome")
+  return(pcomb)
+}
+
+
+my_cont <- function(data, mapping, size = 1, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_point(size = size) +
+    geom_abline(alpha = 0.75, linetype = "dashed") +
+    scale_x_continuous(...) +
+    scale_y_continuous(...)
+}
+
+my_dens <- function(data, mapping, center_point = 0, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_density() +
+    scale_x_continuous(...) +
+    geom_vline(xintercept = center_point, linetype = "dashed", alpha = 0.75)
+}
