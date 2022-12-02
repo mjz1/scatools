@@ -22,11 +22,11 @@ bin_atac_frags <- function(ArrowFiles, bins, blacklist = NULL, outdir, bin_name 
   matlist <- lapply(X = seq_along(ArrowFiles), FUN = function(i) {
     sample_name <- names(ArrowFiles[i])
     ArrowFile <- ArrowFiles[i]
-    sample_outdir <- file.path(outdir, bin_name, sample_name)
+    sample_outdir <- file.path(outdir, bin_name)
 
     # Only bin frags if not done already
     if (!file.exists(file.path(sample_outdir, "matrix.mtx.gz")) | overwrite) {
-      logger::log_info("Computing fragments for ", sample_name)
+      logger::log_info("{sample_name} -- Computing fragments in {bin_name} bins using {ncores} cores")
       tmp <- bin_frags(ArrowFile = ArrowFile, bins = bins, blacklist = blacklist, outdir = sample_outdir, ncores = ncores, ...)
       return(tmp)
     } else {
