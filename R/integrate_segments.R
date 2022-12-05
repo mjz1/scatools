@@ -11,7 +11,6 @@
 #' @export
 #'
 integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
-
   # Check and fix names if needed (in case the sample names are integer or invalid colnames)
   # This fixes the error that can occur during df conversion
   orig_colnames <- granges_signal_colname

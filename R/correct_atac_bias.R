@@ -15,7 +15,6 @@
 #' @export
 #'
 correct_atac_bias <- function(sce, assay_name, corrected_name = "counts_corrected", cn_granges = NULL, granges_signal_colname, drop_missing_bins = FALSE) {
-
   # Get bin_ids to keep track in case of dropped bins
   bin_ids <- get_bin_ids(rowRanges(sce))
 

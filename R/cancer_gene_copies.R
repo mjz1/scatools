@@ -18,7 +18,6 @@
 #' @export
 #'
 get_cancer_gene_copy <- function(sce, assay_name, group_var = "all", gain_cutoff = 0.75, loss_cutoff = -gain_cutoff, clonal_thr = 0.75) {
-
   # Check for the overlaps and create if possible
   if (is.null(sce@metadata$gene_overlap)) {
     # Attempt to perform the overlaps on the fly
@@ -76,10 +75,11 @@ get_cancer_gene_copy <- function(sce, assay_name, group_var = "all", gain_cutoff
       names_pattern = "(.+)_(.+)"
     ) %>%
     mutate(
-      cn_cat = factor(ifelse(relative_copies >= gain_cutoff, "gain",
-        ifelse(relative_copies <= loss_cutoff, "loss", "neutral")
-      ),
-      levels = c("gain", "neutral", "loss")
+      cn_cat = factor(
+        ifelse(relative_copies >= gain_cutoff, "gain",
+          ifelse(relative_copies <= loss_cutoff, "loss", "neutral")
+        ),
+        levels = c("gain", "neutral", "loss")
       )
     )
 
@@ -97,10 +97,11 @@ get_cancer_gene_copy <- function(sce, assay_name, group_var = "all", gain_cutoff
     ) %>%
     dplyr::mutate(
       clonal_prop = as.numeric(n / n_clones),
-      clonality = factor(ifelse(clonal_prop >= clonal_thr, "clonal",
-        ifelse(n == 1, "private", "shared")
-      ),
-      levels = c("private", "shared", "clonal")
+      clonality = factor(
+        ifelse(clonal_prop >= clonal_thr, "clonal",
+          ifelse(n == 1, "private", "shared")
+        ),
+        levels = c("private", "shared", "clonal")
       )
     )
 

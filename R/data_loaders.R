@@ -126,7 +126,7 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
     stringr::str_split_fixed(string = ., pattern = "_", n = 2) %>%
     as.data.frame()
   colnames(snps) <- c("chr", "pos")
-   # Big memory savings plus we rebase the positions to match original VCF
+  # Big memory savings plus we rebase the positions to match original VCF
   snps <- snps %>%
     dplyr::mutate("chr" = as.factor(chr), "start" = as.integer(as.integer(pos) + 1), "end" = as.integer(as.integer(pos) + 1)) %>%
     dplyr::mutate("snp_id" = paste(chr, start, sep = "_")) %>%
@@ -152,7 +152,7 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
       filter(snp_id %in% vcf_df$snp_id) %>%
       dplyr::left_join(vcf_df)
 
-      logger::log_success("VCF data loaded and merged")
+    logger::log_success("VCF data loaded and merged")
   }
 
   # Reorder
@@ -161,8 +161,8 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
     dplyr::arrange(chr, start)
 
   # Filter ref and alt matrices and reorder at the same time
-  ref <- ref[snps$snp_id,]
-  alt <- alt[snps$snp_id,]
+  ref <- ref[snps$snp_id, ]
+  alt <- alt[snps$snp_id, ]
 
   sce <- SingleCellExperiment(list(ref = ref, alt = alt), rowRanges = GenomicRanges::makeGRangesFromDataFrame(snps, keep.extra.columns = TRUE), colData = cells)
 
@@ -172,20 +172,20 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
 #' @export
 vcf_to_df <- function(vcf, verbose = TRUE) {
   vcf <- vcfR::read.vcfR(file = vcf, verbose = verbose)
-  gts <- vcfR::extract.gt(vcf, element = "GT", return.alleles = F)[,1] %>% as.factor()
-  alleles <- vcfR::extract.gt(vcf, element = "GT", return.alleles = T)[,1] %>% stringr::str_split_fixed(string = ., pattern = "/|\\|", n = 2)
+  gts <- vcfR::extract.gt(vcf, element = "GT", return.alleles = F)[, 1] %>% as.factor()
+  alleles <- vcfR::extract.gt(vcf, element = "GT", return.alleles = T)[, 1] %>% stringr::str_split_fixed(string = ., pattern = "/|\\|", n = 2)
   stopifnot(all(names(gts) == names(alleles)))
 
   # Remove indels and non het SNPs
-  keeps <- names(which((!vcfR::is.indel(vcf) & vcfR::is_het(as.matrix(gts)))[,1]))
-  vcf_df <- cbind.data.frame(gts, alleles)[keeps,] %>%
+  keeps <- names(which((!vcfR::is.indel(vcf) & vcfR::is_het(as.matrix(gts)))[, 1]))
+  vcf_df <- cbind.data.frame(gts, alleles)[keeps, ] %>%
     dplyr::mutate(across(where(is.character), as.factor))
   colnames(vcf_df) <- c("gt", "ref", "alt")
   vcf_df$snp_id <- rownames(vcf_df)
 
   pos <- stringr::str_split_fixed(vcf_df$snp_id, pattern = "_", n = 2)
-  vcf_df$chr <- as.factor(pos[,1])
-  vcf_df$start <- vcf_df$end <- as.integer(pos[,2])
+  vcf_df$chr <- as.factor(pos[, 1])
+  vcf_df$start <- vcf_df$end <- as.integer(pos[, 2])
 
   # Reordering columns and sorting
   vcf_df <- vcf_df %>%
@@ -207,7 +207,6 @@ vcf_to_df <- function(vcf, verbose = TRUE) {
 #' @export
 #'
 bin_snp_data <- function(snp_sce, binsize = 500000, select_chrs = NULL, bins = NULL) {
-
   # THIS FUNCTION NEEDS WORK
   # TODO
   if (is.null(select_chrs)) {

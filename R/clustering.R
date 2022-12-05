@@ -33,7 +33,6 @@ cluster_seurat <- function(sce,
                            cluster_name = paste0("clusters", suffix),
                            metric = "correlation",
                            verbose = TRUE) {
-
   # TODO: Improve documentation of this function.
   # TODO: Return neighbors object if possible to allow future umap projection
   # TODO:
@@ -169,7 +168,6 @@ perform_umap_clustering <- function(cn_matrix,
                                     seed = 3,
                                     metric = "correlation",
                                     verbose = TRUE) {
-
   # TODO: Integrate with the SCE object better -- in the reduced dim slot
   # TODO: Add clone id colors to the clustering object so that they are fixed across plots
 

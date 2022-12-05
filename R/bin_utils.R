@@ -260,7 +260,6 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 #' bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
 #' }
 get_tiled_bins <- function(bs_genome = NULL, tilewidth = 500000, select_chrs = NULL, respect_chr_arms = TRUE) {
-
   if (is.null(bs_genome)) {
     logger::log_error("Must provide 'bs_genome'")
     stop(call. = F)
@@ -283,15 +282,17 @@ get_tiled_bins <- function(bs_genome = NULL, tilewidth = 500000, select_chrs = N
     bins <- lapply(X = seq_along(arm_bins), FUN = function(i) {
       r <- arm_bins[i]
 
-      starts = seq(start(r), end(r), by = tilewidth)
-      ends = c(starts[2:(length(starts))] - 1, end(r))
+      starts <- seq(start(r), end(r), by = tilewidth)
+      ends <- c(starts[2:(length(starts))] - 1, end(r))
 
       r_new <- GRanges(seqnames = seqnames(r), ranges = IRanges(start = starts, end = ends), arm = r$arm)
-    }) %>% GRangesList() %>% unlist()
+    }) %>%
+      GRangesList() %>%
+      unlist()
   } else {
     bins <- GenomicRanges::tileGenome(BSgenome::seqinfo(bs_genome)[select_chrs],
-                                      tilewidth = tilewidth,
-                                      cut.last.tile.in.chrom = TRUE
+      tilewidth = tilewidth,
+      cut.last.tile.in.chrom = TRUE
     )
   }
 
@@ -641,11 +642,10 @@ remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
 
 #' @export
 pseudo_groups <- function(sce, assay_name, ids, FUN = mean, ...) {
-
-  by.group <- split(seq_along(ids), ids, drop=TRUE)
+  by.group <- split(seq_along(ids), ids, drop = TRUE)
 
   res <- lapply(X = by.group, FUN = function(X) {
-    apply(assay(sce, assay_name)[,X], MARGIN = 1, FUN = FUN, ...)
+    apply(assay(sce, assay_name)[, X], MARGIN = 1, FUN = FUN, ...)
   })
 
   res <- SingleCellExperiment(list("pseudo" = do.call("cbind", res)))
@@ -657,4 +657,3 @@ pseudo_groups <- function(sce, assay_name, ids, FUN = mean, ...) {
 
   return(res)
 }
-

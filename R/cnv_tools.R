@@ -15,18 +15,19 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
   sample_ids <- colnames(sce)
   logger::log_info("Smoothing {assay_name}")
   smoothed_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
-    x <- as.vector(assay(x = sce, assay_name)[,i])
+    x <- as.vector(assay(x = sce, assay_name)[, i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
     res <- round(withr::with_seed(3, smoothed_CNA_counts <- DNAcopy::smooth.CNA(obj,
-                                                                                smooth.region = 4,
-                                                                                outlier.SD.scale = 4,
-                                                                                smooth.SD.scale = 2,
-                                                                                trim = 0.025))[,3], 2)
+      smooth.region = 4,
+      outlier.SD.scale = 4,
+      smooth.SD.scale = 2,
+      trim = 0.025
+    ))[, 3], 2)
   })
   names(smoothed_counts) <- sample_ids
   smoothed_counts <- as.matrix(dplyr::bind_rows(smoothed_counts))
   rownames(smoothed_counts) <- rownames(sce)
-  smoothed_counts[smoothed_counts <= 0 ] <- 1e-4 # negative or zero values post smoothed.
+  smoothed_counts[smoothed_counts <= 0] <- 1e-4 # negative or zero values post smoothed.
 
   assay(sce, smooth_name) <- smoothed_counts
   logger::log_success("Smoothing complete! Smoothed counts in assay '{smooth_name}'")
@@ -55,15 +56,15 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
   logger::log_info("Segmenting CNVs")
   segmented_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
-    x <- as.vector(assay(sce, assay_name)[,i])
+    x <- as.vector(assay(sce, assay_name)[, i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
     res <- withr::with_seed(3, smoothed_CNA_counts <- DNAcopy::segment(obj,
-                                                                       alpha = alpha,
-                                                                       nperm = nperm,
-                                                                       min.width = min.width,
-                                                                       undo.splits = undo.splits,
-                                                                       verbose = verbose,
-                                                                       ...
+      alpha = alpha,
+      nperm = nperm,
+      min.width = min.width,
+      undo.splits = undo.splits,
+      verbose = verbose,
+      ...
     ))
 
     # test0 <- res$segRows[[2]] + 1 - res$segRows[[1]]
@@ -72,7 +73,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
 
     for (j in 1:nrow(res$segRows)) {
       # Fails if no counts on final segments so we put try
-      try(df[res$segRows[j,1]:res$segRows[j,2], 'seg.mean'] <- res$output[j, 'seg.mean'])
+      try(df[res$segRows[j, 1]:res$segRows[j, 2], "seg.mean"] <- res$output[j, "seg.mean"])
     }
     logger::log_success("Segmentation completed!")
     return(df$seg.mean)
@@ -109,10 +110,11 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
 
   seg_ml_list <- pbmcapply::pbmclapply(seq_along(segment_df), mc.cores = ncores, function(i) {
     cell_name <- names(segment_df)[i]
-    seg_means_ml <- copykit::mergeLevels(vecObs = smooth_counts[, i],
-                                         vecPred = segment_df[, i],
-                                         verbose = 0,
-                                         pv.thres = 1e-4
+    seg_means_ml <- copykit::mergeLevels(
+      vecObs = smooth_counts[, i],
+      vecPred = segment_df[, i],
+      verbose = 0,
+      pv.thres = 1e-4
     )$vecMerged
   })
 
@@ -154,11 +156,10 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
 #' @export
 #'
 identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("gmm", "min_sd"), n_normal_clusts = NULL, plot = TRUE, use_cnv_score = TRUE) {
-
   # TODO: Need a fallback when all clusters are very close or not sure if tumor or normal. Perhaps spike in normal distribution assumed based on reference population
   # TODO: See if we can apply this without pre-clustering
 
-  method = match.arg(method, choices = c("min_sd", "gmm"))
+  method <- match.arg(method, choices = c("min_sd", "gmm"))
 
   if (length(unique(sce[[group_by]])) == 1) {
     logger::log_warn("Only one group detected. Cannot identify normal cells")
@@ -168,8 +169,8 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
 
   if (length(unique(sce[[group_by]])) == 2) {
     logger::log_warn("Only two groups detected. Defaulting to method = 'min_sd'")
-    method = "min_sd"
-    n_normal_clusts = 1
+    method <- "min_sd"
+    n_normal_clusts <- 1
   }
 
   sce$seg_sd <- colSdDiffs(assay(sce, assay_name), na.rm = TRUE)
@@ -178,13 +179,13 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
   # Take the per cluster medians
   s <- split(sce[["seg_sd"]], sce[[group_by]])
 
-  mus <- lapply(s, median) %>% unlist
+  mus <- lapply(s, median) %>% unlist()
 
   if (method == "gmm") {
     if (use_cnv_score) {
       sce$cnv_score <- apply(assay(sce, assay_name), MARGIN = 2, FUN = function(X) abs(mean(X, na.rm = T)))
       s2 <- split(sce[["cnv_score"]], sce[[group_by]])
-      mus2 <- lapply(s2, median) %>% unlist
+      mus2 <- lapply(s2, median) %>% unlist()
       mus <- cbind(mus, mus2)
       mod <- mclust::densityMclust(mus, G = 2, plot = FALSE, verbose = FALSE)
     } else {
@@ -194,8 +195,8 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
     # Pick the classifications with lower mus
     mus <- as.data.frame(mus)
 
-    m1 <- mean(mus[which(mod$classification == 1),1])
-    m2 <- mean(mus[which(mod$classification == 2),1])
+    m1 <- mean(mus[which(mod$classification == 1), 1])
+    m2 <- mean(mus[which(mod$classification == 2), 1])
 
     normal_class <- ifelse(test = (m1 < m2), yes = 1, no = 2)
     normal_clust <- names(which(mod$classification == normal_class))
@@ -208,7 +209,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
     }
     if (n_normal_clusts >= length(unique(sce[[group_by]]))) {
       logger::log_warn("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
-      n_normal_clusts = length(unique(sce[[group_by]])) - 1
+      n_normal_clusts <- length(unique(sce[[group_by]])) - 1
     }
     normal_clust <- names(sort(mus)[1:n_normal_clusts])
   }
@@ -237,7 +238,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
 }
 
 #' @export
-calc_ratios <- function (sce, assay_name, fun = c("mean", "median"), new_assay = paste(assay_name, "ratios", sep = "_")) {
+calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = paste(assay_name, "ratios", sep = "_")) {
   fun <- match.arg(fun)
 
   ratios <- sweep(assay(sce, assay_name), 2, apply(assay(sce, assay_name), 2, fun, na.rm = T), "/")

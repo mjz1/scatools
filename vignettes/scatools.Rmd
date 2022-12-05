@@ -51,9 +51,9 @@ fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools"
 names(fragment_file) <- "test_sample"
 
 # Set up example output directories
-arrow_dir = "./example/ArrowFiles"
-bindepth_dir = "./example/binned_depth"
-scatools_dir = "./example/scatools_analysis"
+arrow_dir <- "./example/ArrowFiles"
+bindepth_dir <- "./example/binned_depth"
+scatools_dir <- "./example/scatools_analysis"
 
 invisible(lapply(list(arrow_dir, bindepth_dir, scatools_dir), dir.create, showWarnings = FALSE, recursive = TRUE))
 ```
@@ -68,7 +68,7 @@ setwd(arrow_dir)
 ArrowFiles <- createArrowFiles(
   inputFiles = fragment_file,
   sampleNames = names(fragment_file),
-  minTSS = 4, #Dont set this too high because you can always increase later
+  minTSS = 4, # Dont set this too high because you can always increase later
   minFrags = 1000,
   addTileMat = TRUE,
   addGeneScoreMat = TRUE,
@@ -78,8 +78,8 @@ ArrowFiles <- createArrowFiles(
 # Calculate doublet scores
 doubScores <- addDoubletScores(
   input = ArrowFiles,
-  k = 10, #Refers to how many cells near a "pseudo-doublet" to count.
-  knnMethod = "LSI", #Refers to the embedding to use for nearest neighbor search.
+  k = 10, # Refers to how many cells near a "pseudo-doublet" to count.
+  knnMethod = "LSI", # Refers to the embedding to use for nearest neighbor search.
   LSIMethod = 1,
   force = FALSE
 )
@@ -88,7 +88,7 @@ doubScores <- addDoubletScores(
 proj <- ArchRProject(
   ArrowFiles = ArrowFiles,
   outputDirectory = "./",
-  copyArrows = FALSE #This is recommended so that you maintain an unaltered copy for later usage.
+  copyArrows = FALSE # This is recommended so that you maintain an unaltered copy for later usage.
 )
 
 proj <- filterDoublets(proj)
@@ -128,7 +128,7 @@ for (i in seq_along(samples)) {
   hmm_out <- file.path(samp_outdir, "hmm", "hmm_results.rda")
 
   logger::log_info("Processing sample {i} of {length(samples)}: {samp_name}")
-  
+
   if (file.exists(final_out) & !overwrite) {
     logger::log_info("Final output exists! Skipping to next sample...")
     next
@@ -148,12 +148,12 @@ for (i in seq_along(samples)) {
       verbose = verbose
     )
   }
-  
+
   sce <- sce %>%
     add_ideal_mat(ncores = ncores, verbose = verbose) %>%
     add_gc_cor(method = "modal", verbose = verbose, ncores = ncores) %>%
     add_hmmcopy(verbose = verbose, ncores = ncores, save_raw_hmm = hmm_out)
-  
+
   save_to(object = sce, save_to = final_out)
 }
 ```
@@ -161,7 +161,7 @@ for (i in seq_along(samples)) {
 
 ```{r, include=FALSE}
 # Sideload results
-data('test_sce')
+data("test_sce")
 sce <- test_sce
 ```
 

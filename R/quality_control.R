@@ -15,18 +15,17 @@
 #' @export
 #'
 filter_sce <- function(sce, assay_name = "counts", which = c("bins", "cells"), min_counts = 1, min_prop = 0.95, flag_only = FALSE, gc_range = c(-Inf, Inf)) {
+  which <- match.arg(arg = which, choices = c("bins", "cells"), several.ok = TRUE)
 
-  which = match.arg(arg = which, choices = c("bins", "cells"), several.ok = TRUE)
 
-
-  gc_keeps <- rowRanges(sce)$gc> gc_range[1] & rowRanges(sce)$gc < gc_range[2]
+  gc_keeps <- rowRanges(sce)$gc > gc_range[1] & rowRanges(sce)$gc < gc_range[2]
   logger::log_info("Removing bins outside of {paste(gc_range, collapse = ' - ')} gc proportion: {sum(!gc_keeps)} bins removed")
 
-  sce <- sce[gc_keeps,]
+  sce <- sce[gc_keeps, ]
 
   for (f in which) {
     if (f == "bins") {
-      m = 1
+      m <- 1
       bin_bool <- (colSums(apply(X = assay(sce, assay_name), MARGIN = m, function(X) X >= min_counts)) / ncol(sce)) >= min_prop
 
       # Flag
@@ -35,12 +34,12 @@ filter_sce <- function(sce, assay_name = "counts", which = c("bins", "cells"), m
       logger::log_info("Keeping {sum(bin_bool)} of {length(bin_bool)} bins")
 
       if (!flag_only) {
-        sce <- sce[bin_bool,]
+        sce <- sce[bin_bool, ]
       }
     }
 
     if (f == "cells") {
-      m = 2
+      m <- 2
       cell_bool <- (colSums(apply(X = assay(sce, assay_name), MARGIN = m, function(X) X >= min_counts)) / nrow(sce)) >= min_prop
 
       # Flag
@@ -49,16 +48,12 @@ filter_sce <- function(sce, assay_name = "counts", which = c("bins", "cells"), m
       logger::log_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells")
 
       if (!flag_only) {
-        sce <- sce[,which(cell_bool)]
+        sce <- sce[, which(cell_bool)]
       }
-
     }
-
-
   }
 
   return(sce)
-
 }
 
 
@@ -80,65 +75,60 @@ filter_sce <- function(sce, assay_name = "counts", which = c("bins", "cells"), m
 #'
 #' @export
 flagDoublets <- function(sce, cutEnrich = 1, cutScore = -Inf, filterRatio = 1, remove = FALSE) {
-
   sce$doublet <- NA
 
-  df <- colData(sce)[,c("Sample", "DoubletEnrichment", "DoubletScore")]
+  df <- colData(sce)[, c("Sample", "DoubletEnrichment", "DoubletScore")]
   splitDF <- split(seq_len(nrow(df)), as.character(df$Sample))
 
-  cellsFilter <- lapply(splitDF, function(y){
-
-    x <- df[y, ,drop = FALSE]
+  cellsFilter <- lapply(splitDF, function(y) {
+    x <- df[y, , drop = FALSE]
 
     n <- nrow(x)
 
     x <- x[order(x$DoubletEnrichment, decreasing = TRUE), ]
 
-    if(!is.null(cutEnrich)){
+    if (!is.null(cutEnrich)) {
       x <- x[which(x$DoubletEnrichment >= cutEnrich), ]
     }
 
-    if(!is.null(cutScore)){
+    if (!is.null(cutScore)) {
       x <- x[which(x$DoubletScore >= cutScore), ]
     }
 
-    if(nrow(x) > 0){
+    if (nrow(x) > 0) {
       head(rownames(x), filterRatio * n * (n / 100000))
-    }else{
+    } else {
       NULL
     }
-
-  }) %>% unlist(use.names=FALSE)
+  }) %>% unlist(use.names = FALSE)
 
   logger::log_info("Identified {length(cellsFilter)} doublet cells across all samples")
-  tabRemove <- table(df[cellsFilter,]$Sample)
+  tabRemove <- table(df[cellsFilter, ]$Sample)
   tabAll <- table(df$Sample)
   samples <- unique(df$Sample)
-  for(i in seq_along(samples)){
-    if(!is.na(tabRemove[samples[i]])){
-      message("\t", samples[i], " : ", tabRemove[samples[i]], " of ", tabAll[samples[i]], " (", round(100 * tabRemove[samples[i]] / tabAll[samples[i]], 1),"%)")
-    }else{
+  for (i in seq_along(samples)) {
+    if (!is.na(tabRemove[samples[i]])) {
+      message("\t", samples[i], " : ", tabRemove[samples[i]], " of ", tabAll[samples[i]], " (", round(100 * tabRemove[samples[i]] / tabAll[samples[i]], 1), "%)")
+    } else {
       message("\t", samples[i], " : ", 0, " of ", tabAll[samples[i]], " (0%)")
     }
   }
 
-  if(length(cellsFilter) > 0){
-
-    sce[,colnames(sce) %in% cellsFilter]$doublet <- TRUE
-    sce[,!colnames(sce) %in% cellsFilter]$doublet <- FALSE
+  if (length(cellsFilter) > 0) {
+    sce[, colnames(sce) %in% cellsFilter]$doublet <- TRUE
+    sce[, !colnames(sce) %in% cellsFilter]$doublet <- FALSE
   } else {
     sce$doublet <- FALSE
   }
 
   if (remove) {
     logger::log_info("Removing doublets!")
-    sce <- sce[,!sce$doublet]
+    sce <- sce[, !sce$doublet]
   } else {
     logger::log_warn("Doublets flagged but not removed!")
   }
 
   return(sce)
-
 }
 
 
@@ -169,4 +159,3 @@ gc_modal_qc_filter <- function(sce, assay = "counts_gc_modal", filter_prop = 0.0
 
   return(sce[, keep_cells])
 }
-

@@ -46,7 +46,6 @@ add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method 
     assay(sce, gc_slot) <- res$counts
 
     sce$modal_quantile <- as.integer(gsub("q", "", res$modal_quantiles))
-
   } else {
     assay(sce, gc_slot) <- perform_gc_cor(
       mat = assay(sce, assay_name),
@@ -125,7 +124,7 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
   if (method == "modal") {
     modal_quantiles <- lapply(X = counts_gc_list, FUN = function(df) {
       unique(na.omit(df$modal_quantile))
-    }) %>% unlist
+    }) %>% unlist()
     corrected <- lapply(X = counts_gc_list, FUN = function(df) {
       df$modal_corrected
     })
@@ -135,7 +134,6 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
     rownames(corrected) <- rownames(mat)
 
     return(list(counts = corrected, modal_quantiles = modal_quantiles))
-
   } else {
     corrected <- matrix(unlist(counts_gc_list), ncol = length(counts_gc_list), byrow = FALSE)
 
@@ -143,8 +141,6 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
     rownames(corrected) <- rownames(mat)
     return(corrected)
   }
-
-
 }
 
 

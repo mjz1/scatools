@@ -115,7 +115,6 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 #' @export
 #'
 plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", FUN = mean, col_fun = NULL) {
-
   if (group_var == "all") {
     sce[[group_var]] <- "all"
   }
@@ -345,10 +344,10 @@ cnaHeatmap <- function(sce,
   if (!is.null(bulk_cn_col)) {
     if (!bulk_cn_col %in% colnames(mcols(rowRanges(sce)))) {
       logger::log_warn("{bulk_cn_col} not found in provided object. Not plotting...")
-      top_annotation = NULL
+      top_annotation <- NULL
     } else {
-      cn_dat = mcols(rowRanges(sce))[,bulk_cn_col]
-      top_annotation = ComplexHeatmap::HeatmapAnnotation(bulk_cn_col = ComplexHeatmap::anno_points(cn_dat, border = T, pch = 15, size = unit(1, "mm")))
+      cn_dat <- mcols(rowRanges(sce))[, bulk_cn_col]
+      top_annotation <- ComplexHeatmap::HeatmapAnnotation(bulk_cn_col = ComplexHeatmap::anno_points(cn_dat, border = T, pch = 15, size = unit(1, "mm")))
       # Need to figure out how to rename the anno.
       # top_annotation@anno_list$bulk_cn_col@name <- bulk_cn_col
     }
@@ -505,27 +504,27 @@ clone_cna_comp_plot <- function(sce,
                                 assay_name = "segment_merged_logratios",
                                 center_point = 0,
                                 pseudobulk_fun = mean) {
-
   # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
 
 
   avg_exp <- pseudo_groups(sce,
-                           assay_name = assay_name,
-                           ids = sce[[clone_column]],
-                           FUN = pseudobulk_fun,
-                           na.rm = TRUE) %>%
+    assay_name = assay_name,
+    ids = sce[[clone_column]],
+    FUN = pseudobulk_fun,
+    na.rm = TRUE
+  ) %>%
     assay()
 
   # Get the range prior to subsetting
-  xy_range = range(avg_exp, na.rm = TRUE)
+  xy_range <- range(avg_exp, na.rm = TRUE)
 
   # Subset if specified
   if (!is.null(subset_clones)) {
-    avg_exp <- avg_exp[,as.character(subset_clones)]
+    avg_exp <- avg_exp[, as.character(subset_clones)]
   }
 
   if (!is.null(subset_chr)) {
-    avg_exp <- avg_exp[grepl(paste(paste0(subset_chr, "_"), collapse = "|"), rownames(avg_exp)),]
+    avg_exp <- avg_exp[grepl(paste(paste0(subset_chr, "_"), collapse = "|"), rownames(avg_exp)), ]
   }
 
   columns <- colnames(avg_exp)
@@ -537,11 +536,15 @@ clone_cna_comp_plot <- function(sce,
     left_join(as.data.frame(rowRanges(sce)))
 
   # Plot
-  pcomb <- GGally::ggpairs(data = avg_exp,
-                           columns = columns, legend = length(columns) + 1,
-                           lower = list(continuous = GGally::wrap(my_cont, limits = xy_range, size = 0.75),
-                                        mapping = aes(color = seqnames)),
-                           diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point))) +
+  pcomb <- GGally::ggpairs(
+    data = avg_exp,
+    columns = columns, legend = length(columns) + 1,
+    lower = list(
+      continuous = GGally::wrap(my_cont, limits = xy_range, size = 0.75),
+      mapping = aes(color = seqnames)
+    ),
+    diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point))
+  ) +
     theme_bw() +
     theme(legend.position = "right") + labs(color = "Chromosome")
   return(pcomb)

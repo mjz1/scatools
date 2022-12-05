@@ -10,7 +10,6 @@
 #' @export
 #'
 summarise_chr_arm <- function(sce, assay_name, cn_granges = NULL, granges_signal_colname = NULL, genome_ver = "hg38") {
-
   # TODO: Make this more general to aggregate signal over defined bins
 
   chr_arm_granges <- get_chr_arm_bins(genome = genome_ver)
