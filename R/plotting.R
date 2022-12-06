@@ -108,20 +108,21 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
 #' Plot Psuedobulk cell CNA profiles
 #'
-#' @inheritParams pseudobulk_sce
+#' @inheritParams plot_cell_cna
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
+#' @param aggr_fun Function to use to psuedobulk data.
 #'
 #' @return ggplot
 #' @export
 #'
-plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", FUN = mean, col_fun = NULL) {
+plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", aggr_fun = mean, col_fun = NULL) {
   if (group_var == "all") {
     sce[[group_var]] <- "all"
   }
 
   # avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
-  avg_exp <- pseudo_groups(sce, assay_name = assay_name, ids = sce[[group_var]], FUN = FUN, na.rm = TRUE)
+  avg_exp <- pseudo_groups(sce, assay_name = assay_name, ids = sce[[group_var]], FUN = aggr_fun, na.rm = TRUE)
 
   plot_cell_cna(sce = avg_exp, assay_name = "pseudo", col_fun = col_fun) + labs(title = group_var, y = assay_name)
 }
@@ -497,13 +498,13 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 #' @return ggapply plot
 #' @export
 #'
-clone_cna_comp_plot <- function(sce,
-                                clone_column = "clusters",
-                                subset_clones = NULL,
-                                subset_chr = NULL,
-                                assay_name = "segment_merged_logratios",
-                                center_point = 0,
-                                pseudobulk_fun = mean) {
+plot_clone_comp <- function(sce,
+                            clone_column = "clusters",
+                            subset_clones = NULL,
+                            subset_chr = NULL,
+                            assay_name = "segment_merged_logratios",
+                            center_point = 0,
+                            pseudobulk_fun = mean) {
   # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
 
 

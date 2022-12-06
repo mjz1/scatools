@@ -8,16 +8,16 @@ plot_cell_psuedobulk_cna(
   sce,
   assay_name,
   group_var = "all",
-  FUN = mean,
+  aggr_fun = mean,
   col_fun = NULL
 )
 }
 \arguments{
-\item{sce}{SingleCellExperiment Object}
+\item{sce}{sce object}
 
-\item{assay_name}{Name of the assay}
+\item{assay_name}{Name of assay to plot}
 
-\item{group_var}{Grouping variable to pseudobulk across. Default: "all"}
+\item{aggr_fun}{Function to use to psuedobulk data.}
 
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
 }
