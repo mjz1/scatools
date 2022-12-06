@@ -170,7 +170,7 @@ read_vartrix <- function(dir_path = NULL, mtx_ref = NULL, mtx_alt = NULL, barcod
 }
 
 #' @export
-vcf_to_df <- function(vcf, verbose = TRUE) {
+vcf_to_df <- function(vcf, verbose = FALSE) {
   vcf <- vcfR::read.vcfR(file = vcf, verbose = verbose)
   gts <- vcfR::extract.gt(vcf, element = "GT", return.alleles = F)[, 1] %>% as.factor()
   alleles <- vcfR::extract.gt(vcf, element = "GT", return.alleles = T)[, 1] %>% stringr::str_split_fixed(string = ., pattern = "/|\\|", n = 2)
