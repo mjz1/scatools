@@ -262,7 +262,7 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 get_tiled_bins <- function(bs_genome = NULL, tilewidth = 500000, select_chrs = NULL, respect_chr_arms = TRUE) {
   if (is.null(bs_genome)) {
     logger::log_error("Must provide 'bs_genome'")
-    stop(call. = F)
+    stop()
   }
 
   stopifnot(class(bs_genome) %in% "BSgenome")
@@ -277,6 +277,10 @@ get_tiled_bins <- function(bs_genome = NULL, tilewidth = 500000, select_chrs = N
   logger::log_info("Binwidth = {prettyMb(tilewidth)}")
 
   if (respect_chr_arms) {
+    if (is.null(bs_genome)) {
+      logger::log_error("Option: 'respect_chr_arms' requires specification of 'bs_genome'")
+      stop()
+    }
     # Get arm bins
     arm_bins <- get_chr_arm_bins(genome = unique(genome(bs_genome))[1])
     bins <- lapply(X = seq_along(arm_bins), FUN = function(i) {
