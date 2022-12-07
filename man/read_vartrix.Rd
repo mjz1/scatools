@@ -12,7 +12,9 @@ read_vartrix(
   variants = NULL,
   input_vcf = NULL,
   phased_vcf = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  keep_barcodes = NULL,
+  min_counts = 1
 )
 
 read_vartrix(
@@ -23,7 +25,9 @@ read_vartrix(
   variants = NULL,
   input_vcf = NULL,
   phased_vcf = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  keep_barcodes = NULL,
+  min_counts = 1
 )
 }
 \arguments{
@@ -42,6 +46,10 @@ read_vartrix(
 \item{phased_vcf}{Phased VCF}
 
 \item{verbose}{Verbosity}
+
+\item{keep_barcodes}{Vector of cell barcodes to keep. Will perform an intersect with this list.}
+
+\item{min_counts}{Minimum count number across all cells to keep a SNP}
 }
 \value{
 A \code{SingleCellExperiment} object
@@ -51,5 +59,5 @@ A \code{SingleCellExperiment} object
 \description{
 Reads in \code{Vartix} scSNP pileups. Assumes Vartrix is run in \verb{-s coverage} mode, outputting barcodes and variants table. If no \code{dir_path} is provided, then user must provide individual file paths for each file. If phased VCF and input VCF is provided this function will also remove any non-heterozygous loci, and indels.
 
-Reads in \code{Vartix} scSNP pileups. Assumes Vartrix is run in \verb{-s coverage} mode, outputting barcodes and variants table. If no \code{dir_path} is provided, then user must provide individual file paths for each file. If phased VCF and input VCF is provided this function will also remove any non-heterozygous loci, and indels.
+Reads in \code{Vartrix} scSNP pileups. Assumes Vartrix is run in \verb{-s coverage} mode, outputting barcodes and variants table. If no \code{dir_path} is provided, then user must provide individual file paths for each file. If phased VCF and input VCF is provided this function will also remove any non-heterozygous loci, and indels.
 }
