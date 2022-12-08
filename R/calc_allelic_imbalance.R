@@ -13,13 +13,12 @@
 #'
 calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
                          FUN = calc_ai) {
-
   if (is.null(bins)) {
     bins <- rowRanges(snp)
   }
 
   if (is.null(group_var)) {
-    group_var = "all"
+    group_var <- "all"
     snp$group_var <- "all"
   }
 
@@ -27,7 +26,7 @@ calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
   snp <- get_snp_bidx(snp, bins = bins)
 
   # Remove SNPs with no matching bin?
-  snp <- snp[!is.na(rowRanges(snp)$bin_id),]
+  snp <- snp[!is.na(rowRanges(snp)$bin_id), ]
 
   # Get indices for each group split
   gr_split <- split(x = seq_along(snp[[group_var]]), f = snp[[group_var]])
@@ -36,8 +35,8 @@ calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
 
   # Apply over cell groups
   res <- lapply(gr_split, FUN = function(gr) {
-    ref = Matrix::rowSums(assay(snp[,gr], "ref"))
-    alt = Matrix::rowSums(assay(snp[,gr], "alt"))
+    ref <- Matrix::rowSums(assay(snp[, gr], "ref"))
+    alt <- Matrix::rowSums(assay(snp[, gr], "alt"))
 
     # apply over bins multithreaded
     bin_res <- pbmcapply::pbmclapply(X = bin_split, mc.cores = ncores, FUN = function(b) {
@@ -66,11 +65,11 @@ calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
   colnames(res) <- names(gr_split)
 
   # Reorder results
-  res <- res[gtools::mixedsort(rownames(res)),]
+  res <- res[gtools::mixedsort(rownames(res)), ]
 
   sce <- SingleCellExperiment(list(res = res))
 
-  rowRanges(sce) <- bins[match(rownames(sce), names(bins)),]
+  rowRanges(sce) <- bins[match(rownames(sce), names(bins)), ]
   return(sce)
 }
 
@@ -85,7 +84,6 @@ calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
 #' @examples
 #' calc_ai(c(4, 2, 1), c(2, 3, 1))
 calc_ai <- function(ref_counts, alt_counts) {
-
   # coerce to vectors
   ref_counts <- as.vector(ref_counts)
   alt_counts <- as.vector(alt_counts)
@@ -96,5 +94,3 @@ calc_ai <- function(ref_counts, alt_counts) {
 
   return(ai)
 }
-
-

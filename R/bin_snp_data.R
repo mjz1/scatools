@@ -19,7 +19,6 @@ get_snp_bidx <- function(snp,
                            respect_chr_arms = respect_chr_arms
                          ),
                          merge_cols = NULL) {
-
   # Add indexing
   rr <- rowRanges(snp)
 
@@ -27,7 +26,7 @@ get_snp_bidx <- function(snp,
   hits <- GenomicRanges::findOverlaps(bins, rr)
 
   new_mcols <- S4Vectors::mcols(rr)
-  new_mcols[,c("bin_idx", "bin_id")] <- NA
+  new_mcols[, c("bin_idx", "bin_id")] <- NA
 
   new_mcols[S4Vectors::subjectHits(hits), "bin_idx"] <- S4Vectors::queryHits(hits)
   new_mcols[S4Vectors::subjectHits(hits), "bin_id"] <- get_bin_ids(bins)[S4Vectors::queryHits(hits)]
@@ -42,8 +41,8 @@ get_snp_bidx <- function(snp,
       }
     }
     if (length(merge_cols) > 0) {
-      new_mcols[,merge_cols] <- NA
-      new_mcols[,merge_cols] <- mcols(bins)[mcols(rowRanges(snp))$bin_idx, merge_cols]
+      new_mcols[, merge_cols] <- NA
+      new_mcols[, merge_cols] <- mcols(bins)[mcols(rowRanges(snp))$bin_idx, merge_cols]
     } else {
       logger::log_warn("No columns left to merge from bins onto snp data")
     }
@@ -76,9 +75,6 @@ bin_snp_data <- function(snp,
                            select_chrs = select_chrs,
                            respect_chr_arms = respect_chr_arms
                          )) {
-
-
-
   # Pull out snp granges
   snp_granges <- rowRanges(snp)
 
