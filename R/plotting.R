@@ -47,8 +47,8 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   plot_dat <- scuttle::makePerCellDF(sce[, cell_id], features = rownames(sce), assay.type = assay_name, use.coldata = FALSE, use.dimred = FALSE, use.altexps = FALSE) %>%
     tibble::rownames_to_column(var = "barcode") %>%
     tidyr::pivot_longer(cols = -dplyr::starts_with("barcode"), names_to = "bin_id", values_to = "counts") %>%
-    dplyr::left_join(as.data.frame(bindat), by = "bin_id") %>%
-    dplyr::filter(!is.na(counts))
+    dplyr::left_join(as.data.frame(bindat), by = "bin_id") #%>%
+    # dplyr::filter(!is.na(counts))
 
   plot_dat$chr_no <- gsub("chr", "", plot_dat$chr)
   plot_dat$chr_no <- factor(plot_dat$chr_no, levels = unique(chr_reorder(plot_dat$chr_no)))
@@ -85,7 +85,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
     p <- base_p +
-      geom_segment(aes(x = start, xend = end, y = counts, yend = counts, color = counts), size = 1) +
+      geom_segment(aes(x = start, xend = end, y = counts, yend = counts, color = counts), linewidth = 1) +
       scale_color_gradient2(
         low = attr(cn_colors, "colors")[1],
         mid = attr(cn_colors, "colors")[2],
@@ -137,6 +137,7 @@ plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", aggr_fu
 #' @export
 #'
 plot_cell_multi <- function(sce, cell_id, assays) {
+  # TODO: Enable passing of assay specific plot options
   plots <- vector(mode = "list")
 
   if (is.numeric(cell_id)) {
