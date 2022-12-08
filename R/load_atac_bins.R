@@ -50,6 +50,10 @@ load_atac_bins <- function(samples,
     }
     # Line up and merge
     colData(sce) <- cbind(colData(sce), subset(ArchR_Proj@cellColData[colnames(sce), ], select = -c(Sample)))
+
+    # Merge blacklist information if present
+    try(metadata(sce)$blacklist <- ArchR::getBlacklist(proj))
+
   }
 
   # Merge bin level information if provided
