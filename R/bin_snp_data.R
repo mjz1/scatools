@@ -25,7 +25,8 @@ get_snp_bidx <- function(snp,
 
 
   # Add indexing
-  mcols(rowRanges(snp))[S4Vectors::subjectHits(hits), 'bin_idx'] <- S4Vectors::queryHits(hits)
+  mcols(rowRanges(snp))[S4Vectors::subjectHits(hits), "bin_idx"] <- S4Vectors::queryHits(hits)
+  mcols(rowRanges(snp))[S4Vectors::subjectHits(hits), "bin_id"] <- get_bin_ids(bins)[S4Vectors::queryHits(hits)]
 
   # And other information
   if (!is.null(merge_cols)) {
