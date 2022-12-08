@@ -41,12 +41,20 @@ calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
 
     # apply over bins multithreaded
     bin_res <- pbmcapply::pbmclapply(X = bin_split, mc.cores = ncores, FUN = function(b) {
-      bin_alt = sum(ref[b])
-      bin_ref = sum(alt[b])
-      z <- FUN(bin_ref, bin_alt)
+      # Take the total count weighted mean across the bin
+      z <- FUN(ref_counts = ref[b], alt_counts = alt[b])
+      per_snp_cov <- ref[b] + alt[b]
+
+      z_w <- weighted.mean(x = z, w = per_snp_cov, na.rm = TRUE)
+
+      per_bin_cov <- sum(per_snp_cov)
+
+      # bin_alt = sum(ref[b])
+      # bin_ref = sum(alt[b])
+      # z <- FUN(bin_ref, bin_alt)
       # z[is.na(z)] <- 0 # mask NAs as zero
-      z <- as(z, "sparseMatrix")
-      return(z)
+      z_w <- as(z_w, "sparseMatrix")
+      return(z_w)
     })
     bnames <- names(bin_res)
     bin_res <- do.call(rbind, bin_res)
