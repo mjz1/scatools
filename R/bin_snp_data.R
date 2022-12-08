@@ -20,13 +20,17 @@ get_snp_bidx <- function(snp,
                          ),
                          merge_cols = NULL) {
 
-  # Then overlap with findoverlaps
-  hits <- GenomicRanges::findOverlaps(bins, rowRanges(snp))
-
-
   # Add indexing
-  mcols(rowRanges(snp))[S4Vectors::subjectHits(hits), "bin_idx"] <- S4Vectors::queryHits(hits)
-  mcols(rowRanges(snp))[S4Vectors::subjectHits(hits), "bin_id"] <- get_bin_ids(bins)[S4Vectors::queryHits(hits)]
+  rr <- rowRanges(snp)
+
+  # Then overlap with findoverlaps
+  hits <- GenomicRanges::findOverlaps(bins, rr)
+
+  new_mcols <- S4Vectors::mcols(rr)
+  new_mcols[,c("bin_idx", "bin_id")] <- NA
+
+  new_mcols[S4Vectors::subjectHits(hits), "bin_idx"] <- S4Vectors::queryHits(hits)
+  new_mcols[S4Vectors::subjectHits(hits), "bin_id"] <- get_bin_ids(bins)[S4Vectors::queryHits(hits)]
 
   # And other information
   if (!is.null(merge_cols)) {
@@ -38,12 +42,16 @@ get_snp_bidx <- function(snp,
       }
     }
     if (length(merge_cols) > 0) {
-      mcols(rowRanges(snp))[, merge_cols] <- mcols(bins)[mcols(rowRanges(snp))$bin_idx, merge_cols]
+      new_mcols[,merge_cols] <- NA
+      new_mcols[,merge_cols] <- mcols(bins)[mcols(rowRanges(snp))$bin_idx, merge_cols]
     } else {
       logger::log_warn("No columns left to merge from bins onto snp data")
     }
   }
 
+  mcols(rr) <- new_mcols
+
+  rowRanges(snp) <- rr
 
   return(snp)
 }
