@@ -37,9 +37,7 @@ read_vartrix <- function(dir_path = NULL,
   alt <- as(Matrix::readMM(mtx_alt), "CsparseMatrix")
   cells <- read.table(barcodes, header = FALSE, col.names = "barcodes")
 
-
   colnames(ref) <- colnames(alt) <- cells$barcodes
-  rownames(ref) <- rownames(alt) <- snps$snp_id
 
   if (!is.null(keep_barcodes)) {
     keep_barcodes <- intersect(cells$barcodes, keep_barcodes)
@@ -59,6 +57,8 @@ read_vartrix <- function(dir_path = NULL,
     dplyr::mutate("chr" = as.factor(chr), "start" = as.integer(as.integer(pos) + 1), "end" = as.integer(as.integer(pos) + 1)) %>%
     dplyr::mutate("snp_id" = paste(chr, start, sep = "_")) %>%
     select(snp_id, chr, start, end)
+
+  rownames(ref) <- rownames(alt) <- snps$snp_id
 
   # Load phasing if provided
   if (!is.null(phased_vcf)) {
@@ -101,7 +101,7 @@ read_vartrix <- function(dir_path = NULL,
   # will mask any SNPs that are 0,0 in ref and alt in a cell. This will allow
   # us to convert NAs to zeroes in sparse form, and ensure calculations are
   # only performed on true data
-  assay(snp, "cov") <- assay(snp, "total") != 0
+  assay(sce, "cov") <- assay(sce, "total") != 0
 
   return(sce)
 }
