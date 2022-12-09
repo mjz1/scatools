@@ -11,6 +11,7 @@
 #' @param phased_vcf Phased VCF
 #' @param verbose Verbosity
 #' @param keep_barcodes Vector of cell barcodes to keep. Will perform an intersect with this list.
+#' @param blacklist Optional blacklist to remove SNPs
 #' @param min_counts Minimum count number across all cells to keep a SNP
 #'
 #' @return A `SingleCellExperiment` object
@@ -24,6 +25,7 @@ read_vartrix <- function(dir_path = NULL,
                          phased_vcf = NULL,
                          verbose = FALSE,
                          keep_barcodes = NULL,
+                         blacklist = metadata(sce)$blacklist,
                          min_counts = 1) {
   if (!is.null(dir_path)) {
     mtx_ref <- dir(dir_path, pattern = "ref", full.names = TRUE)
@@ -90,6 +92,12 @@ read_vartrix <- function(dir_path = NULL,
   alt <- alt[snps$snp_id, ]
 
   sce <- SingleCellExperiment(list(ref = ref, alt = alt), rowRanges = GenomicRanges::makeGRangesFromDataFrame(snps, keep.extra.columns = TRUE), colData = cells)
+
+  if (!is.null(blacklist)) {
+    hits <- GenomicRanges::findOverlaps(rowRanges(sce), blacklist)
+    logger::log_info("Removing {prettyNum(length(hits), big.mark = ',')} SNPs overlapping with blacklist")
+    sce <- sce[-S4Vectors::queryHits(hits),]
+  }
 
   assay(sce, "total") <- assay(sce, "ref") + assay(sce, "alt")
 
