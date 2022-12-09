@@ -11,6 +11,8 @@ plot_clone_comp(
   subset_chr = NULL,
   assay_name = "segment_merged_logratios",
   center_point = 0,
+  pt_size = 0.75,
+  lg_pt_size = 3,
   pseudobulk_fun = mean
 )
 }
@@ -26,6 +28,10 @@ plot_clone_comp(
 \item{assay_name}{name of assay to use}
 
 \item{center_point}{Center point of the assay for drawing dashed lines}
+
+\item{pt_size}{Size of the points in the plot}
+
+\item{lg_pt_size}{Size of the points in the legend}
 
 \item{pseudobulk_fun}{mean or median}
 }
