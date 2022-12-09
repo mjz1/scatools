@@ -1,3 +1,31 @@
+#' Utility to pull assay data and merge with features
+#'
+#' @param sce SingleCellExperiment object
+#' @param assays Vector list of assays
+#' @param cell_id Cell id to grab data
+#'
+#' @return data frame with merged data
+#' @export
+#'
+get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
+
+  # Make sure binids consistent
+  rowRanges(sce)$bin_id <- get_bin_ids(rowRanges(sce))
+
+  plot_dat <- lapply(X = assay_names, FUN = function(assay_name) {
+    a_dat <- as.data.frame.matrix(assay(sce, assay_name)) %>%
+      rownames_to_column(var = "bin_id") %>%
+      pivot_longer(cols = !bin_id, names_to = "id", values_to = assay_name)
+  })
+
+  plot_dat <- purrr::reduce(plot_dat, dplyr::full_join, by = c("bin_id", "id"))
+
+  plot_dat <- plot_dat %>%
+    dplyr::left_join(as.data.frame(rowRanges(sce)), by = "bin_id")
+
+  return(plot_dat)
+}
+
 #' Pseudobulk cell CNA profiles
 #'
 #' @param sce SingleCellExperiment Object

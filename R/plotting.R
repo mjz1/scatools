@@ -1,6 +1,3 @@
-# TODO: Separate out the single cell plot generation from data preprocessing to allow for more flexibility
-
-
 #' Plot Cell Copy Number
 #'
 #' @param sce sce object
@@ -44,21 +41,25 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
   # TODO: subset for main chromosomes and reorder)
 
-  plot_dat <- scuttle::makePerCellDF(sce[, cell_id], features = rownames(sce), assay.type = assay_name, use.coldata = FALSE, use.dimred = FALSE, use.altexps = FALSE) %>%
-    tibble::rownames_to_column(var = "barcode") %>%
-    tidyr::pivot_longer(cols = -dplyr::starts_with("barcode"), names_to = "bin_id", values_to = "counts") %>%
-    dplyr::left_join(as.data.frame(bindat), by = "bin_id") # %>%
-  # dplyr::filter(!is.na(counts))
+  plot_dat <- get_assay_dat(sce = sce, assay_names = assay_name, cell_id = cell_id)
 
-  plot_dat$chr_no <- gsub("chr", "", plot_dat$chr)
+  p <- plot_sc_track(plot_dat = plot_dat, assay_name = assay_name, col_fun = col_fun)
+
+  return(p)
+}
+
+
+plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL) {
+
+  plot_dat$chr_no <- gsub("chr", "", plot_dat$seqnames)
   plot_dat$chr_no <- factor(plot_dat$chr_no, levels = unique(chr_reorder(plot_dat$chr_no)))
 
-  # Keep cell ordering as provided
-  plot_dat$barcode <- factor(plot_dat$barcode, levels = cell_id)
+  # Grab y var
+  y_var <- sym(assay_name)
 
   # Base plot
   base_p <- ggplot(plot_dat) +
-    facet_grid(barcode ~ chr_no, scales = "free_x", space = "free_x") +
+    facet_grid(id ~ chr_no, scales = "free_x", space = "free_x") +
     labs(x = NULL, y = assay_name, color = assay_name) +
     theme_bw() +
     theme(
@@ -73,19 +74,19 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   if ((!is.null(col_fun) && grepl("state", assay_name))) {
     cn_colors <- state_cn_colors()
     # Clip counts to 11
-    plot_dat[plot_dat$counts > 11, "counts"] <- 11
-    plot_dat$counts <- as.factor(plot_dat$counts)
-    plot_dat$counts <- dplyr::recode_factor(plot_dat$counts, "11" = "11+")
+    plot_dat[plot_dat$assay_name > 11, assay_name] <- 11
+    plot_dat$assay_name <- as.factor(plot_dat$assay_name)
+    plot_dat$assay_name <- dplyr::recode_factor(plot_dat$assay_name, "11" = "11+")
 
     p <- base_p +
-      geom_segment(aes(x = start, xend = end, y = counts, yend = counts, color = counts), size = 1) +
+      geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var, color = !!y_var), linewidth = 1) +
       scale_color_manual(values = cn_colors) +
       guides(colour = guide_legend(override.aes = list(size = 3)))
   } else if (!is.null(col_fun)) {
     cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
     p <- base_p +
-      geom_segment(aes(x = start, xend = end, y = counts, yend = counts, color = counts), linewidth = 1) +
+      geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var, color = !!y_var), linewidth = 1) +
       scale_color_gradient2(
         low = attr(cn_colors, "colors")[1],
         mid = attr(cn_colors, "colors")[2],
@@ -99,11 +100,11 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
     # base_p$mapping$colour <- NULL # remove color mapping
 
-    p <- base_p + geom_segment(aes(x = start, xend = end, y = counts, yend = counts), size = 1)
+    p <- base_p + geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var), linewidth = 1)
   }
-
   return(p)
 }
+
 
 
 #' Plot Psuedobulk cell CNA profiles
@@ -197,6 +198,8 @@ cnaHeatmap <- function(sce,
                        top_annotation = NULL,
                        bulk_cn_col = NULL,
                        ...) {
+  # TODO: Enable multiple annotations
+  # TODO: Enable multiple plots layered on top
   # if (is.null(rownames(sce))) {
   #   rownames(sce) <- 1:nrow(sce)
   # }
