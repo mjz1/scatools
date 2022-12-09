@@ -4,7 +4,14 @@
 \alias{calc_allelic}
 \title{Calculate allelic information over cells and bins}
 \usage{
-calc_allelic(snp, ncores = 1, bins = NULL, group_var = NULL, FUN = calc_ai)
+calc_allelic(
+  snp,
+  ncores = 1,
+  bins = NULL,
+  group_var = NULL,
+  FUN = calc_ai,
+  min_cov = 1
+)
 }
 \arguments{
 \item{snp}{SNP SingleCellExperiment object with slots 'ref' and 'alt' per cell counts}
@@ -16,9 +23,16 @@ calc_allelic(snp, ncores = 1, bins = NULL, group_var = NULL, FUN = calc_ai)
 \item{group_var}{Column containing cell grouping information}
 
 \item{FUN}{A function which can take two values (or vectors) of reference and alternate counts to produce another value (or vector)}
+
+\item{min_cov}{Minumum coverage per SNP across pseudobulked cells to be included in the calculation}
 }
 \value{
-a snp sce
+a snp sce with slots:
+\itemize{
+\item \code{res} - Containing the main result
+\item \code{tot_cov} - Total SNP coverage in the bin for the set of cells after filtering for \code{min_cov}
+\item \code{n_snp} - Number of SNPs remaining in the bin after filtering for \code{min_cov}
+}
 }
 \description{
 Calculate allelic information over cells and bins

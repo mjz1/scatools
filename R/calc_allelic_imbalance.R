@@ -7,19 +7,27 @@
 #' @param bins Bins over which to aggregate allele information. If not provided will calculate for each SNP
 #' @param group_var Column containing cell grouping information
 #' @param FUN A function which can take two values (or vectors) of reference and alternate counts to produce another value (or vector)
+#' @param min_cov Minumum coverage per SNP across pseudobulked cells to be included in the calculation
 #'
-#' @return a snp sce
+#' @return a snp sce with slots:
+#' * `res` - Containing the main result
+#' * `tot_cov` - Total SNP coverage in the bin for the set of cells after filtering for `min_cov`
+#' * `n_snp` - Number of SNPs remaining in the bin after filtering for `min_cov`
+#'
 #' @export
 #'
-calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
-                         FUN = calc_ai) {
+calc_allelic <- function(snp, ncores = 1,
+                         bins = NULL,
+                         group_var = NULL,
+                         FUN = calc_ai,
+                         min_cov = 1) {
   if (is.null(bins)) {
     bins <- rowRanges(snp)
   }
 
   if (is.null(group_var)) {
     group_var <- "all"
-    snp$group_var <- "all"
+    snp$all <- "all"
   }
 
   # Get matching indices between snps and bins
@@ -34,42 +42,53 @@ calc_allelic <- function(snp, ncores = 1, bins = NULL, group_var = NULL,
   bin_split <- split(x = seq_along(rowRanges(snp)), f = rowRanges(snp)$bin_id)
 
   # Apply over cell groups
-  res <- lapply(gr_split, FUN = function(gr) {
+  res <- lapply(seq_along(gr_split), FUN = function(i) {
+    gr <- gr_split[[i]]
+    gr_name <- names(gr_split[i])
     ref <- Matrix::rowSums(assay(snp[, gr], "ref"))
     alt <- Matrix::rowSums(assay(snp[, gr], "alt"))
 
     # apply over bins multithreaded
     bin_res <- pbmcapply::pbmclapply(X = bin_split, mc.cores = ncores, FUN = function(b) {
-      # Take the total count weighted mean across the bin
-      z <- FUN(ref_counts = ref[b], alt_counts = alt[b])
+      # Compute the per SNP coverage within the bin
       per_snp_cov <- ref[b] + alt[b]
 
-      z_w <- weighted.mean(x = z, w = per_snp_cov, na.rm = TRUE)
+      s_idx <- per_snp_cov >= min_cov
 
-      per_bin_cov <- sum(per_snp_cov)
+      # Take the total count weighted mean across the bin
+      z <- FUN(ref_counts = ref[b][s_idx], alt_counts = alt[b][s_idx])
 
-      # bin_alt = sum(ref[b])
-      # bin_ref = sum(alt[b])
-      # z <- FUN(bin_ref, bin_alt)
-      # z[is.na(z)] <- 0 # mask NAs as zero
-      z_w <- as(z_w, "sparseMatrix")
-      return(z_w)
+      z_w <- weighted.mean(x = z, w = per_snp_cov[s_idx], na.rm = TRUE)
+
+      per_bin_cov <- sum(per_snp_cov[s_idx])
+
+      # z_w <- as(z_w, "sparseMatrix")
+      return(list(mean = z_w, n_snp = sum(s_idx), tot_cov = per_bin_cov))
     })
-    bnames <- names(bin_res)
-    bin_res <- do.call(rbind, bin_res)
-    rownames(bin_res) <- bnames
+    bin_res <- do.call(rbind.data.frame, bin_res)
+    bin_res$bin_id <- rownames(bin_res)
+    bin_res[[group_var]] <- gr_name
+    rownames(bin_res) <- NULL
     return(bin_res)
   })
 
-  res <- do.call(cbind, res)
-  colnames(res) <- names(gr_split)
+  res <- do.call(rbind.data.frame, res)
 
-  # Reorder results
-  res <- res[gtools::mixedsort(rownames(res)), ]
+  # Format results
+  mean_mat <- pivot_wider(res, id_cols = "bin_id", names_from = group_var, values_from = "mean") %>%
+    column_to_rownames("bin_id")
+  tot_cov_mat <- pivot_wider(res, id_cols = "bin_id", names_from = group_var, values_from = "tot_cov") %>%
+    column_to_rownames("bin_id")
+  n_snp_mat <- pivot_wider(res, id_cols = "bin_id", names_from = group_var, values_from = "n_snp") %>%
+    column_to_rownames("bin_id")
 
-  sce <- SingleCellExperiment(list(res = res))
+  sce <- SingleCellExperiment(list("res" = mean_mat, "tot_cov" = tot_cov_mat, "n_snp" = n_snp_mat))
 
-  rowRanges(sce) <- bins[match(rownames(sce), names(bins)), ]
+  sce <- sce[gtools::mixedsort(rownames(sce)),]
+
+  metadata(sce)$calc_allelic <- list(FUN = FUN, min_cov = min_cov)
+  rowRanges(sce) <- bins[match(rownames(sce), get_bin_ids(bins)), ]
+
   return(sce)
 }
 
