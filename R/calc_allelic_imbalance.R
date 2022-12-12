@@ -1,4 +1,3 @@
-
 #' Calculate allelic information over cells and bins
 #'
 #'
@@ -10,7 +9,7 @@
 #' @param min_cov Minumum coverage per SNP across pseudobulked cells to be included in the calculation
 #'
 #' @return a snp sce with slots:
-#' * `res` - Containing the main result
+#' * `snp` - Containing the main result
 #' * `tot_cov` - Total SNP coverage in the bin for the set of cells after filtering for `min_cov`
 #' * `n_snp` - Number of SNPs remaining in the bin after filtering for `min_cov`
 #'
@@ -82,7 +81,7 @@ calc_allelic <- function(snp, ncores = 1,
   n_snp_mat <- pivot_wider(res, id_cols = "bin_id", names_from = group_var, values_from = "n_snp") %>%
     column_to_rownames("bin_id")
 
-  sce <- SingleCellExperiment(list("res" = mean_mat, "tot_cov" = tot_cov_mat, "n_snp" = n_snp_mat))
+  sce <- SingleCellExperiment(list("snp" = mean_mat, "tot_cov" = tot_cov_mat, "n_snp" = n_snp_mat))
 
   sce <- sce[gtools::mixedsort(rownames(sce)),]
 

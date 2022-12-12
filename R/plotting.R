@@ -39,7 +39,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
   }
   bindat$bin_id <- rownames(sce)
 
-  # TODO: subset for main chromosomes and reorder)
+  # TODO: subset for main chromosomes and reorder
 
   plot_dat <- get_assay_dat(sce = sce, assay_names = assay_name, cell_id = cell_id)
 
@@ -123,7 +123,7 @@ plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", aggr_fu
 
   # avg_exp <- pseudobulk_sce(sce = sce, assay_name = assay_name, group_var = group_var)
 
-  avg_exp <- pseudo_groups(sce, assay_name = assay_name, ids = sce[[group_var]], FUN = aggr_fun, na.rm = TRUE)
+  avg_exp <- pseudo_groups(sce, assay_name = assay_name, group_var = group_var, FUN = aggr_fun, na.rm = TRUE)
 
   plot_cell_cna(sce = avg_exp, assay_name = "pseudo", col_fun = col_fun) + labs(title = group_var, y = assay_name)
 }
@@ -411,7 +411,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # avg_exp <- scuttle::summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
   # rowRanges(avg_exp) <- rowRanges(sce)
 
-  avg_exp <- pseudo_groups(sce, assay_name = new_assay, ids = sce[[clone_name]], FUN = aggr_fun, na.rm = TRUE)
+  avg_exp <- pseudo_groups(sce, assay_name = new_assay, group_var = clone_name, FUN = aggr_fun, na.rm = TRUE)
 
   # Order by clone size
   avg_exp <- avg_exp[, order(avg_exp$ncells, decreasing = TRUE)]
@@ -492,7 +492,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 #' Clone Copy Number Comparison Plot
 #'
 #' @param sce sce object
-#' @param clone_column column name with clone information
+#' @param group_var column name with clone information
 #' @param subset_clones optional vector of clones to subset for comparison
 #' @param subset_chr optional vector of chromosomes to subset for comparison
 #' @param assay_name name of assay to use
@@ -505,20 +505,24 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 #' @export
 #'
 plot_clone_comp <- function(sce,
-                            clone_column = "clusters",
+                            group_var = "clusters",
                             subset_clones = NULL,
                             subset_chr = NULL,
                             assay_name = "segment_merged_logratios",
-                            center_point = 0,
+                            center_point = NULL,
                             pt_size = 0.75,
                             lg_pt_size = 3,
                             pseudobulk_fun = mean) {
   # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
 
+  if (is.null(group_var)) {
+    group_var <- "all"
+    sce$all <- "all"
+  }
 
   avg_exp <- pseudo_groups(sce,
     assay_name = assay_name,
-    ids = sce[[clone_column]],
+    group_var = group_var,
     FUN = pseudobulk_fun,
     na.rm = TRUE
   ) %>%
@@ -549,7 +553,7 @@ plot_clone_comp <- function(sce,
     data = avg_exp,
     columns = columns, legend = length(columns) + 1,
     lower = list(
-      continuous = GGally::wrap(my_cont, limits = xy_range, size = pt_size),
+      continuous = GGally::wrap(my_cont, limits = xy_range, size = pt_size, lg_pt_size = lg_pt_size),
       mapping = aes(color = seqnames)
     ),
     diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point))
@@ -560,7 +564,7 @@ plot_clone_comp <- function(sce,
 }
 
 
-my_cont <- function(data, mapping, size = 1, ...) {
+my_cont <- function(data, mapping, size = 1, lg_pt_size = 3, ...) {
   ggplot(data = data, mapping = mapping) +
     geom_point(size = size) +
     geom_abline(alpha = 0.75, linetype = "dashed") +

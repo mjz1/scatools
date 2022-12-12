@@ -29,7 +29,7 @@ calc_allelic(
 \value{
 a snp sce with slots:
 \itemize{
-\item \code{res} - Containing the main result
+\item \code{snp} - Containing the main result
 \item \code{tot_cov} - Total SNP coverage in the bin for the set of cells after filtering for \code{min_cov}
 \item \code{n_snp} - Number of SNPs remaining in the bin after filtering for \code{min_cov}
 }

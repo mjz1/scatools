@@ -645,11 +645,19 @@ remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
 }
 
 #' @export
-pseudo_groups <- function(sce, assay_name, ids, FUN = mean, ...) {
+pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, ...) {
+
+  if (is.null(group_var)) {
+    group_var <- "all"
+    sce$all <- "all"
+  }
+
+  ids <- sce[[group_var]]
+
   by.group <- split(seq_along(ids), ids, drop = TRUE)
 
-  res <- lapply(X = by.group, FUN = function(X) {
-    apply(assay(sce, assay_name)[, X], MARGIN = 1, FUN = FUN, ...)
+  res <- lapply(X = by.group, FUN = function(x) {
+    apply(X = as.matrix(assay(sce, assay_name)[, x]), MARGIN = 1, FUN = FUN, ...)
   })
 
   res <- SingleCellExperiment(list("pseudo" = do.call("cbind", res)))
