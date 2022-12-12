@@ -6,11 +6,11 @@
 \usage{
 plot_clone_comp(
   sce,
-  clone_column = "clusters",
+  group_var = "clusters",
   subset_clones = NULL,
   subset_chr = NULL,
   assay_name = "segment_merged_logratios",
-  center_point = 0,
+  center_point = NULL,
   pt_size = 0.75,
   lg_pt_size = 3,
   pseudobulk_fun = mean
@@ -19,7 +19,7 @@ plot_clone_comp(
 \arguments{
 \item{sce}{sce object}
 
-\item{clone_column}{column name with clone information}
+\item{group_var}{column name with clone information}
 
 \item{subset_clones}{optional vector of clones to subset for comparison}
 
