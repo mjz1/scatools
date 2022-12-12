@@ -50,7 +50,6 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
 
 plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL) {
-
   plot_dat$chr_no <- gsub("chr", "", plot_dat$seqnames)
   plot_dat$chr_no <- factor(plot_dat$chr_no, levels = unique(chr_reorder(plot_dat$chr_no)))
 

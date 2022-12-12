@@ -96,7 +96,7 @@ read_vartrix <- function(dir_path = NULL,
   if (!is.null(blacklist)) {
     hits <- GenomicRanges::findOverlaps(rowRanges(sce), blacklist)
     logger::log_info("Removing {prettyNum(length(hits), big.mark = ',')} SNPs overlapping with blacklist")
-    sce <- sce[-S4Vectors::queryHits(hits),]
+    sce <- sce[-S4Vectors::queryHits(hits), ]
   }
 
   assay(sce, "total") <- assay(sce, "ref") + assay(sce, "alt")

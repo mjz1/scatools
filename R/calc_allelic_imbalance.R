@@ -83,7 +83,7 @@ calc_allelic <- function(snp, ncores = 1,
 
   sce <- SingleCellExperiment(list("snp" = mean_mat, "tot_cov" = tot_cov_mat, "n_snp" = n_snp_mat))
 
-  sce <- sce[gtools::mixedsort(rownames(sce)),]
+  sce <- sce[gtools::mixedsort(rownames(sce)), ]
 
   metadata(sce)$calc_allelic <- list(FUN = FUN, min_cov = min_cov)
   rowRanges(sce) <- bins[match(rownames(sce), get_bin_ids(bins)), ]

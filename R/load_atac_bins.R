@@ -53,7 +53,6 @@ load_atac_bins <- function(samples,
 
     # Merge blacklist information if present
     try(metadata(sce)$blacklist <- ArchR::getBlacklist(proj))
-
   }
 
   # Merge bin level information if provided

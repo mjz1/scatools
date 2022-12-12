@@ -21,5 +21,4 @@ pseudo_join <- function(sce, snp, sce_assay = "counts", ncores = 1, group_var = 
   joint$id <- colnames(joint)
 
   return(joint)
-
 }

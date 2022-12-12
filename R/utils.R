@@ -8,11 +8,10 @@
 #' @export
 #'
 get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
-
   # Make sure binids consistent
   rowRanges(sce)$bin_id <- get_bin_ids(rowRanges(sce))
 
-  sce <- sce[,cell_id]
+  sce <- sce[, cell_id]
 
   plot_dat <- lapply(X = assay_names, FUN = function(assay_name) {
     a_dat <- as.data.frame.matrix(assay(sce, assay_name)) %>%
@@ -25,7 +24,7 @@ get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
   # TODO: Fix bug here when we have common colnames between the bins and
   range_dat <- as.data.frame(rowRanges(sce))
 
-  range_dat <- range_dat[,which(!colnames(range_dat) %in% assay_names)]
+  range_dat <- range_dat[, which(!colnames(range_dat) %in% assay_names)]
 
   plot_dat <- plot_dat %>%
     dplyr::left_join(range_dat, by = "bin_id")
