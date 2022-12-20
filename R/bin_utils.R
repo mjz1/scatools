@@ -549,6 +549,17 @@ get_bin_ids <- function(granges) {
   return(bin_ids)
 }
 
+#' @export
+get_bin_info <- function(bin_ids) {
+  # get the bin_ids
+  bin_info <- data.frame(stringr::str_split_fixed(bin_ids, pattern = "_", n = 3))
+  colnames(bin_info) <- c("chr", "start", "end")
+  bin_info$chr <- factor(bin_info$chr, levels = gtools::mixedsort(unique(bin_info$chr)))
+  bin_info$start <- as.numeric(bin_info$start)
+  bin_info$end <- as.numeric(bin_info$end)
+  return(bin_info)
+}
+
 #' Overlap genes with bins
 #'
 #' Given an annotation object, this function will overlap genes with bins and place the results in the metadata slot `gene_overlaps`. This function will also attempt to annotate cancer genes using OncoKB.
@@ -645,7 +656,7 @@ remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
 }
 
 #' @export
-pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, ...) {
+pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, na.rm = TRUE, ...) {
   if (is.null(group_var)) {
     group_var <- "all"
     sce$all <- "all"
@@ -656,7 +667,7 @@ pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, ...) {
   by.group <- split(seq_along(ids), ids, drop = TRUE)
 
   res <- lapply(X = by.group, FUN = function(x) {
-    apply(X = as.matrix(assay(sce, assay_name)[, x]), MARGIN = 1, FUN = FUN, ...)
+    apply(X = as.matrix(assay(sce, assay_name)[, x]), MARGIN = 1, FUN = FUN, na.rm = na.rm, ...)
   })
 
   res <- SingleCellExperiment(list("pseudo" = do.call("cbind", res)))

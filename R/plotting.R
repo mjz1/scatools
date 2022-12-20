@@ -212,7 +212,7 @@ cnaHeatmap <- function(sce,
 
   if (!is.null(clone_name)) {
     if (!clone_name %in% colnames(colData(sce))) {
-      logger::log_warn("{clone_name} not found in sce object")
+      logger::log_error("{clone_name} not found in sce object")
     }
   }
 
