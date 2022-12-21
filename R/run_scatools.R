@@ -7,6 +7,7 @@
 #' @param ArrowFile ArrowFile
 #' @param outdir Outdir
 #' @param overwrite Whether to overwrite previous results
+#' @param force_arrow recreate arrow file
 #' @param verbose Verbosity
 #' @param bins Bins granges
 #' @param ncores Number of cores
@@ -19,11 +20,14 @@ run_scatools <- function(sample_id,
                          ArrowFile = NULL,
                          outdir = sample_id,
                          overwrite = FALSE,
+                         force_arrow = FALSE,
                          verbose = TRUE,
                          bins,
                          ncores = 1) {
 
   # TODO INPUT VALIDATION
+
+  bin_name <- prettyMb(getmode(width(bins)))
 
   # sample directories
   archr_dir <- file.path(outdir, "ArchR")
@@ -32,7 +36,7 @@ run_scatools <- function(sample_id,
   processed <- file.path(cnv_out, "processed")
 
   # Check for final output and skip if present
-  final_out <- file.path(processed, "processed.sce")
+  final_out <- file.path(processed, glue("{bin_name}_processed.sce"))
 
   if (file.exists(final_out) & !overwrite) {
     logger::log_info("Processed output already exists: {final_out}")
@@ -52,7 +56,8 @@ run_scatools <- function(sample_id,
                             ArrowFile = ArrowFile,
                             fragments = fragments,
                             sample_id = sample_id,
-                            ncores = ncores)
+                            ncores = ncores,
+                            force = force_arrow)
 
   # Binning and CNV processing
   dir.create(bins_out, recursive = TRUE, showWarnings = FALSE)
@@ -81,16 +86,23 @@ run_scatools <- function(sample_id,
     BPPARAM = BiocParallel::bpparam(),
     verbose = verbose
   )
-  save_to(object = sce, save_to = file.path(processed, "raw.sce"))
 
-  # Remove any small leftover bins less than 1mbp
-  sce_processed <- sce[rowRanges(sce)$binwidth > 1e6, ]
+  sce <- flagDoublets(sce, filterRatio = 2, remove = FALSE)
+
+  save_to(object = sce, save_to = file.path(processed, glue("{bin_name}_raw.sce")))
+
+  # Remove any small leftover bins less than 10% of the full bin length
+  sce_processed <- sce[rowRanges(sce)$binwidth > 0.1*getmode(width(bins)), ]
 
   # Length normalize so the tail end bins are in the same scale
   sce_processed <- length_normalize(sce_processed, assay_name = "counts", assay_to = "counts")
+
+  # Flag and remove doublets
+  sce_processed <- flagDoublets(sce_processed, filterRatio = 2, remove = TRUE)
+
   sce_processed <- sce_processed %>%
     filter_sce(gc_range = c(0.3, 1)) %>%
-    add_ideal_mat(verbose = TRUE) %>%
+    add_ideal_mat(verbose = TRUE, ncores = ncores) %>%
     add_gc_cor(method = "modal", verbose = TRUE, ncores = ncores) %>%
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
     calc_ratios(assay = "counts_gc_modal_smoothed") %>%
@@ -106,16 +118,16 @@ run_scatools <- function(sample_id,
     logger::log_info("Writing output to anndata")
     # Save raw anndata
     adata <- zellkonverter::SCE2AnnData(sce)
-    anndata::write_h5ad(adata, filename = file.path(processed, "raw.h5ad"))
+    anndata::write_h5ad(adata, filename = file.path(processed, glue("{bin_name}_raw.h5ad")))
     adata2 <- zellkonverter::SCE2AnnData(sce_processed, verbose = TRUE, reducedDims = FALSE) # Bug in reduced dims conversion nbd
-    anndata::write_h5ad(adata2, filename = file.path(processed, "processed.h5ad"))
+    anndata::write_h5ad(adata2, filename = file.path(processed, glue("{bin_name}_processed.h5ad")))
   }
 
   return(sce_processed)
 }
 
 
-create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id = "sample", genome = "hg38", ncores = 1) {
+create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id = "sample", genome = "hg38", ncores = 1, force = FALSE) {
 
   ArchR::addArchRThreads(ncores)
   ArchR::addArchRGenome(genome)
@@ -124,7 +136,7 @@ create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id 
   # Set working directory for ArchR
   # knitr::opts_current$set(root.dir = archr_dir)
   setwd(archr_dir)
-  if (file.exists(ArrowFile)) {
+  if (file.exists(ArrowFile) & !force) {
     logger::log_info("LOADING ARROWFILE")
     proj <- ArchR::ArchRProject(
       ArrowFile = ArrowFile,
@@ -159,7 +171,7 @@ create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id 
       minFrags = 1000,
       addTileMat = TRUE,
       addGeneScoreMat = TRUE,
-      force = FALSE
+      force = force
     )
     logger::log_info("CALCULATING DOUBLETS")
     doubScores <- ArchR::addDoubletScores(

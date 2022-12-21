@@ -10,6 +10,7 @@ run_scatools(
   ArrowFile = NULL,
   outdir = sample_id,
   overwrite = FALSE,
+  force_arrow = FALSE,
   verbose = TRUE,
   bins,
   ncores = 1
@@ -25,6 +26,8 @@ run_scatools(
 \item{outdir}{Outdir}
 
 \item{overwrite}{Whether to overwrite previous results}
+
+\item{force_arrow}{recreate arrow file}
 
 \item{verbose}{Verbosity}
 
