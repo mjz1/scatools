@@ -405,10 +405,7 @@ combine.func <- function (diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 
 #' @param name String with the name for the target slot for the resulting
 #' transformed counts.
 #'
-#' @return A data frame with log transformed counts inside the
-#' \code{\link[SummarizedExperiment]{assay}} slot.
-#'
-#' @importFrom SummarizedExperiment assay
+#' @return A data frame with log transformed counts inside the `assay` slot.
 #'
 #' @export
 logNorm <- function(scCNA,
@@ -418,7 +415,7 @@ logNorm <- function(scCNA,
   transform <- match.arg(transform)
 
   # obtaining data
-  seg_ratios <- SummarizedExperiment::assay(scCNA, assay)
+  seg_ratios <- assay(scCNA, assay)
 
   # saving logr
   seg_ratios[seg_ratios == 0] <- 1e-3
@@ -433,7 +430,7 @@ logNorm <- function(scCNA,
     seg_ratios_logr <- log10(seg_ratios)
   }
 
-  SummarizedExperiment::assay(scCNA, name) <- round(seg_ratios_logr, 2)
+  assay(scCNA, name) <- round(seg_ratios_logr, 2)
 
   return(scCNA)
 }
