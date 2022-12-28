@@ -15,6 +15,7 @@ Imports:
     BiocParallel,
     Biostrings,
     BSgenome,
+    ComplexHeatmap,
     DNAcopy,
     dplyr,
     DropletUtils,
@@ -48,6 +49,7 @@ BugReports: https://github.com/mjz1/scatools/issues
 Suggests: 
     anndata,
     dbscan,
+    dittoSeq,
     GGally,
     gtools,
     knitr,

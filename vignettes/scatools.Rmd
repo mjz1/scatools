@@ -48,11 +48,17 @@ names(fragment_file) <- "test_sample"
 
 
 Now we process this data using `scatools`. Helper functions help us to create `GenomicRanges` bins, and compute GC content for downstream usage. Here we demonstrate using 10Mb bins.
-```{r}
+```{r, include=FALSE}
+# Sideload bins
+bins <- get(data(bins_10mb))
+rm(bins_10mb)
+```
+
+```{r, eval=FALSE}
 # Generate bins
 bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 1e7)
-bin_name <- prettyMb(getmode(width(bins)))
 ```
+
 
 A convenience wrapper is provided to perform the analysis
 ```{r, eval=FALSE}
