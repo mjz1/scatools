@@ -1,4 +1,3 @@
-
 #' Cluster using Seurat
 #'
 #' @param sce SingleCellExperiment object
@@ -65,7 +64,9 @@ cluster_seurat <- function(sce,
     srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
   }
 
-  srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
+  if (requireNamespace("HGC", quietly = TRUE)) {
+    srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
+  }
 
   srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = metric, verbose = verbose)
 
@@ -170,6 +171,11 @@ perform_umap_clustering <- function(cn_matrix,
                                     verbose = TRUE) {
   # TODO: Integrate with the SCE object better -- in the reduced dim slot
   # TODO: Add clone id colors to the clustering object so that they are fixed across plots
+
+  if (!requireNamespace("dbscan")) {
+    logger::log_error("Package 'dbscan' required for this function")
+    stop()
+  }
 
   cn_matrix <- as.matrix(cn_matrix)
 

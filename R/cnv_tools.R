@@ -90,7 +90,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
 
 #' Merge segment levels
 #'
-#' Wrapper for [copykit::mergeLevels] to merge segments
+#' Wrapper for [mergeLevels] to merge segments
 #'
 #' @inheritParams segment_cnv
 #' @param smooth_assay name of assay with smoothed counts
@@ -110,7 +110,7 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
 
   seg_ml_list <- pbmcapply::pbmclapply(seq_along(segment_df), mc.cores = ncores, function(i) {
     cell_name <- names(segment_df)[i]
-    seg_means_ml <- copykit::mergeLevels(
+    seg_means_ml <- mergeLevels(
       vecObs = smooth_counts[, i],
       vecPred = segment_df[, i],
       verbose = 0,
@@ -129,7 +129,7 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
   rownames(seg_ratios) <- rownames(sce)
   assay(sce, paste(new_assay, "ratios", sep = "_")) <- as.matrix(round(seg_ratios, 2))
 
-  sce <- copykit::logNorm(sce, assay = paste(new_assay, "ratios", sep = "_"), name = paste(new_assay, "logratios", sep = "_"))
+  sce <- logNorm(sce, assay = paste(new_assay, "ratios", sep = "_"), name = paste(new_assay, "logratios", sep = "_"))
 
   logger::log_info("Merged segments in: {new_assay}")
   logger::log_info("Merged segments ratios in: {paste(new_assay, 'ratios', sep = '_')}")
@@ -244,4 +244,196 @@ calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = 
   ratios <- sweep(assay(sce, assay_name), 2, apply(assay(sce, assay_name), 2, fun, na.rm = T), "/")
   assay(sce, new_assay) <- round(ratios, 2)
   return(sce)
+}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Merge Levels
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# mergeLevels and combine.func are present in https://doi.org/10.1038/ng.3641
+# They can also be found in the package aCGH from Peter Dimitrov
+# https://www.bioconductor.org/packages/release/bioc/html/aCGH.html
+# under GPL-2 licence
+
+# This is taken from copykit to avoid additional dependencies
+
+#' @export
+#' @importFrom stats ansari.test wilcox.test
+mergeLevels <- function (vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
+                         thresMin = 0.05, thresMax = 0.5, verbose = 1, scale = TRUE)
+{
+  if (thresMin > thresMax) {
+    cat("Error, thresMax should be equal to or larger than thresMin\n")
+    return()
+  }
+  thresAbs = thresMin
+  sq <- numeric()
+  j = 0
+  ansari = numeric()
+  lv = numeric()
+  flag = 0
+  if (thresMin == thresMax) {
+    flag = 2
+  }
+  else {
+    l.step <- signif((thresMax - thresMin)/10, 1)
+    s.step <- signif((thresMax - thresMin)/200, 1)
+  }
+  while (1) {
+    if (verbose >= 1) {
+      cat("\nCurrent thresAbs: ", thresAbs, "\n")
+    }
+    j = j + 1
+    sq[j] <- thresAbs
+    vecPredNow = vecPred
+    mnNow = unique(vecPred)
+    mnNow = mnNow[!is.na(mnNow)]
+    cont = 0
+    while (cont == 0 & length(mnNow) > 1) {
+      mnNow = sort(mnNow)
+      n <- length(mnNow)
+      if (verbose >= 2) {
+        cat("\r", n, ":", length(unique(vecPred)), "\t")
+      }
+      if (scale) {
+        d <- (2 * 2^mnNow)[-n] - (2 * 2^mnNow)[-1]
+      }
+      else {
+        d <- (mnNow)[-n] - (mnNow)[-1]
+      }
+      dst <- cbind(abs(d)[order(abs(d))], (2:n)[order(abs(d))],
+                   (1:(n - 1))[order(abs(d))])
+      for (i in 1:nrow(dst)) {
+        cont = 1
+        out = combine.func(diff = dst[i, 1], vecObs,
+                           vecPredNow, mnNow, mn1 = mnNow[dst[i, 2]],
+                           mn2 = mnNow[dst[i, 3]], pv.thres = pv.thres,
+                           thresAbs = if (scale) {
+                             2 * 2^thresAbs - 2
+                           }
+                           else {
+                             thresAbs
+                           })
+        if (out$pv > pv.thres) {
+          cont = 0
+          vecPredNow = out$vecPredNow
+          mnNow = out$mnNow
+          break
+        }
+      }
+    }
+    ansari[j] = ansari.test(sort(vecObs - vecPredNow), sort(vecObs -
+                                                              vecPred))$p.value
+    if (is.na(ansari[j])) {
+      ansari[j] = 0
+    }
+    lv[j] = length(mnNow)
+    if (flag == 2) {
+      break
+    }
+    if (ansari[j] < ansari.sign) {
+      flag = 1
+    }
+    if (flag) {
+      if (ansari[j] > ansari.sign | thresAbs == thresMin) {
+        break
+      }
+      else {
+        thresAbs = signif(thresAbs - s.step, 3)
+        if (thresAbs <= thresMin) {
+          thresAbs = thresMin
+        }
+      }
+    }
+    else {
+      thresAbs = thresAbs + l.step
+    }
+    if (thresAbs >= thresMax) {
+      thresAbs = thresMax
+      flag = 2
+    }
+  }
+  return(list(vecMerged = vecPredNow, mnNow = mnNow, sq = sq,
+              ansari = ansari))
+}
+
+
+#' @export
+combine.func <- function (diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1e-04,
+                          thresAbs = 0)
+{
+  vec1 = vecObs[which(vecPredNow == mn1)]
+  vec2 = vecObs[which(vecPredNow == mn2)]
+  if (diff <= thresAbs) {
+    pv = 1
+  }
+  else {
+    if ((length(vec1) > 10 & length(vec2) > 10) | sum(length(vec1),
+                                                      length(vec2)) > 100) {
+      pv = wilcox.test(vec1, vec2)$p.value
+    }
+    else {
+      pv = wilcox.test(vec1, vec2, exact = TRUE)$p.value
+    }
+    if (length(vec1) <= 3 | length(vec2) <= 3) {
+      pv = 0
+    }
+  }
+  index.merged <- numeric()
+  if (pv > pv.thres) {
+    vec = c(vec1, vec2)
+    index.merged = which((vecPredNow == mn1) | (vecPredNow ==
+                                                  mn2))
+    vecPredNow[index.merged] = median(vec, na.rm = TRUE)
+    mnNow[which((mnNow == mn1) | (mnNow == mn2))] = median(vec,
+                                                           na.rm = TRUE)
+    mnNow = unique(mnNow)
+  }
+  list(mnNow = mnNow, vecPredNow = vecPredNow, pv = pv)
+}
+
+
+#' logNorm()
+#'
+#' Computes a log transformation of the selected assay. Function taken from the `copyKit` package.
+#'
+#' @param scCNA scCNA object.
+#' @param transform String specifying the transformation to apply to the selected
+#' assay.
+#' @param assay String with the name of the assay to pull data from to run the
+#' segmentation.
+#' @param name String with the name for the target slot for the resulting
+#' transformed counts.
+#'
+#' @return A data frame with log transformed counts inside the
+#' \code{\link[SummarizedExperiment]{assay}} slot.
+#'
+#' @importFrom SummarizedExperiment assay
+#'
+#' @export
+logNorm <- function(scCNA,
+                    transform = c("log", "log2", "log10", "log1p"),
+                    assay = "segment_ratios",
+                    name = "logr") {
+  transform <- match.arg(transform)
+
+  # obtaining data
+  seg_ratios <- SummarizedExperiment::assay(scCNA, assay)
+
+  # saving logr
+  seg_ratios[seg_ratios == 0] <- 1e-3
+
+  if (transform == "log") {
+    seg_ratios_logr <- log(seg_ratios)
+  } else if (transform == "log2") {
+    seg_ratios_logr <- log2(seg_ratios)
+  } else if (transform == "log1p") {
+    seg_ratios_logr <- log1p(seg_ratios)
+  } else if (transform == "log10") {
+    seg_ratios_logr <- log10(seg_ratios)
+  }
+
+  SummarizedExperiment::assay(scCNA, name) <- round(seg_ratios_logr, 2)
+
+  return(scCNA)
 }

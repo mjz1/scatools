@@ -27,5 +27,5 @@ merge_segments(
 A \code{SingleCellExperiment} object
 }
 \description{
-Wrapper for \link[copykit:internals]{copykit::mergeLevels} to merge segments
+Wrapper for \link{mergeLevels} to merge segments
 }

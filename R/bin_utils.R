@@ -13,7 +13,19 @@
 #' @return If `return_mat=TRUE`, returns a sparse binned depth matrix. Otherwise returns `NULL`
 #'
 #' @export
-bin_atac_frags <- function(ArrowFiles, bins, blacklist = NULL, outdir, bin_name = prettyMb(getmode(width(bins))), ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), overwrite = FALSE, return_mat = FALSE, ...) {
+bin_atac_frags <- function(ArrowFiles,
+                           bins,
+                           blacklist = NULL,
+                           outdir,
+                           bin_name = prettyMb(getmode(width(bins))),
+                           ncores = 1,
+                           bpparams = BiocParallel::MulticoreParam(
+                             workers = ncores,
+                             progressbar = TRUE
+                             ),
+                           overwrite = FALSE,
+                           return_mat = FALSE,
+                           ...) {
   # TODO: optional outdir if we don't want to save
 
   stopifnot(class(bins) %in% "GRanges")

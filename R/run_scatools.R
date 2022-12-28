@@ -27,6 +27,11 @@ run_scatools <- function(sample_id,
 
   # TODO INPUT VALIDATION
 
+  dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+  outdir <- normalizePath(outdir)
+
+  logger::log_info("Output directory: {outdir}")
+
   bin_name <- prettyMb(getmode(width(bins)))
 
   # sample directories
@@ -36,7 +41,7 @@ run_scatools <- function(sample_id,
   processed <- file.path(cnv_out, "processed")
 
   # Check for final output and skip if present
-  final_out <- file.path(processed, glue("{bin_name}_processed.sce"))
+  final_out <- file.path(processed, glue::glue("{bin_name}_processed.sce"))
 
   if (file.exists(final_out) & !overwrite) {
     logger::log_info("Processed output already exists: {final_out}")
@@ -74,7 +79,7 @@ run_scatools <- function(sample_id,
     outdir = bins_out,
     ncores = ncores,
     return_mat = FALSE,
-    overwrite = FALSE
+    overwrite = overwrite
   )
 
   # Load the binned fragments and process
@@ -89,7 +94,7 @@ run_scatools <- function(sample_id,
 
   sce <- flagDoublets(sce, filterRatio = 2, remove = FALSE)
 
-  save_to(object = sce, save_to = file.path(processed, glue("{bin_name}_raw.sce")))
+  save_to(object = sce, save_to = file.path(processed, glue::glue("{bin_name}_raw.sce")))
 
   # Remove any small leftover bins less than 10% of the full bin length
   sce_processed <- sce[rowRanges(sce)$binwidth > 0.1*getmode(width(bins)), ]
@@ -106,7 +111,7 @@ run_scatools <- function(sample_id,
     add_gc_cor(method = "modal", verbose = TRUE, ncores = ncores) %>%
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
     calc_ratios(assay = "counts_gc_modal_smoothed") %>%
-    copykit::logNorm(assay = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
+    logNorm(assay = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
     cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE) %>%
     segment_cnv(assay_name = "counts_gc_modal_smoothed", ncores = ncores) %>%
     merge_segments(smooth_assay = "counts_gc_modal_smoothed", segment_assay = "counts_gc_modal_smoothed_segment", ncores = ncores) %>%
@@ -118,9 +123,9 @@ run_scatools <- function(sample_id,
     logger::log_info("Writing output to anndata")
     # Save raw anndata
     adata <- zellkonverter::SCE2AnnData(sce)
-    anndata::write_h5ad(adata, filename = file.path(processed, glue("{bin_name}_raw.h5ad")))
+    anndata::write_h5ad(adata, filename = file.path(processed, glue::glue("{bin_name}_raw.h5ad")))
     adata2 <- zellkonverter::SCE2AnnData(sce_processed, verbose = TRUE, reducedDims = FALSE) # Bug in reduced dims conversion nbd
-    anndata::write_h5ad(adata2, filename = file.path(processed, glue("{bin_name}_processed.h5ad")))
+    anndata::write_h5ad(adata2, filename = file.path(processed, glue::glue("{bin_name}_processed.h5ad")))
   }
 
   return(sce_processed)
@@ -128,6 +133,11 @@ run_scatools <- function(sample_id,
 
 
 create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id = "sample", genome = "hg38", ncores = 1, force = FALSE) {
+
+  if (!require("ArchR", quietly = TRUE)) {
+    logger::log_error("'ArchR' package is required to create ArrowFiles from fragments files")
+    stop()
+  }
 
   ArchR::addArchRThreads(ncores)
   ArchR::addArchRGenome(genome)
