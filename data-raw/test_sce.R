@@ -1,7 +1,7 @@
 ## code to prepare `test_sce` dataset goes here
 library(scatools)
 
-ncores = 4
+ncores = parallelly::availableCores()
 
 fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools")
 names(fragment_file) <- "test_sample"
@@ -17,8 +17,8 @@ test_sce <- run_scatools(sample_id = names(fragment_file),
                     fragments = fragment_file,
                     outdir = outdir,
                     verbose = TRUE,
-                    overwrite = FALSE,
-                    force_arrow = FALSE,
+                    overwrite = TRUE,
+                    force_arrow = TRUE,
                     ncores = ncores,
                     bins = bins)
 
