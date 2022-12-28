@@ -24,8 +24,7 @@ segmentation.}
 transformed counts.}
 }
 \value{
-A data frame with log transformed counts inside the
-\code{\link[SummarizedExperiment]{assay}} slot.
+A data frame with log transformed counts inside the \code{assay} slot.
 }
 \description{
 Computes a log transformation of the selected assay. Function taken from the \code{copyKit} package.

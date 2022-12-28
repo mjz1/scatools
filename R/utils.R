@@ -15,8 +15,8 @@ get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
 
   plot_dat <- lapply(X = assay_names, FUN = function(assay_name) {
     a_dat <- as.data.frame.matrix(assay(sce, assay_name)) %>%
-      rownames_to_column(var = "bin_id") %>%
-      pivot_longer(cols = !bin_id, names_to = "id", values_to = assay_name)
+      tibble::rownames_to_column(var = "bin_id") %>%
+      tidyr::pivot_longer(cols = !bin_id, names_to = "id", values_to = assay_name)
   })
 
   plot_dat <- purrr::reduce(plot_dat, dplyr::full_join, by = c("bin_id", "id"))

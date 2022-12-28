@@ -24,7 +24,6 @@ Note this vignette is currently set up with dummy normal data and is purely inte
 You can install the development version of scatools from [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("devtools")
 devtools::install_github("mjz1/scatools")
 ```
 
@@ -35,10 +34,6 @@ We start by loading `scatools` and `ArchR`, as well as the filepath to an exampl
 Note that all steps in this vignette work with a list of fragment files from multiple samples as well.
 ```{r setup, eval=TRUE, message=FALSE}
 library(scatools)
-library(ArchR, quietly = TRUE)
-library(BSgenome.Hsapiens.UCSC.hg38, quietly = TRUE)
-library(patchwork)
-library(dittoSeq)
 ```
 
 
@@ -74,33 +69,49 @@ sce <- run_scatools(sample_id = names(fragment_file),
 
 ```{r, include=FALSE}
 # Sideload the SCE object
-sce <- data(test_sce)
+sce <- get(data(test_sce))
+rm(test_sce)
 ```
 
 
 Plot the results using the `dittoSeq` package.
 ```{r}
-p1 <- dittoDimPlot(sce, var = "clusters", do.label = TRUE, labels.highlight = FALSE, labels.repel = FALSE)
-p2 <- dittoDimPlot(sce, var = "cnv_score", order = "increasing", legend.title = "cnv score")
+library(dittoSeq)
+library(patchwork)
 
-pcomb <- p1 + p2 + plot_layout(ncol = 2) & theme(aspect.ratio = 1)
-pcomb
+p1 <- dittoDimPlot(sce, var = "clusters")
+p2 <- dittoDimPlot(sce, var = "tumor_cell") + scale_color_manual(values = col_tumor_cells(), name = "Tumor cell")
+
+p1 + p2 & theme(aspect.ratio = 1)
 ```
-
-```{r}
-dittoPlot(sce, "cnv_score", group.by = "clusters", plots = c("vlnplot", "jitter"), jitter.width = 1, jitter.size = 0.2, x.labels.rotate = FALSE)
-```
-
 
 
 We can visualize the results as a heatmap.
 ```{r cnaheatmap_plot, message=FALSE}
-ht <- cnaHeatmap(sce, assay_name = "counts_gc_modal", clone_name = "clusters", log2 = TRUE, center = TRUE, scale = "cells", col_fun = logr_col_fun(), col_clones = dittoColors(), border = TRUE)
-ht
+library(ComplexHeatmap)
+
+sce <- sce[,order(sce$tumor_cell, sce$clusters)]
+
+col_clones <- dittoColors()
+col_clones <- col_clones[1:length(unique(sce[["clusters"]]))]
+names(col_clones) <- levels(factor(sce[["clusters"]]))
+
+
+left_annot <- ComplexHeatmap::HeatmapAnnotation(
+  tumor_cell = sce[["tumor_cell"]],
+  cnv_cluster = sce[["clusters"]],
+  col = list(tumor_cell = col_tumor_cells(), cnv_cluster = col_clones),
+  which = "row"
+)
+
+
+p_ht_cna <- cnaHeatmap(sce, assay_name = "segment_merged_logratios", clust_annot = left_annot, col_fun = logr_col_fun())
+p_ht_cna
 ```
 
 
 Or plot individual cells
 ```{r cell_cna_plot}
-plot_cell_cna(sce = sce, cell_id = colnames(sce)[1:5], assay_name = "counts_gc_modal")
+# Plot the first five cells
+plot_cell_cna(sce = sce, cell_id = 1:5, assay_name = "logr_modal")
 ```
