@@ -6,18 +6,21 @@
 \usage{
 run_scatools(
   sample_id,
+  bins,
   fragments = NULL,
   ArrowFile = NULL,
   outdir = sample_id,
   overwrite = FALSE,
   force_arrow = FALSE,
   verbose = TRUE,
-  bins,
+  save_h5ad = TRUE,
   ncores = 1
 )
 }
 \arguments{
 \item{sample_id}{Sample id}
+
+\item{bins}{Bins granges}
 
 \item{fragments}{Fragments file}
 
@@ -31,7 +34,7 @@ run_scatools(
 
 \item{verbose}{Verbosity}
 
-\item{bins}{Bins granges}
+\item{save_h5ad}{Logical. Whether to save raw and processed h5ad files. Requires packages \code{zellkonverter} and \code{anndata}}
 
 \item{ncores}{Number of cores}
 }
