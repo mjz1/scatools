@@ -22,7 +22,7 @@ bin_atac_frags <- function(ArrowFiles,
                            bpparams = BiocParallel::MulticoreParam(
                              workers = ncores,
                              progressbar = TRUE
-                             ),
+                           ),
                            overwrite = FALSE,
                            return_mat = FALSE,
                            ...) {

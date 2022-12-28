@@ -26,7 +26,6 @@ run_scatools <- function(sample_id,
                          verbose = TRUE,
                          save_h5ad = TRUE,
                          ncores = 1) {
-
   # TODO INPUT VALIDATION
 
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
@@ -59,12 +58,14 @@ run_scatools <- function(sample_id,
     ArrowFile <- glue::glue("{archr_dir}/{sample_id}.arrow")
   }
 
-  proj <- create_arrow_file(archr_dir = archr_dir,
-                            ArrowFile = ArrowFile,
-                            fragments = fragments,
-                            sample_id = sample_id,
-                            ncores = ncores,
-                            force = force_arrow)
+  proj <- create_arrow_file(
+    archr_dir = archr_dir,
+    ArrowFile = ArrowFile,
+    fragments = fragments,
+    sample_id = sample_id,
+    ncores = ncores,
+    force = force_arrow
+  )
 
   # Binning and CNV processing
   dir.create(bins_out, recursive = TRUE, showWarnings = FALSE)
@@ -99,7 +100,7 @@ run_scatools <- function(sample_id,
   save_to(object = sce, save_to = file.path(processed, glue::glue("{bin_name}_raw.sce")))
 
   # Remove any small leftover bins less than 10% of the full bin length
-  sce_processed <- sce[rowRanges(sce)$binwidth > 0.1*getmode(width(bins)), ]
+  sce_processed <- sce[rowRanges(sce)$binwidth > 0.1 * getmode(width(bins)), ]
 
   # Length normalize so the tail end bins are in the same scale
   sce_processed <- length_normalize(sce_processed, assay_name = "counts", assay_to = "counts")
@@ -136,7 +137,6 @@ run_scatools <- function(sample_id,
 
 
 create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id = "sample", genome = "hg38", ncores = 1, force = FALSE) {
-
   if (!require("ArchR", quietly = TRUE)) {
     logger::log_error("'ArchR' package is required to create ArrowFiles from fragments files")
     stop()
@@ -204,4 +204,3 @@ create_arrow_file <- function(fragments = NULL, ArrowFile, archr_dir, sample_id 
 
   return(proj)
 }
-

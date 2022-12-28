@@ -15,7 +15,8 @@
 #'
 #' @export
 #'
-calc_allelic <- function(snp, ncores = 1,
+calc_allelic <- function(snp,
+                         ncores = 1,
                          bins = NULL,
                          group_var = NULL,
                          FUN = calc_ai,
@@ -109,6 +110,7 @@ calc_ai <- function(ref_counts, alt_counts) {
   x <- pmax(ref_counts, alt_counts)
   y <- pmin(ref_counts, alt_counts)
   ai <- (x - y) / x
+  # ai <- y / (x + y) # Deviation from 0.5
 
   return(ai)
 }

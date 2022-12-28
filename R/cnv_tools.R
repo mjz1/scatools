@@ -259,135 +259,135 @@ calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = 
 
 #' @export
 #' @importFrom stats ansari.test wilcox.test
-mergeLevels <- function (vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
-                         thresMin = 0.05, thresMax = 0.5, verbose = 1, scale = TRUE)
-{
+mergeLevels <- function(vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
+                        thresMin = 0.05, thresMax = 0.5, verbose = 1, scale = TRUE) {
   if (thresMin > thresMax) {
     cat("Error, thresMax should be equal to or larger than thresMin\n")
     return()
   }
-  thresAbs = thresMin
+  thresAbs <- thresMin
   sq <- numeric()
-  j = 0
-  ansari = numeric()
-  lv = numeric()
-  flag = 0
+  j <- 0
+  ansari <- numeric()
+  lv <- numeric()
+  flag <- 0
   if (thresMin == thresMax) {
-    flag = 2
-  }
-  else {
-    l.step <- signif((thresMax - thresMin)/10, 1)
-    s.step <- signif((thresMax - thresMin)/200, 1)
+    flag <- 2
+  } else {
+    l.step <- signif((thresMax - thresMin) / 10, 1)
+    s.step <- signif((thresMax - thresMin) / 200, 1)
   }
   while (1) {
     if (verbose >= 1) {
       cat("\nCurrent thresAbs: ", thresAbs, "\n")
     }
-    j = j + 1
+    j <- j + 1
     sq[j] <- thresAbs
-    vecPredNow = vecPred
-    mnNow = unique(vecPred)
-    mnNow = mnNow[!is.na(mnNow)]
-    cont = 0
+    vecPredNow <- vecPred
+    mnNow <- unique(vecPred)
+    mnNow <- mnNow[!is.na(mnNow)]
+    cont <- 0
     while (cont == 0 & length(mnNow) > 1) {
-      mnNow = sort(mnNow)
+      mnNow <- sort(mnNow)
       n <- length(mnNow)
       if (verbose >= 2) {
         cat("\r", n, ":", length(unique(vecPred)), "\t")
       }
       if (scale) {
         d <- (2 * 2^mnNow)[-n] - (2 * 2^mnNow)[-1]
-      }
-      else {
+      } else {
         d <- (mnNow)[-n] - (mnNow)[-1]
       }
-      dst <- cbind(abs(d)[order(abs(d))], (2:n)[order(abs(d))],
-                   (1:(n - 1))[order(abs(d))])
+      dst <- cbind(
+        abs(d)[order(abs(d))], (2:n)[order(abs(d))],
+        (1:(n - 1))[order(abs(d))]
+      )
       for (i in 1:nrow(dst)) {
-        cont = 1
-        out = combine.func(diff = dst[i, 1], vecObs,
-                           vecPredNow, mnNow, mn1 = mnNow[dst[i, 2]],
-                           mn2 = mnNow[dst[i, 3]], pv.thres = pv.thres,
-                           thresAbs = if (scale) {
-                             2 * 2^thresAbs - 2
-                           }
-                           else {
-                             thresAbs
-                           })
+        cont <- 1
+        out <- combine.func(
+          diff = dst[i, 1], vecObs,
+          vecPredNow, mnNow, mn1 = mnNow[dst[i, 2]],
+          mn2 = mnNow[dst[i, 3]], pv.thres = pv.thres,
+          thresAbs = if (scale) {
+            2 * 2^thresAbs - 2
+          } else {
+            thresAbs
+          }
+        )
         if (out$pv > pv.thres) {
-          cont = 0
-          vecPredNow = out$vecPredNow
-          mnNow = out$mnNow
+          cont <- 0
+          vecPredNow <- out$vecPredNow
+          mnNow <- out$mnNow
           break
         }
       }
     }
-    ansari[j] = ansari.test(sort(vecObs - vecPredNow), sort(vecObs -
-                                                              vecPred))$p.value
+    ansari[j] <- ansari.test(sort(vecObs - vecPredNow), sort(vecObs -
+      vecPred))$p.value
     if (is.na(ansari[j])) {
-      ansari[j] = 0
+      ansari[j] <- 0
     }
-    lv[j] = length(mnNow)
+    lv[j] <- length(mnNow)
     if (flag == 2) {
       break
     }
     if (ansari[j] < ansari.sign) {
-      flag = 1
+      flag <- 1
     }
     if (flag) {
       if (ansari[j] > ansari.sign | thresAbs == thresMin) {
         break
-      }
-      else {
-        thresAbs = signif(thresAbs - s.step, 3)
+      } else {
+        thresAbs <- signif(thresAbs - s.step, 3)
         if (thresAbs <= thresMin) {
-          thresAbs = thresMin
+          thresAbs <- thresMin
         }
       }
-    }
-    else {
-      thresAbs = thresAbs + l.step
+    } else {
+      thresAbs <- thresAbs + l.step
     }
     if (thresAbs >= thresMax) {
-      thresAbs = thresMax
-      flag = 2
+      thresAbs <- thresMax
+      flag <- 2
     }
   }
-  return(list(vecMerged = vecPredNow, mnNow = mnNow, sq = sq,
-              ansari = ansari))
+  return(list(
+    vecMerged = vecPredNow, mnNow = mnNow, sq = sq,
+    ansari = ansari
+  ))
 }
 
 
 #' @export
-combine.func <- function (diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1e-04,
-                          thresAbs = 0)
-{
-  vec1 = vecObs[which(vecPredNow == mn1)]
-  vec2 = vecObs[which(vecPredNow == mn2)]
+combine.func <- function(diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1e-04,
+                         thresAbs = 0) {
+  vec1 <- vecObs[which(vecPredNow == mn1)]
+  vec2 <- vecObs[which(vecPredNow == mn2)]
   if (diff <= thresAbs) {
-    pv = 1
-  }
-  else {
-    if ((length(vec1) > 10 & length(vec2) > 10) | sum(length(vec1),
-                                                      length(vec2)) > 100) {
-      pv = wilcox.test(vec1, vec2)$p.value
-    }
-    else {
-      pv = wilcox.test(vec1, vec2, exact = TRUE)$p.value
+    pv <- 1
+  } else {
+    if ((length(vec1) > 10 & length(vec2) > 10) | sum(
+      length(vec1),
+      length(vec2)
+    ) > 100) {
+      pv <- wilcox.test(vec1, vec2)$p.value
+    } else {
+      pv <- wilcox.test(vec1, vec2, exact = TRUE)$p.value
     }
     if (length(vec1) <= 3 | length(vec2) <= 3) {
-      pv = 0
+      pv <- 0
     }
   }
   index.merged <- numeric()
   if (pv > pv.thres) {
-    vec = c(vec1, vec2)
-    index.merged = which((vecPredNow == mn1) | (vecPredNow ==
-                                                  mn2))
-    vecPredNow[index.merged] = median(vec, na.rm = TRUE)
-    mnNow[which((mnNow == mn1) | (mnNow == mn2))] = median(vec,
-                                                           na.rm = TRUE)
-    mnNow = unique(mnNow)
+    vec <- c(vec1, vec2)
+    index.merged <- which((vecPredNow == mn1) | (vecPredNow ==
+      mn2))
+    vecPredNow[index.merged] <- median(vec, na.rm = TRUE)
+    mnNow[which((mnNow == mn1) | (mnNow == mn2))] <- median(vec,
+      na.rm = TRUE
+    )
+    mnNow <- unique(mnNow)
   }
   list(mnNow = mnNow, vecPredNow = vecPredNow, pv = pv)
 }

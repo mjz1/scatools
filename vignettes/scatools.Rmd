@@ -62,14 +62,16 @@ bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapien
 
 A convenience wrapper is provided to perform the analysis
 ```{r, eval=FALSE}
-sce <- run_scatools(sample_id = names(fragment_file), 
-                    fragments = fragment_file, 
-                    outdir = "./example/", 
-                    verbose = TRUE, 
-                    overwrite = FALSE, 
-                    force_arrow = FALSE,
-                    ncores = ncores, 
-                    bins = bins)
+sce <- run_scatools(
+  sample_id = names(fragment_file),
+  fragments = fragment_file,
+  outdir = "./example/",
+  verbose = TRUE,
+  overwrite = FALSE,
+  force_arrow = FALSE,
+  ncores = ncores,
+  bins = bins
+)
 ```
 
 
@@ -96,7 +98,7 @@ We can visualize the results as a heatmap.
 ```{r cnaheatmap_plot, message=FALSE}
 library(ComplexHeatmap)
 
-sce <- sce[,order(sce$tumor_cell, sce$clusters)]
+sce <- sce[, order(sce$tumor_cell, sce$clusters)]
 
 col_clones <- dittoColors()
 col_clones <- col_clones[1:length(unique(sce[["clusters"]]))]
