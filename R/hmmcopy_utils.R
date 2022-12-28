@@ -12,9 +12,6 @@
 #' @return an sce object with hmm copy metadata added to coldata, and new slots `copy` and `state`
 #' @export
 #'
-#' @examples
-#' data(test_sce)
-#' test_sce <- add_hmmcopy(test_sce)
 add_hmmcopy <- function(sce,
                         verbose = FALSE,
                         ncores = 1,

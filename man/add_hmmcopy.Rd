@@ -35,7 +35,3 @@ an sce object with hmm copy metadata added to coldata, and new slots \code{copy}
 \description{
 Add HMMCopy results to sce object
 }
-\examples{
-data(test_sce)
-test_sce <- add_hmmcopy(test_sce)
-}
