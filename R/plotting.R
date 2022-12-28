@@ -514,6 +514,11 @@ plot_clone_comp <- function(sce,
                             pseudobulk_fun = mean) {
   # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
 
+  if (!requireNamespace("GGally")) {
+    logger::log_warn("The GGally package is required for the clone_comp_plot function. Please install")
+    stop()
+  }
+
   if (is.null(group_var)) {
     group_var <- "all"
     sce$all <- "all"
@@ -555,7 +560,7 @@ plot_clone_comp <- function(sce,
       continuous = GGally::wrap(my_cont, limits = xy_range, size = pt_size, lg_pt_size = lg_pt_size),
       mapping = aes(color = seqnames)
     ),
-    diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point))
+    diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point)), progress = FALSE
   ) +
     theme_bw() +
     theme(legend.position = "right") + labs(color = "Chromosome")

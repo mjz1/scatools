@@ -27,6 +27,7 @@ Imports:
     mclust,
     methods,
     patchwork,
+    pbmcapply,
     polynom,
     quantreg,
     R.utils,
@@ -44,9 +45,9 @@ URL: https://github.com/mjz1/scatools,
     https://mjz1.github.io/scatools/
 BugReports: https://github.com/mjz1/scatools/issues
 Suggests: 
+    GGally,
     gtools,
     knitr,
-    pbmcapply,
     rmarkdown,
     Seurat,
     testthat (>= 3.0.0)
