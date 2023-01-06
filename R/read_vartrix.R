@@ -25,7 +25,7 @@ read_vartrix <- function(dir_path = NULL,
                          phased_vcf = NULL,
                          verbose = FALSE,
                          keep_barcodes = NULL,
-                         blacklist = metadata(sce)$blacklist,
+                         blacklist = NULL,
                          min_counts = 1) {
   if (!is.null(dir_path)) {
     mtx_ref <- dir(dir_path, pattern = "ref", full.names = TRUE)

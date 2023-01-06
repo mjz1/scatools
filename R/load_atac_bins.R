@@ -49,10 +49,13 @@ load_atac_bins <- function(samples,
       logger::log_error("Cells in ArchR project not matching with sce object")
     }
     # Line up and merge
+    # TODO: check this line for error:
+    # Error in .validInput(input = ArchRProj, name = "ArchRProj", valid = c("ArchRProject",  :
+    # Input value for 'ArchRProj' is not a null,archrproject, (ArchRProj = function) please supply valid input!
     colData(sce) <- cbind(colData(sce), subset(ArchR_Proj@cellColData[colnames(sce), ], select = -c(Sample)))
 
     # Merge blacklist information if present
-    try(metadata(sce)$blacklist <- ArchR::getBlacklist(proj))
+    try(metadata(sce)$blacklist <- ArchR::getBlacklist(ArchR_Proj))
   }
 
   # Merge bin level information if provided

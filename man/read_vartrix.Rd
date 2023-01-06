@@ -14,7 +14,7 @@ read_vartrix(
   phased_vcf = NULL,
   verbose = FALSE,
   keep_barcodes = NULL,
-  blacklist = metadata(sce)$blacklist,
+  blacklist = NULL,
   min_counts = 1
 )
 }

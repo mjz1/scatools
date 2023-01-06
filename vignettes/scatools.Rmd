@@ -39,8 +39,6 @@ library(scatools)
 
 ```{r, eval=FALSE}
 ncores <- 4 # Adjust accordingly
-addArchRThreads(ncores)
-addArchRGenome("hg38")
 
 fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools")
 names(fragment_file) <- "test_sample"
@@ -67,8 +65,8 @@ sce <- run_scatools(
   fragments = fragment_file,
   outdir = "./example/",
   verbose = TRUE,
-  overwrite = FALSE,
-  force_arrow = FALSE,
+  overwrite = TRUE,
+  force_arrow = TRUE,
   ncores = ncores,
   bins = bins
 )
