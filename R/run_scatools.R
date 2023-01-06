@@ -76,7 +76,7 @@ run_scatools <- function(sample_id,
 
   # Bin the fragments
   bin_atac_frags(
-    ArrowFile = ArchR::getArrowFiles(proj),
+    ArrowFile = ArrowFile,
     blacklist = ArchR::getBlacklist(proj),
     bins = bins,
     outdir = bins_out,
