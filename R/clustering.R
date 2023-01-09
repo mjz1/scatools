@@ -1,14 +1,16 @@
 #' Cluster using Seurat
 #'
 #' @param sce SingleCellExperiment object
-#' @param assay_name Assay name
+#' @param assay_name Assay name. Can provide two assay names to perform joint clustering across both
 #' @param do.scale scale
 #' @param do.center center
 #' @param algorithm clustering algorithm
 #' @param resolution clustering resolution
 #' @param n.neighbors neighbors for umap
 #' @param dims Number of reduced dimensions to use for FindNeighbors and UMAP
-#' @param metric metric for umap
+#' @param k.param Defines k for the k-nearest neighbor algorithm
+#' @param annoy.metric Metric for [Seurat::FindNeighbors]
+#' @param umap.metric Metric for [Seurat::RunUMAP]
 #' @param suffix Suffix name to add to the PCA, UMAP, and clusters
 #' @param PCA_name Name to store PCA dimred
 #' @param UMAP_name Name to store UMAP dimred
@@ -26,11 +28,13 @@ cluster_seurat <- function(sce,
                            resolution = 0.8,
                            n.neighbors = 10,
                            dims = 1:50,
+                           k.param = 20,
                            suffix = "",
                            PCA_name = paste0("PCA", suffix),
                            UMAP_name = paste0("UMAP", suffix),
                            cluster_name = paste0("clusters", suffix),
-                           metric = "correlation",
+                           umap.metric = "correlation",
+                           annoy.metric = "cosine",
                            verbose = TRUE) {
   # TODO: Improve documentation of this function.
   # TODO: Return neighbors object if possible to allow future umap projection
@@ -45,15 +49,35 @@ cluster_seurat <- function(sce,
   for (dim_name in reducedDimNames(sce)) {
     reducedDim(sce, dim_name) <- NULL
   }
-
-  srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name), data = assay(sce, assay_name))
-
+  
+  # For joint clustering
+  if (length(assay_name) == 2) {
+    logger::log_info("Jointly clustering assays '{assay_name[1]}' and '{assay_name[2]}'")
+    a1 <- scale(assay(sce, assay_name[1]))
+    a2 <- scale(assay(sce, assay_name[2]))
+    
+    joint_data <- rbind(a1, a2)
+    
+    idx_1 <- 1:nrow(assay(sce, assay_name[1]))
+    idx_2 <- (nrow(assay(sce, assay_name[1]))+1):nrow(joint_data)
+    
+    rownames(joint_data)[idx_1] <- paste0(assay_name[1], "_", rownames(joint_data)[idx_1])
+    rownames(joint_data)[idx_2] <- paste0(assay_name[2], "_", rownames(joint_data)[idx_2])
+    
+    srt <- Seurat::CreateSeuratObject(counts = joint_data, data = joint_data)
+  } else {
+    srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name), data = assay(sce, assay_name))
+  }
 
   srt <- Seurat::ScaleData(srt, do.scale = do.scale, do.center = do.center, verbose = verbose)
 
   srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = FALSE)
 
-  srt <- Seurat::FindNeighbors(srt, dims = dims, verbose = verbose)
+  srt <- Seurat::FindNeighbors(srt, 
+                               dims = dims, 
+                               verbose = verbose, 
+                               annoy.metric = annoy.metric,
+                               k.param = k.param)
 
   if (algorithm == 4) {
     # Set method to igraph for leiden
@@ -68,7 +92,7 @@ cluster_seurat <- function(sce,
     srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
   }
 
-  srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = metric, verbose = verbose)
+  srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = umap.metric, verbose = verbose)
 
   # Put the PCA, UMAP, and clustering results into the original SCE
   reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings

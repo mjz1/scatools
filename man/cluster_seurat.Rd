@@ -17,14 +17,15 @@ cluster_seurat(
   PCA_name = paste0("PCA", suffix),
   UMAP_name = paste0("UMAP", suffix),
   cluster_name = paste0("clusters", suffix),
-  metric = "correlation",
+  umap.metric = "correlation",
+  annoy.metric = "cosine",
   verbose = TRUE
 )
 }
 \arguments{
 \item{sce}{SingleCellExperiment object}
 
-\item{assay_name}{Assay name}
+\item{assay_name}{Assay name. Can provide two assay names to perform joint clustering across both}
 
 \item{do.scale}{scale}
 
@@ -46,7 +47,9 @@ cluster_seurat(
 
 \item{cluster_name}{Name to store seurat clusters}
 
-\item{metric}{metric for umap}
+\item{umap.metric}{Metric for \link[Seurat:RunUMAP]{Seurat::RunUMAP}}
+
+\item{annoy.metric}{Metric for \link[Seurat:FindNeighbors]{Seurat::FindNeighbors}}
 
 \item{verbose}{Message verbosity}
 }
