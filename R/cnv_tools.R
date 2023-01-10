@@ -173,7 +173,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
     n_normal_clusts <- 1
   }
 
-  sce$seg_sd <- colSdDiffs(assay(sce, assay_name), na.rm = TRUE)
+  sce$seg_sd <- colSds(assay(sce, assay_name), na.rm = TRUE)
 
 
   # Take the per cluster medians

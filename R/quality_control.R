@@ -140,7 +140,7 @@ flagDoublets <- function(sce, cutEnrich = 1, cutScore = -Inf, filterRatio = 1, r
 #'
 #' @param sce SingleCellExperiment object
 #' @param assay Assay containing GC modal corrected counts
-#' @param filter_prop Filter proportion
+#' @param filter_prop Filter proportion to keep cells with less then X% NA
 #' @param verbose Logical. Message verbosity
 #'
 #' @return Filtered SingleCellExperiment

@@ -16,7 +16,7 @@ gc_modal_qc_filter(
 
 \item{assay}{Assay containing GC modal corrected counts}
 
-\item{filter_prop}{Filter proportion}
+\item{filter_prop}{Filter proportion to keep cells with less then X\% NA}
 
 \item{verbose}{Logical. Message verbosity}
 }
