@@ -350,10 +350,10 @@ cnaHeatmap <- function(sce,
       logger::log_warn("{bulk_cn_col} not found in provided object. Not plotting...")
       top_annotation <- NULL
     } else {
-      cn_dat <- mcols(rowRanges(sce))[, bulk_cn_col]
+      cn_dat <- data.frame(mcols(rowRanges(sce))[, bulk_cn_col])
+      
       top_annotation <- ComplexHeatmap::HeatmapAnnotation(bulk_cn_col = ComplexHeatmap::anno_points(cn_dat, border = T, pch = 15, size = unit(1, "mm")))
-      # Need to figure out how to rename the anno.
-      # top_annotation@anno_list$bulk_cn_col@name <- bulk_cn_col
+      top_annotation@anno_list$bulk_cn_col@label <- bulk_cn_col
     }
   }
 
