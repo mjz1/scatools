@@ -667,7 +667,18 @@ remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
   return(sce[names(which(keep)), ])
 }
 
+#' Pseudobulk groups
+#'
+#' @param sce sce obj
+#' @param assay_name One or more assays to pseudobulk
+#' @param group_var grouping variable
+#' @param FUN funtion to use when pseudobulking
+#' @param na.rm logical -- remove NAs in `FUN`
+#' @param ... additional parameters to pass to `FUN`
+#'
+#' @return A pseudobulked sce obj
 #' @export
+#'
 pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, na.rm = TRUE, ...) {
   if (is.null(group_var)) {
     group_var <- "all"
@@ -677,12 +688,17 @@ pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, na.rm = TRUE, 
   ids <- sce[[group_var]]
 
   by.group <- split(seq_along(ids), ids, drop = TRUE)
+  
+  res_list <- vector(mode = "list")
+  
+  for (a in assay_name) {
+    res <- lapply(X = by.group, FUN = function(x) {
+      apply(X = as.matrix(assay(sce, a)[, x]), MARGIN = 1, FUN = FUN, na.rm = na.rm, ...)
+    })
+    res_list[[a]] <- do.call("cbind", res)
+   }
 
-  res <- lapply(X = by.group, FUN = function(x) {
-    apply(X = as.matrix(assay(sce, assay_name)[, x]), MARGIN = 1, FUN = FUN, na.rm = na.rm, ...)
-  })
-
-  res <- SingleCellExperiment(list("pseudo" = do.call("cbind", res)))
+  res <- SingleCellExperiment(res_list)
 
   rowRanges(res) <- rowRanges(sce)
   rownames(res) <- rownames(sce)
