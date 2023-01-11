@@ -704,6 +704,7 @@ pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, na.rm = TRUE, 
   rownames(res) <- rownames(sce)
   res$ncells <- unlist(lapply(by.group, length))
   res$ids <- colnames(res)
+  res[[group_var]] <- colnames(res)
 
   return(res)
 }

@@ -408,7 +408,7 @@ cnaHeatmap <- function(sce,
 }
 
 #' @export
-cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clustering_results = NULL, clust_lab = TRUE, aggr_fun = mean, round = FALSE, ...) {
+cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clust_lab = TRUE, aggr_fun = mean, round = FALSE, ...) {
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
   }
@@ -506,7 +506,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # )
 
   # ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", border = TRUE, cluster_rows = tree, ...)
-  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = assay_name, scale = "none", clone_name = clone_name, border = TRUE, ...)
+  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = assay_name, scale = scale, log2 = log2, center = center, clone_name = clone_name, border = TRUE, ...)
 
   # print(ht_plot)
   return(ht_plot)
