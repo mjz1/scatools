@@ -415,14 +415,14 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 
   orig_sce <- sce
 
-  clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2, center = center)
+  # clust_mat <- scale_mat(assay(sce, assay_name), scale = scale, log2 = log2, center = center)
 
   # Subset the SCE to the same dimensions
-  sce <- sce[rownames(clust_mat), colnames(clust_mat)]
+  # sce <- sce[rownames(clust_mat), colnames(clust_mat)]
 
-  new_assay <- paste(assay_name, "avg", sep = "_")
+  # new_assay <- paste(assay_name, "avg", sep = "_")
 
-  assay(sce, new_assay) <- clust_mat
+  # assay(sce, new_assay) <- clust_mat
 
   # if (!is.null(clone_name)) {
   #
@@ -437,16 +437,14 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # avg_exp <- scuttle::summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
   # rowRanges(avg_exp) <- rowRanges(sce)
 
-  avg_exp <- pseudo_groups(sce, assay_name = new_assay, group_var = clone_name, FUN = aggr_fun, na.rm = TRUE)
+  avg_exp <- pseudo_groups(sce, assay_name = assay_name, group_var = clone_name, FUN = aggr_fun, na.rm = TRUE)
 
   # Order by clone size
   avg_exp <- avg_exp[, order(avg_exp$ncells, decreasing = TRUE)]
 
   if (round) {
     # Round to integers
-    assay(avg_exp, new_assay) <- round(assay(avg_exp, "pseudo"))
-  } else {
-    assay(avg_exp, new_assay) <- assay(avg_exp, "pseudo")
+    assay(avg_exp, new_assay) <- round(assay(avg_exp, clone_name))
   }
 
   # if (clust_lab) {
@@ -463,7 +461,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # )
 
 
-  metadata(orig_sce)[[new_assay]] <- avg_exp
+  # metadata(orig_sce)[[new_assay]] <- avg_exp
 
   avg_exp$cell_id <- avg_exp$ids
 
@@ -508,7 +506,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # )
 
   # ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", border = TRUE, cluster_rows = tree, ...)
-  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = new_assay, scale = "none", clone_name = "ids", border = TRUE, ...)
+  ht_plot <- cnaHeatmap(sce = avg_exp, assay_name = assay_name, scale = "none", clone_name = clone_name, border = TRUE, ...)
 
   # print(ht_plot)
   return(ht_plot)
