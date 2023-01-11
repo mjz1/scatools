@@ -158,6 +158,33 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 }
 
 
+#' Plot data with segments
+#' 
+#' Will plot copy number tracks with raw input and overlaid segmented data
+#'
+#' @param sce `SingleCellExperiment` object with data
+#' @param seg_assay segmented assay
+#' @param input_assay input data assay (pre-segmented)
+#' @param cell_id Cell to plot
+#'
+#' @return ggplot
+#' @export
+#'
+plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
+  
+  # Get consistent y axis scaling from the global assay object
+  ylims = range(assay(sce, input_assay))
+  
+  plot_dat <- get_assay_dat(sce, assay_names = c(seg_assay, input_assay), cell_id = cell_id)
+  
+  p <- plot_sc_track(plot_dat = plot_dat, assay_name = input_assay) +
+    geom_segment(aes(x = start, xend = end, y = !!sym(seg_assay), yend = !!sym(seg_assay)), linewidth = 1, color = "red") +
+    scale_y_continuous(limits = ylims)
+  
+  return(p)
+}
+
+
 #' Plot copy number heatmap
 #'
 #' @param sce A SingleCellExperiment object
