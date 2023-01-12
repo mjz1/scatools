@@ -524,6 +524,8 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
 #' @param pseudobulk_fun mean or median
 #' @param pt_size Size of the points in the plot
 #' @param lg_pt_size Size of the points in the legend
+#' @param xline Numeric for X intercept line
+#' @param yline Numeric for Y intecept line
 #'
 #' @return ggapply plot
 #' @export
@@ -535,6 +537,8 @@ plot_clone_comp <- function(sce,
                             assay_name = "segment_merged_logratios",
                             center_point = NULL,
                             pt_size = 0.75,
+                            xline = NULL,
+                            yline = NULL,
                             lg_pt_size = 3,
                             pseudobulk_fun = mean) {
   # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
@@ -582,7 +586,7 @@ plot_clone_comp <- function(sce,
     data = avg_exp,
     columns = columns, legend = length(columns) + 1,
     lower = list(
-      continuous = GGally::wrap(my_cont, limits = xy_range, size = pt_size, lg_pt_size = lg_pt_size),
+      continuous = GGally::wrap(my_cont, limits = xy_range, size = pt_size, lg_pt_size = lg_pt_size, xline = xline, yline = yline),
       mapping = aes(color = seqnames)
     ),
     diag = list(continuous = GGally::wrap(my_dens, limits = xy_range, center_point = center_point)), progress = FALSE
@@ -593,14 +597,16 @@ plot_clone_comp <- function(sce,
 }
 
 
-my_cont <- function(data, mapping, size = 1, lg_pt_size = 3, ...) {
+my_cont <- function(data, mapping, size = 1, lg_pt_size = 3, xline = NULL, yline = NULL, ...) {
   ggplot(data = data, mapping = mapping) +
     geom_point(size = size) +
     geom_abline(alpha = 0.75, linetype = "dashed") +
     scale_x_continuous(...) +
     scale_y_continuous(...) +
     scale_color_viridis_d() +
-    guides(color = guide_legend(override.aes = list(size = lg_pt_size)))
+    guides(color = guide_legend(override.aes = list(size = lg_pt_size))) +
+    geom_hline(yintercept = yline, linetype = "dashed", alpha = 0.75) +
+    geom_vline(xintercept = xline, linetype = "dashed", alpha = 0.75)
 }
 
 my_dens <- function(data, mapping, center_point = 0, ...) {
