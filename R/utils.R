@@ -9,7 +9,7 @@
 #'
 get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
   # Make sure binids consistent
-  rowRanges(sce)$bin_id <- get_bin_ids(rowRanges(sce))
+  SummarizedExperiment::rowRanges(sce)$bin_id <- get_bin_ids(SummarizedExperiment::rowRanges(sce))
 
   sce <- sce[, cell_id]
 
@@ -22,7 +22,7 @@ get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
   plot_dat <- purrr::reduce(plot_dat, dplyr::full_join, by = c("bin_id", "id"))
 
   # TODO: Fix bug here when we have common colnames between the bins and
-  range_dat <- as.data.frame(rowRanges(sce))
+  range_dat <- as.data.frame(SummarizedExperiment::rowRanges(sce))
 
   range_dat <- range_dat[, which(!colnames(range_dat) %in% assay_names)]
 
@@ -52,7 +52,7 @@ pseudobulk_sce <- function(sce, assay_name, group_var = "all", statistics = "mea
     ids = as.factor(sce[[group_var]]),
     statistics = statistics
   )
-  rowRanges(avg_exp) <- rowRanges(sce)
+  SummarizedExperiment::rowRanges(avg_exp) <- SummarizedExperiment::rowRanges(sce)
 
   # Propagate the correct names
   avg_exp[[group_var]] <- avg_exp[["ids"]]
@@ -127,10 +127,13 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = "none", 
   mat <- assay(sce, assay_name)
 
   # Ensure we have matching rownames to index later
-  rownames(mat) <- get_bin_ids(rowRanges(sce))
-  rownames(sce) <- get_bin_ids(rowRanges(sce))
+  rownames(mat) <- get_bin_ids(SummarizedExperiment::rowRanges(sce))
+  rownames(sce) <- get_bin_ids(SummarizedExperiment::rowRanges(sce))
 
   scaled_mat <- scale_mat(mat, log2 = log2, scale = scale, center = center)
+  
+  rownames(scaled_mat) <- rownames(sce)
+  colnames(scaled_mat) <- colnames(sce)
 
   if (is.null(new_assay)) {
     new_assay <- paste0(assay_name, "_scaled_", scale)
@@ -163,13 +166,13 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
   # }
 
   # Remove fully NA or 0 columns
-  keep_bins <- apply(mat, 1, FUN = function(x) !all(is.na(x)) & !all(x == 0))
+  # keep_bins <- apply(mat, 1, FUN = function(x) !all(is.na(x)) & !all(x == 0))
 
-  logger::log_debug("Keeping {sum(keep_bins)} of {nrow(mat)} bins")
+  # logger::log_debug("Keeping {sum(keep_bins)} of {nrow(mat)} bins")
 
   mat_names <- colnames(mat)
 
-  mat <- as.matrix(mat[keep_bins, ])
+  # mat <- as.matrix(mat[keep_bins, ])
 
   colnames(mat) <- mat_names
 
@@ -333,7 +336,7 @@ get_f_idx <- function(f) {
 #'
 #' bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = FALSE)
 #'
-bind_sublist <- function(toplist, sublist, what = c("rbind"), .add_id = FALSE, .id_name = "id") {
+bind_sublist <- function(toplist, sublist, what = c("rbind", "cbind", "c"), .add_id = FALSE, .id_name = "id") {
   what <- match.arg(what)
 
   if (is.null(names(toplist))) {

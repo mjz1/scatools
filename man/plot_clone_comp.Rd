@@ -12,6 +12,8 @@ plot_clone_comp(
   assay_name = "segment_merged_logratios",
   center_point = NULL,
   pt_size = 0.75,
+  xline = NULL,
+  yline = NULL,
   lg_pt_size = 3,
   pseudobulk_fun = mean
 )
@@ -30,6 +32,10 @@ plot_clone_comp(
 \item{center_point}{Center point of the assay for drawing dashed lines}
 
 \item{pt_size}{Size of the points in the plot}
+
+\item{xline}{Numeric for X intercept line}
+
+\item{yline}{Numeric for Y intecept line}
 
 \item{lg_pt_size}{Size of the points in the legend}
 

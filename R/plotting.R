@@ -124,7 +124,7 @@ plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", aggr_fu
 
   avg_exp <- pseudo_groups(sce, assay_name = assay_name, group_var = group_var, FUN = aggr_fun, na.rm = TRUE)
 
-  plot_cell_cna(sce = avg_exp, assay_name = "pseudo", col_fun = col_fun) + labs(title = group_var, y = assay_name)
+  plot_cell_cna(sce = avg_exp, assay_name = assay_name, col_fun = col_fun) + labs(title = group_var, y = assay_name)
 }
 
 #' Plot multiple cell assays together
@@ -203,6 +203,7 @@ plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
 #' @param bulk_cn_col Name of column in `rowRanges(sce)` that contains bulk copy number data to plot on top of heatmap
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
+#' 
 #'
 #' @return A heatmap
 #' @export
@@ -251,7 +252,7 @@ cnaHeatmap <- function(sce,
         ids = sce[[clone_name]],
         statistics = "mean"
       )
-      rowRanges(avg_exp) <- rowRanges(sce)
+      SummarizedExperiment::rowRanges(avg_exp) <- SummarizedExperiment::rowRanges(sce)
 
       # Compute the distance based on correlation
       d <- as.dist(1 - cor(assay(avg_exp, "mean")))
@@ -325,7 +326,7 @@ cnaHeatmap <- function(sce,
     match_idx <- match_idx[!is.na(match_idx)]
 
     gene_bins <- mcols(sce@metadata$gene_overlap[match_idx])[["bin_id"]]
-    gene_bins_idx <- match(gene_bins, get_bin_ids(rowRanges(sce)))
+    gene_bins_idx <- match(gene_bins, get_bin_ids(SummarizedExperiment::rowRanges(sce)))
 
     # Label genes
     bottom_ha_genes <- HeatmapAnnotation(genes = anno_mark(at = c(gene_bins_idx), labels = label_genes, which = "column", side = "bottom", link_width = unit(3, "mm")))
@@ -373,11 +374,11 @@ cnaHeatmap <- function(sce,
 
   # Add bulk CN annotation
   if (!is.null(bulk_cn_col)) {
-    if (!bulk_cn_col %in% colnames(mcols(rowRanges(sce)))) {
+    if (!bulk_cn_col %in% colnames(mcols(SummarizedExperiment::rowRanges(sce)))) {
       logger::log_warn("{bulk_cn_col} not found in provided object. Not plotting...")
       top_annotation <- NULL
     } else {
-      cn_dat <- data.frame(mcols(rowRanges(sce))[, bulk_cn_col])
+      cn_dat <- data.frame(mcols(SummarizedExperiment::rowRanges(sce))[, bulk_cn_col])
       
       top_annotation <- ComplexHeatmap::HeatmapAnnotation(bulk_cn_col = ComplexHeatmap::anno_points(cn_dat, border = T, pch = 15, size = unit(1, "mm")))
       top_annotation@anno_list$bulk_cn_col@label <- bulk_cn_col
@@ -435,7 +436,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   # sce$clone_id <- clustering_results$clustering[match(sce$Barcode, clustering_results$clustering$cell_id), "clone_id"]
 
   # avg_exp <- scuttle::summarizeAssayByGroup(sce, assay.type = new_assay, ids = sce[[clone_name]], statistics = "mean")
-  # rowRanges(avg_exp) <- rowRanges(sce)
+  # SummarizedExperiment::rowRanges(avg_exp) <- SummarizedExperiment::rowRanges(sce)
 
   avg_exp <- pseudo_groups(sce, assay_name = assay_name, group_var = clone_name, FUN = aggr_fun, na.rm = TRUE)
 
@@ -579,7 +580,7 @@ plot_clone_comp <- function(sce,
   avg_exp <- avg_exp %>%
     as.data.frame() %>%
     rownames_to_column(var = "ID") %>%
-    left_join(as.data.frame(rowRanges(sce)))
+    left_join(as.data.frame(SummarizedExperiment::rowRanges(sce)))
 
   # Plot
   pcomb <- GGally::ggpairs(

@@ -7,7 +7,7 @@
 bind_sublist(
   toplist,
   sublist,
-  what = c("rbind"),
+  what = c("rbind", "cbind", "c"),
   .add_id = FALSE,
   .id_name = "id"
 )
