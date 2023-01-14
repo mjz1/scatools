@@ -131,7 +131,7 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = "none", 
   rownames(sce) <- get_bin_ids(SummarizedExperiment::rowRanges(sce))
 
   scaled_mat <- scale_mat(mat, log2 = log2, scale = scale, center = center)
-  
+
   rownames(scaled_mat) <- rownames(sce)
   colnames(scaled_mat) <- colnames(sce)
 

@@ -49,21 +49,21 @@ cluster_seurat <- function(sce,
   for (dim_name in reducedDimNames(sce)) {
     reducedDim(sce, dim_name) <- NULL
   }
-  
+
   # For joint clustering
   if (length(assay_name) == 2) {
     logger::log_info("Jointly clustering assays '{assay_name[1]}' and '{assay_name[2]}'")
     a1 <- scale(assay(sce, assay_name[1]))
     a2 <- scale(assay(sce, assay_name[2]))
-    
+
     joint_data <- rbind(a1, a2)
-    
+
     idx_1 <- 1:nrow(assay(sce, assay_name[1]))
-    idx_2 <- (nrow(assay(sce, assay_name[1]))+1):nrow(joint_data)
-    
+    idx_2 <- (nrow(assay(sce, assay_name[1])) + 1):nrow(joint_data)
+
     rownames(joint_data)[idx_1] <- paste0(assay_name[1], "_", rownames(joint_data)[idx_1])
     rownames(joint_data)[idx_2] <- paste0(assay_name[2], "_", rownames(joint_data)[idx_2])
-    
+
     srt <- Seurat::CreateSeuratObject(counts = joint_data, data = joint_data)
   } else {
     srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name), data = assay(sce, assay_name))
@@ -73,11 +73,12 @@ cluster_seurat <- function(sce,
 
   srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = FALSE)
 
-  srt <- Seurat::FindNeighbors(srt, 
-                               dims = dims, 
-                               verbose = verbose, 
-                               annoy.metric = annoy.metric,
-                               k.param = k.param)
+  srt <- Seurat::FindNeighbors(srt,
+    dims = dims,
+    verbose = verbose,
+    annoy.metric = annoy.metric,
+    k.param = k.param
+  )
 
   if (algorithm == 4) {
     # Set method to igraph for leiden

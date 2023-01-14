@@ -159,7 +159,7 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 
 
 #' Plot data with segments
-#' 
+#'
 #' Will plot copy number tracks with raw input and overlaid segmented data
 #'
 #' @param sce `SingleCellExperiment` object with data
@@ -171,16 +171,15 @@ plot_cell_multi <- function(sce, cell_id, assays) {
 #' @export
 #'
 plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
-  
   # Get consistent y axis scaling from the global assay object
-  ylims = range(assay(sce, input_assay))
-  
+  ylims <- range(assay(sce, input_assay))
+
   plot_dat <- get_assay_dat(sce, assay_names = c(seg_assay, input_assay), cell_id = cell_id)
-  
+
   p <- plot_sc_track(plot_dat = plot_dat, assay_name = input_assay) +
     geom_segment(aes(x = start, xend = end, y = !!sym(seg_assay), yend = !!sym(seg_assay)), linewidth = 1, color = "red") +
     scale_y_continuous(limits = ylims)
-  
+
   return(p)
 }
 
@@ -203,7 +202,7 @@ plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
 #' @param bulk_cn_col Name of column in `rowRanges(sce)` that contains bulk copy number data to plot on top of heatmap
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
-#' 
+#'
 #'
 #' @return A heatmap
 #' @export
@@ -379,7 +378,7 @@ cnaHeatmap <- function(sce,
       top_annotation <- NULL
     } else {
       cn_dat <- data.frame(mcols(SummarizedExperiment::rowRanges(sce))[, bulk_cn_col])
-      
+
       top_annotation <- ComplexHeatmap::HeatmapAnnotation(bulk_cn_col = ComplexHeatmap::anno_points(cn_dat, border = T, pch = 15, size = unit(1, "mm")))
       top_annotation@anno_list$bulk_cn_col@label <- bulk_cn_col
     }

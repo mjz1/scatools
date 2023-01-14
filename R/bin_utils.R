@@ -688,15 +688,15 @@ pseudo_groups <- function(sce, assay_name, group_var = NULL, FUN = mean, na.rm =
   ids <- sce[[group_var]]
 
   by.group <- split(seq_along(ids), ids, drop = TRUE)
-  
+
   res_list <- vector(mode = "list")
-  
+
   for (a in assay_name) {
     res <- lapply(X = by.group, FUN = function(x) {
       apply(X = as.matrix(assay(sce, a)[, x]), MARGIN = 1, FUN = FUN, na.rm = na.rm, ...)
     })
     res_list[[a]] <- do.call("cbind", res)
-   }
+  }
 
   res <- SingleCellExperiment(res_list)
 
