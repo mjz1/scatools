@@ -679,7 +679,7 @@ remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
 #' @return A pseudobulked sce obj
 #' @export
 #'
-pseudo_groups <- function(sce, assay_name, group_var, FUN = mean, na.rm = TRUE, ...) {
+pseudo_groups <- function(sce, assay_name, group_var = NULL, FUN = mean, na.rm = TRUE, ...) {
   if (is.null(group_var)) {
     group_var <- "all"
     sce$all <- "all"
