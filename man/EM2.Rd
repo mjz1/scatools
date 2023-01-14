@@ -4,7 +4,7 @@
 \alias{EM2}
 \title{Iterative phasing and theta_hat estimation}
 \usage{
-EM2(ref_table, alt_table, max_iter = max_iter, seed = 3, tol = 0.001)
+EM2(ref_table, alt_table, max_iter = 50, seed = 3, phases = NULL, tol = 0.001)
 }
 \arguments{
 \item{ref_table}{A SNP by cell read count matrix/ spare matrix for the reference alleles.}

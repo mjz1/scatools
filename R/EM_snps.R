@@ -5,6 +5,7 @@
 #' @param bins `GenomicRanges` object containing bins (or segments) over which to perform phasing
 #' @param max_iter Maximum number of iterations for the EM
 #' @param sub_cells Subset cells when phasing
+#' @param phases Named vector of SNP phases. 
 #' @param ncores Number of cores to parallelize over bins
 #' @param min_snp_cov Minimum total coverage per SNP to be used in phasing.
 #' @param tol maximum liklihood stopping tolerance
@@ -12,7 +13,7 @@
 #' @return `SingleCellExperiment` object containing EM phased SNPs. Per bin values are stored in `altExp(snp, 'em')`. Per SNP results are appended to `rowRanges(snp)`
 #' @export
 #'
-phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, ncores = 1, min_snp_cov = 5, tol = 0.001) {
+phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL, ncores = 1, min_snp_cov = 5, tol = 0.001) {
   # For each bin find the overlapping SNPs in the pseudobulk
   olaps <- GenomicRanges::findOverlaps(SummarizedExperiment::rowRanges(snp), bins)
 
@@ -26,31 +27,50 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, ncores = 1, m
     sub_cells <- colnames(snp)
   }
 
-  # Remove SNPs that do not meet minumum coverage requirement
-  tot_snp_cov <- Matrix::rowSums(assay(snp[S4Vectors::queryHits(olaps), sub_cells], "ref") + assay(snp[S4Vectors::queryHits(olaps), sub_cells], "alt"))
-  keep_snps <- names(tot_snp_cov[which(tot_snp_cov >= min_snp_cov)])
-
-  logger::log_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(S4Vectors::queryHits(olaps)), big.mark = ',')} SNPs overlapping bins meet minimum coverage requirements ({min_snp_cov} reads)")
-
-  logger::log_info("Phasing {prettyNum(length(keep_snps), big.mark = ',')} SNPs in {length(bins)} bins across {prettyNum(length(sub_cells), big.mark = ',')} cells")
-
+  if (is.null(phases)) {
+    # Remove SNPs that do not meet minumum coverage requirement
+    tot_snp_cov <- Matrix::rowSums(assay(snp[S4Vectors::queryHits(olaps), sub_cells], "ref") + assay(snp[S4Vectors::queryHits(olaps), sub_cells], "alt"))
+    keep_snps <- names(tot_snp_cov[which(tot_snp_cov >= min_snp_cov)])
+    
+    logger::log_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(S4Vectors::queryHits(olaps)), big.mark = ',')} SNPs overlapping bins meet minimum coverage requirements ({min_snp_cov} reads)")
+    
+    logger::log_info("Phasing {prettyNum(length(keep_snps), big.mark = ',')} SNPs in {length(bins)} bins across {prettyNum(length(sub_cells), big.mark = ',')} cells")
+  } else {
+    logger::log_info("Phases provided. Ignoring 'min_snp_cov'")
+    
+    # Remove any NA I_hats
+    phases <- phases[!is.na(phases)]
+    
+    # Check overlapping SNPs with the provided phasing
+    
+    atac_snps <- names(SummarizedExperiment::rowRanges(snp)[S4Vectors::queryHits(olaps),])
+    keep_snps <- intersect(atac_snps, names(phases))
+    
+    phases <- phases[keep_snps]
+    logger::log_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(atac_snps), big.mark = ',')} SNPs overlapping in bins and with provided phasing")
+  }
+   
   em_res_all <- pbmcapply::pbmclapply(X = seq_along(bins), mc.cores = ncores, FUN = function(i) {
+  # em_res_all <- lapply(X = seq_along(bins), FUN = function(i) {
+    logger::log_debug("Iteration {i}")
+  
     
     # Get the names for the overlapping SNPs in the given bin which meet minimum depth requirements
     bin_snps_names <- intersect(rownames(snp[S4Vectors::queryHits(olaps)[which(S4Vectors::subjectHits(olaps) == i)],]), keep_snps)
-
+    bin_phases <- phases[bin_snps_names]
     # Run the EM on that bin's SNPs
     em_res <- EM2(
       ref_table = assay(snp[bin_snps_names, sub_cells], "ref"),
       alt_table = assay(snp[bin_snps_names, sub_cells], "alt"),
       max_iter = max_iter,
+      phases = bin_phases,
       tol = tol,
       seed = 3
     )
-
+    
     return(em_res)
   })
-
+  
   names(em_res_all) <- get_bin_ids(bins)
 
   ### Unwrap the results into an object ###
@@ -72,8 +92,8 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, ncores = 1, m
   }) %>% unlist()
 
 
-  # Append to the SNP object asw an altExp
-  em <- SingleCellExperiment(list("theta_hat" = theta_hat, "w1" = w1, "w2" = w2))
+  # Append to the SNP object as an altExp
+  em <- SingleCellExperiment(list("mhf" = w2 / (w1 + w2), "w1" = w1, "w2" = w2))
   SummarizedExperiment::rowRanges(em) <- bins
   mcols(SummarizedExperiment::rowRanges(em))[,c("em_iterations", "em_n_tot_snps", "em_n_cov_snps")] <- cbind(iterations, n_tot_snps, n_cov_snps)
   
@@ -95,69 +115,70 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, ncores = 1, m
 #'
 #' @return A list of estimated indicators (I_hat) for each SNP and estimated major haplotype proportion (theta_hat) for each cell in one region. I_hat is the phasing result indicating whether reference allele is on the major haplotype for each SNP. Theta_hat represents the CNV states for each cell. A cell is considered as a CNV carrier if its theta_hat depart from 0.5.
 #'
-#' @importFrom Matrix t
+#' @importFrom Matrix t 
 #'
 #' @export
-EM2 <- function(ref_table, alt_table, max_iter = max_iter, seed = 3, tol = 0.001) {
-  # Might need top ensure `Matrix` is loaded or registered to transpose sparse matrix
+EM2 <- function(ref_table, alt_table, max_iter = 50, seed = 3, phases = NULL, tol = 0.001) {
+
   # For now we use dense format to ensure eveyrthing works before optimizing
-  alt_table <- as.matrix(alt_table)
-  ref_table <- as.matrix(ref_table)
+  # alt_table <- as.matrix(alt_table)
+  # ref_table <- as.matrix(ref_table)
   alt_table <- t(alt_table)
   ref_table <- t(ref_table)
 
-  # if (!is.null(sub_cells)) {
-  #   alt_table2 <- alt_table
-  #   ref_table2 <- ref_table
-  #   alt_table <- alt_table[which(rownames(alt_table) %in% sub_cells), ]
-  #   ref_table <- ref_table[which(rownames(ref_table) %in% sub_cells), ]
-  #   snp_ind <- which(colSums(alt_table + ref_table) > 0)
-  #   alt_table <- alt_table[, snp_ind]
-  #   ref_table <- ref_table[, snp_ind]
-  #   alt_table2 <- alt_table2[, snp_ind]
-  #   ref_table2 <- ref_table2[, snp_ind]
-  #   cat(paste0("Using ", length(snp_ind), " SNPs > 0 reads among the target cells \n"))
-  # }
 
   # Number of SNPs and cells
   mm <- dim(ref_table)[2] # mm snv
   nn <- dim(ref_table)[1] # nn cell
-
-  # Compute pseudobulk total counts and vafs
-  var_tot <- colSums(alt_table + ref_table)
-  var_alt <- colSums(alt_table)
-  var_vaf <- var_alt / var_tot
-  var_vaf[is.na(var_vaf)] <- 0
-
-  # k means clustering to get priors
-  withr::with_seed(seed = seed, km <- kmeans(x = var_vaf, centers = 3))
-  km_label <- rep(0.5, mm)
-  oo <- order(km$centers)
-  km_label[which(km$cluster == oo[1])] <- km$centers[oo[3]]
-  km_label[which(km$cluster == oo[3])] <- km$centers[oo[1]]
-
-  ## EM
-  ind0 <- km_label
-  ind <- ind0
-
+  
+  if (is.null(phases)) {
+    # initialize priors for I_hat based on kmeans
+    
+    # Compute pseudobulk total counts and vafs
+    var_tot <- Matrix::colSums(alt_table + ref_table)
+    var_alt <- Matrix::colSums(alt_table)
+    var_vaf <- var_alt / var_tot
+    var_vaf[is.na(var_vaf)] <- 0
+    
+    # k means clustering to get priors
+    withr::with_seed(seed = seed, km <- kmeans(x = var_vaf, centers = 3))
+    km_label <- rep(0.5, mm)
+    oo <- order(km$centers)
+    km_label[which(km$cluster == oo[1])] <- km$centers[oo[3]]
+    km_label[which(km$cluster == oo[3])] <- km$centers[oo[1]]
+    
+    ## EM
+    ind0 <- km_label
+    ind <- ind0
+    
+  } else {
+    # Phases provided so use these as the prior and set max_iter to 1
+    ind <- phases
+    max_iter <- 1
+  }
+  
   ll_old <- -Inf
-
-
+  
   for (ii in 1:max_iter) {
     logger::log_debug("Iteration {ii}")
+    
     ind_table <- matrix(rep(ind, nn), nrow = nn, byrow = T)
     # maximization step
-    w1 <- rowSums((ref_table * ind_table) + (alt_table * (1 - ind_table)))
-    w2 <- rowSums((ref_table * (1 - ind_table)) + (alt_table * ind_table))
+    w1 <- Matrix::rowSums((ref_table * ind_table) + (alt_table * (1 - ind_table)))
+    w2 <- Matrix::rowSums((ref_table * (1 - ind_table)) + (alt_table * ind_table))
 
     theta <- w1 / (w1 + w2)
     theta[is.na(theta)] <- 0.5
 
     ## estimation step
     theta_table <- matrix(rep(theta, mm), nrow = nn, byrow = F)
-    product <- matrixStats::colProds(((theta_table) / (1 - theta_table + 1e-10))^(alt_table - ref_table))
-    # product2 <- sparseMatrixStats::colProds(((theta_table) / (1 - theta_table + 1e-10))^(alt_table - ref_table))
-
+    
+    # Using sparse matrices
+    product <- sparseMatrixStats::colProds(Matrix::Matrix(((theta_table) / (1 - theta_table + 1e-10))^(alt_table - ref_table), sparse = TRUE))
+    
+    # Original version
+    # product <- matrixStats::colProds(((theta_table) / (1 - theta_table + 1e-10))^as.matrix(alt_table - ref_table))
+    
     ind <- 1 / (1 + product)
     ll_new <- sum(log(theta + 1e-10) * w1 + log(1 - theta + 1e-10) * w2)
 
@@ -167,23 +188,6 @@ EM2 <- function(ref_table, alt_table, max_iter = max_iter, seed = 3, tol = 0.001
     }
     ll_old <- ll_new
   }
-
-  # if (!is.null(sub_cells)) {
-  #   # alt_table=t(alt_table)
-  #   # ref_table=t(ref_table)
-  #
-  #   # tot_table2=alt_table2+ref_table2
-  #   mm <- dim(ref_table2)[2] # mm snv
-  #   nn <- dim(ref_table2)[1] # nn cell
-  #
-  #   ind_table <- matrix(rep(ind, nn), nrow = nn, byrow = T)
-  #   # maximization step
-  #   w1 <- rowSums((ref_table2 * ind_table) + (alt_table2 * (1 - ind_table)))
-  #   w2 <- rowSums((ref_table2 * (1 - ind_table)) + (alt_table2 * ind_table))
-  #
-  #   theta <- w1 / (w1 + w2)
-  #   theta[is.na(theta)] <- 0.5
-  # }
 
   output <- list(theta_hat = theta, I_hat = ind, iterations = ii, w1 = w1, w2 = w2, n_snps = length(ind))
   return(output)

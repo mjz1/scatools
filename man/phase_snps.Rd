@@ -9,6 +9,7 @@ phase_snps(
   bins,
   max_iter = 50,
   sub_cells = NULL,
+  phases = NULL,
   ncores = 1,
   min_snp_cov = 5,
   tol = 0.001
@@ -22,6 +23,8 @@ phase_snps(
 \item{max_iter}{Maximum number of iterations for the EM}
 
 \item{sub_cells}{Subset cells when phasing}
+
+\item{phases}{Named vector of SNP phases.}
 
 \item{ncores}{Number of cores to parallelize over bins}
 

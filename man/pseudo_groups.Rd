@@ -4,7 +4,7 @@
 \alias{pseudo_groups}
 \title{Pseudobulk groups}
 \usage{
-pseudo_groups(sce, assay_name, group_var, FUN = mean, na.rm = TRUE, ...)
+pseudo_groups(sce, assay_name, group_var = NULL, FUN = mean, na.rm = TRUE, ...)
 }
 \arguments{
 \item{sce}{sce obj}
