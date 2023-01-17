@@ -66,7 +66,7 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL
   logger::log_info("Keeping {length(keep_bins)} of {length(bins)} input bins with at least {min_bin_snps} SNPs covered in the bin")
   bins <- bins[get_bin_ids(bins) %in% keep_bins]
 
-  logger::log_info("Phasing {prettyNum(length(keep_snps), big.mark = ',')} SNPs in {length(bins)} bins across {prettyNum(length(sub_cells), big.mark = ',')} cells")
+  logger::log_info("Phasing {prettyNum(length(keep_snps), big.mark = ',')} SNPs in {length(bins)} bins across {prettyNum(length(sub_cells), big.mark = ',')} cells using {ncores} cores")
 
   em_res_all <- pbmcapply::pbmclapply(X = seq_along(bins), mc.cores = ncores, FUN = function(i) {
     # em_res_all <- lapply(X = seq_along(bins), FUN = function(i) {

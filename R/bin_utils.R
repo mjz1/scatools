@@ -253,6 +253,8 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
     bins <- add_gc_freq(bins = bins, bs_genome = bs_genome)
   }
   bins <- sort(bins)
+  
+  bins$chr_arm <- paste0(GenomeInfoDb::seqnames(bins), bins$arm)
 
   return(bins)
 }
