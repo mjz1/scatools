@@ -615,3 +615,13 @@ my_dens <- function(data, mapping, center_point = 0, ...) {
     scale_x_continuous(...) +
     geom_vline(xintercept = center_point, linetype = "dashed", alpha = 0.75)
 }
+
+#' @export
+get_label_centers <- function(sce, group_var = "clusters", reduced_dim = "UMAP") {
+  # To any scatter of a umap can add + geom_label_repel(data = get_label_centers(sce), aes(x = x, y = y, label = clusters))
+  x_means <- lapply(split(reducedDim(sce, reduced_dim)[,1], sce[[group_var]]), mean) %>% unlist
+  y_means <- lapply(split(reducedDim(sce, reduced_dim)[,2], sce[[group_var]]), mean) %>% unlist
+  centers <- data.frame(x = x_means, y = y_means)
+  centers[[group_var]] <- rownames(centers)
+  return(centers)
+}
