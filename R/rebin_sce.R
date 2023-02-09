@@ -31,11 +31,19 @@ rebin_sce <- function(sce, assays, new_bins, cell_ids = NULL, ncores = 1) {
     message(glue("{assay_cur}"))
     # Loop over the new bins and map the weighted mean values on
     res <- pbmcapply::pbmclapply(unique(bin_map$y_bins), mc.cores = ncores, FUN = function(new_bin_idx) {
+    # res <- lapply(unique(bin_map$y_bins), FUN = function(new_bin_idx) {
+      # logger::log_debug("{new_bin_idx}")
       # Original bin indexes and disjoint widths
       orig_bin_idx <- bin_map[bin_map$y_bins == new_bin_idx, "x_bins"]
       orig_bin_widths <- bin_map[bin_map$y_bins == new_bin_idx, "disjoint_width"]
       # Now loop over cells and perform the weighted mean calculations
-      slice_means <- apply(assay(sce, assay_cur)[orig_bin_idx, ], MARGIN = 2, FUN = function(x) {
+      # Catch single gene bins
+      if (length(orig_bin_widths) == 1) {
+        mat <- t(as.matrix(assay(sce, assay_cur)[orig_bin_idx, cell_ids]))
+      } else {
+        mat <- assay(sce, assay_cur)[orig_bin_idx, cell_ids]
+      }
+      slice_means <- apply(mat, MARGIN = 2, FUN = function(x) {
         weighted.mean(x, w = orig_bin_widths, na.rm = TRUE)
       })
     })
