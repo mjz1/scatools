@@ -12,7 +12,10 @@ cluster_seurat(
   algorithm = 1,
   resolution = 0.8,
   n.neighbors = 10,
-  dims = 1:50,
+  npcs.pca = 50,
+  features.pca = "all",
+  nvar.features = NULL,
+  dims = 1:npcs.pca,
   k.param = 20,
   suffix = "",
   PCA_name = paste0("PCA", suffix),
@@ -37,6 +40,12 @@ cluster_seurat(
 \item{resolution}{clustering resolution}
 
 \item{n.neighbors}{neighbors for umap}
+
+\item{npcs.pca}{Total Number of PCs to compute and store (50 by default)}
+
+\item{features.pca}{One of 'all', 'variable', or a vector of features to include in dimensionality reduction. Defaults to 'all'.}
+
+\item{nvar.features}{Number of variable features if \code{features.pca='variable'}}
 
 \item{dims}{Number of reduced dimensions to use for FindNeighbors and UMAP}
 

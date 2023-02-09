@@ -7,6 +7,9 @@
 #' @param algorithm clustering algorithm
 #' @param resolution clustering resolution
 #' @param n.neighbors neighbors for umap
+#' @param npcs.pca Total Number of PCs to compute and store (50 by default)
+#' @param features.pca One of 'all', 'variable', or a vector of features to include in dimensionality reduction. Defaults to 'all'.
+#' @param nvar.features Number of variable features if `features.pca='variable'`
 #' @param dims Number of reduced dimensions to use for FindNeighbors and UMAP
 #' @param k.param Defines k for the k-nearest neighbor algorithm
 #' @param annoy.metric Metric for [Seurat::FindNeighbors]
@@ -27,7 +30,10 @@ cluster_seurat <- function(sce,
                            algorithm = 1,
                            resolution = 0.8,
                            n.neighbors = 10,
-                           dims = 1:50,
+                           npcs.pca = 50,
+                           features.pca = "all",
+                           nvar.features = NULL,
+                           dims = 1:npcs.pca,
                            k.param = 20,
                            suffix = "",
                            PCA_name = paste0("PCA", suffix),
@@ -69,9 +75,29 @@ cluster_seurat <- function(sce,
     srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name), data = assay(sce, assay_name))
   }
 
-  srt <- Seurat::ScaleData(srt, do.scale = do.scale, do.center = do.center, verbose = verbose)
+  if (features.pca == "all") {
+    features.pca <- rownames(srt)
+  } else if (features.pca == "variable") {
+    if (is.null(nvar.features)) {
+      logger::log_error("Variable features must provide 'nvar.features")
+      break
+    }
+    srt <- Seurat::FindVariableFeatures(srt)
+    # Will use Seurats find variable features
+    features.pca <- NULL
+  }
 
-  srt <- Seurat::RunPCA(srt, features = rownames(srt), verbose = FALSE)
+  srt <- Seurat::ScaleData(srt,
+    do.scale = do.scale,
+    do.center = do.center,
+    verbose = verbose
+  )
+
+  srt <- Seurat::RunPCA(srt,
+    features = features.pca,
+    npcs = npcs.pca,
+    verbose = FALSE
+  )
 
   srt <- Seurat::FindNeighbors(srt,
     dims = dims,
@@ -92,7 +118,7 @@ cluster_seurat <- function(sce,
     srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
   }
 
-  srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = umap.metric, verbose = verbose)
+  srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = umap.metric, verbose = verbose, seed.use = 3)
 
   # Put the PCA, UMAP, and clustering results into the original SCE
   reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings
