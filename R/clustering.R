@@ -80,10 +80,9 @@ cluster_seurat <- function(sce,
     k.param = k.param
   )
 
-  if (algorithm == 4) {
-    # Set method to igraph for leiden
+  if (algorithm %in% c(4, "leiden")) {
     logger::log_info("Finding clusters using leiden algorithm")
-    srt <- suppressWarnings(Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose))
+    srt$seurat_clusters <- factor(leiden_wrapper(adj_mat = srt@graphs$RNA_snn, resolution = resolution))
     logger::log_success("Found ", length(unique(srt$seurat_clusters)), " communities")
   } else {
     srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
@@ -104,6 +103,49 @@ cluster_seurat <- function(sce,
   sce_orig@metadata[[paste("graphs", suffix, sep = "_")]] <- srt@graphs
 
   return(sce_orig)
+}
+
+
+#' Wrapper for the Leiden Algorithm
+#'
+#' @param adj_mat Adjacency matrix
+#' @param resolution Resolution paramter
+#'
+#' @return cluster memberships
+#' @export
+#'
+leiden_wrapper <- function(adj_mat, group_singletons = TRUE, resolution = 1) {
+  if (!requireNamespace("igraph")) {
+    logger::log_error("Package 'igraph' required for leiden clustering. Please install.")
+    stop()
+  }
+
+  if (!requireNamespace("leidenbase")) {
+    logger::log_error("Package 'leidenbase' required for leiden clustering. Please install.")
+    stop()
+  }
+
+  # https://github.com/satijalab/seurat/discussions/6754?sort=top
+
+  # Requires igraph, leidenbase
+  graph_obj <- igraph::graph_from_adjacency_matrix(adj_mat, weighted = TRUE)
+
+  res <- leidenbase::leiden_find_partition(
+    graph_obj,
+    partition_type = "RBConfigurationVertexPartition",
+    resolution_parameter = resolution,
+    num_iter = 10,
+    seed = 3
+  )
+  
+  ids <- res$membership
+  names(ids) <- colnames(adj_mat)
+  
+  if (group_singletons) {
+    ids <- Seurat:::GroupSingletons(ids, SNN = adj_mat, group.singletons = TRUE, verbose = TRUE)
+  }
+  
+  return(ids)
 }
 
 #' Add UMAP clusters to SCE
