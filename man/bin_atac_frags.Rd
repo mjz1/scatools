@@ -18,7 +18,7 @@ bin_atac_frags(
 )
 }
 \arguments{
-\item{ArrowFiles}{List or vector of ArrowFile paths}
+\item{ArrowFiles}{Named list or vector of ArrowFile paths}
 
 \item{bins}{Bins GRanges object}
 

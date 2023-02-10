@@ -4,7 +4,7 @@
 #'
 #' @inherit bin_frags
 #'
-#' @param ArrowFiles List or vector of ArrowFile paths
+#' @param ArrowFiles Named list or vector of ArrowFile paths
 #' @param bin_name Name of the bins (e.g. `'10Mb'`, `'500Kb'`, `'chr_arm'`). If not provided is automatically detected based on binwidth.
 #' @param overwrite Logical. Overwrite previously existing results (default = FALSE)
 #' @param return_mat Logical. Return the binned depth matrix (default = FALSE)
@@ -34,7 +34,9 @@ bin_atac_frags <- function(ArrowFiles,
   matlist <- lapply(X = seq_along(ArrowFiles), FUN = function(i) {
     sample_name <- names(ArrowFiles[i])
     ArrowFile <- ArrowFiles[i]
-    sample_outdir <- file.path(outdir, bin_name)
+    sample_outdir <- file.path(outdir, bin_name, sample_name)
+    
+    dir.create(sample_outdir, showWarnings = FALSE, recursive = TRUE)
 
     # Only bin frags if not done already
     if (!file.exists(file.path(sample_outdir, "matrix.mtx.gz")) | overwrite) {
