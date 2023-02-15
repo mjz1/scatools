@@ -552,6 +552,8 @@ plot_clone_comp <- function(sce,
     group_var <- "all"
     sce$all <- "all"
   }
+  
+  rownames(sce) <- rowRanges(sce)$bin_id <- get_bin_ids(rowRanges(sce))
 
   avg_exp <- pseudo_groups(sce,
     assay_name = assay_name,
@@ -578,7 +580,7 @@ plot_clone_comp <- function(sce,
   # Convert to data frame and join with range information
   avg_exp <- avg_exp %>%
     as.data.frame() %>%
-    rownames_to_column(var = "ID") %>%
+    rownames_to_column(var = "bin_id") %>%
     left_join(as.data.frame(SummarizedExperiment::rowRanges(sce)))
 
   # Plot
