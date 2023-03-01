@@ -37,7 +37,7 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
     rownames(sce) <- with(bindat, paste(chr, start, end, sep = "_"))
     # logger::log_error("rownames(sce) cannot be NULL.")
   }
-  bindat$bin_id <- rownames(sce)
+  bindat$bin_id <- get_bin_ids(rowRanges(sce))
 
   # TODO: subset for main chromosomes and reorder
 
@@ -200,6 +200,7 @@ plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
 #' @param bulk_cn_col Name of column in `rowRanges(sce)` that contains bulk copy number data to plot on top of heatmap
+#' @param raster_quality Quality of raster (default: 10)
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
 #'
@@ -223,6 +224,7 @@ cnaHeatmap <- function(sce,
                        verbose = TRUE,
                        top_annotation = NULL,
                        bulk_cn_col = NULL,
+                       raster_quality = 10,
                        ...) {
   # TODO: Enable multiple annotations
   # TODO: Enable multiple plots layered on top
@@ -260,7 +262,9 @@ cnaHeatmap <- function(sce,
       # Pull out the order from the hc object
       clone_order <- hc$labels[hc$order]
     } else {
-      clone_order <- as.character(sort(unique(sce[[clone_name]])))
+      # clone_order <- as.character(sort(unique(sce[[clone_name]])))
+      clone_order <- as.character(unique(sce[[clone_name]]))
+      
     }
 
     # Do we want to reorder the sce now?
@@ -304,13 +308,14 @@ cnaHeatmap <- function(sce,
   if (!is.null(label_genes)) {
     if (is.null(sce@metadata$gene_overlap)) {
       # Attempt to perform the overlaps on the fly
-      if (requireNamespace("EnsDb.Hsapiens.v86")) {
+      if (!requireNamespace("EnsDb.Hsapiens.v86")) {
+        logger::log_error("EnsDb.Hsapiens.v86 not installed. No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+      } else {
         logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
         sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
-      } else {
-        logger::log_error("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
       }
     }
+    
     # Now create a heatmap where genes are highlighted in the bottom panel
     match_idx <- match(label_genes, sce@metadata$gene_overlap$symbol)
 
@@ -394,7 +399,7 @@ cnaHeatmap <- function(sce,
     show_column_names = FALSE,
     na_col = "white",
     use_raster = TRUE,
-    raster_quality = 10,
+    raster_quality = raster_quality,
     column_split = col_split,
     left_annotation = left_annot,
     row_split = row_split,
@@ -440,7 +445,7 @@ cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale
   avg_exp <- pseudo_groups(sce, assay_name = assay_name, group_var = clone_name, FUN = aggr_fun, na.rm = TRUE)
 
   # Order by clone size
-  avg_exp <- avg_exp[, order(avg_exp$ncells, decreasing = TRUE)]
+  # avg_exp <- avg_exp[, order(avg_exp$ncells, decreasing = TRUE)]
 
   if (round) {
     # Round to integers

@@ -4,7 +4,7 @@
 \alias{leiden_wrapper}
 \title{Wrapper for the Leiden Algorithm}
 \usage{
-leiden_wrapper(adj_mat, resolution = 1)
+leiden_wrapper(adj_mat, group_singletons = TRUE, resolution = 1)
 }
 \arguments{
 \item{adj_mat}{Adjacency matrix}

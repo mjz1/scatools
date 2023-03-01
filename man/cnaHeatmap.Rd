@@ -21,6 +21,7 @@ cnaHeatmap(
   verbose = TRUE,
   top_annotation = NULL,
   bulk_cn_col = NULL,
+  raster_quality = 10,
   ...
 )
 }
@@ -54,6 +55,8 @@ cnaHeatmap(
 \item{verbose}{Logical: Message verbosity}
 
 \item{bulk_cn_col}{Name of column in \code{rowRanges(sce)} that contains bulk copy number data to plot on top of heatmap}
+
+\item{raster_quality}{Quality of raster (default: 10)}
 
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
 }
