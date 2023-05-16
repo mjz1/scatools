@@ -92,6 +92,15 @@ cluster_seurat <- function(sce,
     do.center = do.center,
     verbose = verbose
   )
+  
+  if (length(features.pca) < npcs.pca) {
+    logger::log_error("{length(features.pca)} features provided for PCA but requesting {npcs.pca} PCA dimensions. Please adjust.")
+  }
+  
+  if (ncol(srt) < npcs.pca) {
+    logger::log_warn("Not enough cells: {ncol(srt)} for requesting pcs: {npcs.pca}. Reducing to {ncol(srt)-1}")
+    npcs.pca <- ncol(srt) - 1
+   }
 
   srt <- Seurat::RunPCA(srt,
     features = features.pca,
