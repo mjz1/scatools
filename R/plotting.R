@@ -8,7 +8,7 @@
 #' @return A ggplot object
 #' @export
 #'
-plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = NULL) {
+plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = NULL, linewidth = 1) {
   if (is.null(cell_id)) {
     if (length(cell_id) > 20) {
       logger::log_warn("No cell ids provided and plotting many cells. Are you sure you want to do this!?")
@@ -43,13 +43,13 @@ plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = 
 
   plot_dat <- get_assay_dat(sce = sce, assay_names = assay_name, cell_id = cell_id)
 
-  p <- plot_sc_track(plot_dat = plot_dat, assay_name = assay_name, col_fun = col_fun)
+  p <- plot_sc_track(plot_dat = plot_dat, assay_name = assay_name, col_fun = col_fun, linewidth = linewidth)
 
   return(p)
 }
 
 
-plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL) {
+plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL, linewidth = 1) {
   plot_dat$chr_no <- gsub("chr", "", plot_dat$seqnames)
   plot_dat$chr_no <- factor(plot_dat$chr_no, levels = unique(chr_reorder(plot_dat$chr_no)))
 
@@ -78,14 +78,14 @@ plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL) {
     plot_dat$assay_name <- dplyr::recode_factor(plot_dat$assay_name, "11" = "11+")
 
     p <- base_p +
-      geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var, color = !!y_var), linewidth = 1) +
+      geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var, color = !!y_var), linewidth = linewidth) +
       scale_color_manual(values = cn_colors) +
       guides(colour = guide_legend(override.aes = list(size = 3)))
   } else if (!is.null(col_fun)) {
     cn_colors <- col_fun
     # This is hacky -- maybe there is a more direct way to pass color pallete from col_fun
     p <- base_p +
-      geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var, color = !!y_var), linewidth = 1) +
+      geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var, color = !!y_var), linewidth = linewidth) +
       scale_color_gradient2(
         low = attr(cn_colors, "colors")[1],
         mid = attr(cn_colors, "colors")[2],
@@ -99,7 +99,7 @@ plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL) {
 
     # base_p$mapping$colour <- NULL # remove color mapping
 
-    p <- base_p + geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var), linewidth = 1)
+    p <- base_p + geom_segment(aes(x = start, xend = end, y = !!y_var, yend = !!y_var), linewidth = linewidth)
   }
   return(p)
 }
@@ -225,6 +225,7 @@ cnaHeatmap <- function(sce,
                        top_annotation = NULL,
                        bulk_cn_col = NULL,
                        raster_quality = 10,
+                       row_split = NULL,
                        ...) {
   # TODO: Enable multiple annotations
   # TODO: Enable multiple plots layered on top
@@ -275,7 +276,7 @@ cnaHeatmap <- function(sce,
     row_split <- factor(sce[[clone_name]], levels = clone_order)
     row_title <- clone_order
   } else {
-    row_split <- NULL
+    row_split <- row_split
     row_title <- NULL
   }
 
@@ -333,7 +334,7 @@ cnaHeatmap <- function(sce,
     gene_bins_idx <- match(gene_bins, get_bin_ids(SummarizedExperiment::rowRanges(sce)))
 
     # Label genes
-    bottom_ha_genes <- HeatmapAnnotation(genes = anno_mark(at = c(gene_bins_idx), labels = label_genes, which = "column", side = "bottom", link_width = unit(3, "mm")))
+    bottom_ha_genes <- ComplexHeatmap::HeatmapAnnotation(genes = ComplexHeatmap::anno_mark(at = c(gene_bins_idx), labels = label_genes, which = "column", side = "bottom", link_width = unit(3, "mm")))
   } else {
     # Make null so we can pass to heatmap function regardless
     bottom_ha_genes <- NULL
