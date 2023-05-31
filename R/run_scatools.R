@@ -9,6 +9,7 @@
 #' @param outdir Outdir
 #' @param overwrite Whether to overwrite previous results
 #' @param force_arrow recreate arrow file
+#' @param remove_doublets Logical. Whether to remove flagged doublets or not.
 #' @param verbose Verbosity
 #' @param save_h5ad Logical. Whether to save raw and processed h5ad files. Requires packages `zellkonverter` and `anndata`
 #' @param ncores Number of cores
@@ -23,6 +24,7 @@ run_scatools <- function(sample_id,
                          outdir = sample_id,
                          overwrite = FALSE,
                          force_arrow = FALSE,
+                         remove_doublets = FALSE,
                          verbose = TRUE,
                          save_h5ad = TRUE,
                          ncores = 1) {
@@ -106,7 +108,9 @@ run_scatools <- function(sample_id,
   sce_processed <- length_normalize(sce_processed, assay_name = "counts", assay_to = "counts")
 
   # Flag and remove doublets
-  sce_processed <- flagDoublets(sce_processed, filterRatio = 2, remove = TRUE)
+  if (remove_doublets) {
+    sce_processed <- flagDoublets(sce_processed, filterRatio = 2, remove = TRUE)
+  }
 
   sce_processed <- sce_processed %>%
     filter_sce(gc_range = c(0.3, 1)) %>%

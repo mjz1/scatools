@@ -12,6 +12,7 @@ run_scatools(
   outdir = sample_id,
   overwrite = FALSE,
   force_arrow = FALSE,
+  remove_doublets = FALSE,
   verbose = TRUE,
   save_h5ad = TRUE,
   ncores = 1
@@ -31,6 +32,8 @@ run_scatools(
 \item{overwrite}{Whether to overwrite previous results}
 
 \item{force_arrow}{recreate arrow file}
+
+\item{remove_doublets}{Logical. Whether to remove flagged doublets or not.}
 
 \item{verbose}{Verbosity}
 
