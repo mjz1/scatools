@@ -265,7 +265,6 @@ cnaHeatmap <- function(sce,
     } else {
       # clone_order <- as.character(sort(unique(sce[[clone_name]])))
       clone_order <- as.character(unique(sce[[clone_name]]))
-      
     }
 
     # Do we want to reorder the sce now?
@@ -316,7 +315,7 @@ cnaHeatmap <- function(sce,
         sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
       }
     }
-    
+
     # Now create a heatmap where genes are highlighted in the bottom panel
     match_idx <- match(label_genes, sce@metadata$gene_overlap$symbol)
 
@@ -558,7 +557,7 @@ plot_clone_comp <- function(sce,
     group_var <- "all"
     sce$all <- "all"
   }
-  
+
   rownames(sce) <- rowRanges(sce)$bin_id <- get_bin_ids(rowRanges(sce))
 
   avg_exp <- pseudo_groups(sce,
@@ -627,9 +626,77 @@ my_dens <- function(data, mapping, center_point = 0, ...) {
 #' @export
 get_label_centers <- function(sce, group_var = "clusters", reduced_dim = "UMAP") {
   # To any scatter of a umap can add + geom_label_repel(data = get_label_centers(sce), aes(x = x, y = y, label = clusters))
-  x_means <- lapply(split(reducedDim(sce, reduced_dim)[,1], sce[[group_var]]), mean) %>% unlist
-  y_means <- lapply(split(reducedDim(sce, reduced_dim)[,2], sce[[group_var]]), mean) %>% unlist
+  x_means <- lapply(split(reducedDim(sce, reduced_dim)[, 1], sce[[group_var]]), mean) %>% unlist()
+  y_means <- lapply(split(reducedDim(sce, reduced_dim)[, 2], sce[[group_var]]), mean) %>% unlist()
   centers <- data.frame(x = x_means, y = y_means)
   centers[[group_var]] <- rownames(centers)
   return(centers)
+}
+
+
+#' Plot Gene CNA
+#'
+#' @param sce sce
+#' @param gene gene
+#' @param assay_type assay
+#' @param group_by grouping variable
+#' @param color_by coloring variable
+#'
+#' @return plot
+#' @export
+#'
+plot_gene_cna <- function(sce,
+                          gene,
+                          assay_type = "counts",
+                          group_by = NULL,
+                          color_by = group_by,
+                          return_data = F) {
+  # Check for the overlaps and create if possible
+  if (is.null(sce@metadata$gene_overlap)) {
+    # Attempt to perform the overlaps on the fly
+    if (requireNamespace("EnsDb.Hsapiens.v86")) {
+      logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
+      sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
+    } else {
+      logger::log_error("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+    }
+  }
+
+  if (is.null(group_by)) {
+    group_by <- "all"
+    sce[[group_by]] <- group_by
+  }
+
+  sce[["group"]] <- sce[[group_by]]
+
+
+  bin_id <- as.data.frame(sce@metadata$gene_overlap[which(sce@metadata$gene_overlap$gene_name == gene), ])[, "bin_id"]
+
+  # Create plots
+  plot_df <- scater::makePerCellDF(sce, assay.type = assay_type, use.coldata = TRUE, features = bin_id) %>%
+    add_count(group) %>%
+    mutate(sample_lab = glue("{group} n=({n})"))
+  plot_df[[gene]] <- plot_df[[bin_id]]
+
+  if (return_data) {
+    return(plot_df)
+  } else {
+    plot_df %>%
+      ggplot(aes(x = fct_reorder(sample_lab, .data[[bin_id]], median), y = .data[[bin_id]], color = .data[[color_by]])) +
+      geom_pointrange(
+        stat = "summary",
+        fun.min = function(z) {
+          quantile(z, 0.25)
+        },
+        fun.max = function(z) {
+          quantile(z, 0.75)
+        },
+        fun = median
+      ) +
+      scale_y_continuous(trans = "log2", breaks = seq(0.5, 1.5, by = c(0.05))) +
+      # facet_grid(. ~ Time.Point, scales = "free_x", space = "free_x") +
+      guides(x = guide_axis(angle = 90)) +
+      labs(x = group_by, y = glue("{gene} Bin Copy Number\n({bin_id})")) +
+      theme(strip.background = element_blank(), axis.line = element_blank(), panel.border = element_rect(fill = NA, linewidth = 0.5))
+  }
 }
