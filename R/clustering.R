@@ -92,15 +92,15 @@ cluster_seurat <- function(sce,
     do.center = do.center,
     verbose = verbose
   )
-  
+
   if (length(features.pca) < npcs.pca) {
     logger::log_error("{length(features.pca)} features provided for PCA but requesting {npcs.pca} PCA dimensions. Please adjust.")
   }
-  
+
   if (ncol(srt) < npcs.pca) {
     logger::log_warn("Not enough cells: {ncol(srt)} for requesting pcs: {npcs.pca}. Reducing to {ncol(srt)-1}")
     npcs.pca <- ncol(srt) - 1
-   }
+  }
 
   srt <- Seurat::RunPCA(srt,
     features = features.pca,
@@ -172,14 +172,14 @@ leiden_wrapper <- function(adj_mat, group_singletons = TRUE, resolution = 1) {
     num_iter = 10,
     seed = 3
   )
-  
+
   ids <- res$membership
   names(ids) <- colnames(adj_mat)
-  
+
   if (group_singletons) {
     ids <- Seurat:::GroupSingletons(ids, SNN = adj_mat, group.singletons = TRUE, verbose = TRUE)
   }
-  
+
   return(ids)
 }
 

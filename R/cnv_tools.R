@@ -67,15 +67,13 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
       ...
     ))
 
-    # test0 <- res$segRows[[2]] + 1 - res$segRows[[1]]
-
     df <- data.frame(idx = 1:length(x), seg.mean = NA)
 
     for (j in 1:nrow(res$segRows)) {
       # Fails if no counts on final segments so we put try
       try(df[res$segRows[j, 1]:res$segRows[j, 2], "seg.mean"] <- res$output[j, "seg.mean"])
     }
-    logger::log_success("Segmentation completed!")
+    # logger::log_success("Segmentation completed!")
     return(df$seg.mean)
   })
 
@@ -170,6 +168,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
   if (length(unique(sce[[group_by]])) == 2) {
     logger::log_warn("Only two groups detected. Defaulting to method = 'min_sd'")
     method <- "min_sd"
+    use_cnv_score <- FALSE
     n_normal_clusts <- 1
   }
 

@@ -34,8 +34,8 @@ bin_atac_frags <- function(ArrowFiles,
   matlist <- lapply(X = seq_along(ArrowFiles), FUN = function(i) {
     sample_name <- names(ArrowFiles[i])
     ArrowFile <- ArrowFiles[i]
-    sample_outdir <- file.path(outdir, bin_name, sample_name)
-    
+    sample_outdir <- file.path(outdir, bin_name)
+
     dir.create(sample_outdir, showWarnings = FALSE, recursive = TRUE)
 
     # Only bin frags if not done already
@@ -255,7 +255,7 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
     bins <- add_gc_freq(bins = bins, bs_genome = bs_genome)
   }
   bins <- sort(bins)
-  
+
   bins$chr_arm <- paste0(GenomeInfoDb::seqnames(bins), bins$arm)
 
   return(bins)
@@ -588,6 +588,7 @@ get_bin_info <- function(bin_ids) {
 #' @export
 #'
 overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
+  # TODO: Allow selection of individual genes
   bin_ranges <- rowRanges(sce)
 
   # Pull genes

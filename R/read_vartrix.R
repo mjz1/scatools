@@ -63,19 +63,19 @@ read_vartrix <- function(dir_path = NULL,
   rownames(ref) <- rownames(alt) <- snps$snp_id
 
   logger::log_debug("{nrow(snps)} input SNPs from vartrix")
-  
+
   # Load phasing if provided
   if (!is.null(input_vcf)) {
     logger::log_info("Reading input vcf: {input_vcf}")
     vcf_df <- vcf_to_df(input_vcf)
-    
+
     if (!is.null(phased_vcf)) {
       logger::log_info("Reading phased vcf: {phased_vcf}")
       phased_vcf_df <- vcf_to_df(phased_vcf)
       phased_vcf_df <- dplyr::rename(phased_vcf_df, "gt_phased" = "gt")
-      
+
       vcf_df <- vcf_df %>%
-        dplyr::left_join(phased_vcf_df, by = c("snp_id", "chr", "start", "end"), suffix = c("", "_phased"),) %>%
+        dplyr::left_join(phased_vcf_df, by = c("snp_id", "chr", "start", "end"), suffix = c("", "_phased"), ) %>%
         dplyr::filter(ref != "*", alt != "*")
     }
     # Merge
@@ -127,9 +127,9 @@ vcf_to_df <- function(vcf, verbose = FALSE) {
 
   # Remove indels and non het SNPs
   keeps <- names(which((!vcfR::is.indel(vcf) & vcfR::is_het(as.matrix(gts)))[, 1]))
-  
+
   logger::log_debug("{length(keeps)} hetSNPs")
-  
+
   vcf_df <- cbind.data.frame(gts, alleles)[keeps, ] %>%
     dplyr::mutate(across(where(is.character), as.factor))
   colnames(vcf_df) <- c("gt", "ref", "alt")

@@ -1,4 +1,3 @@
-
 #' Add HMMCopy results to sce object
 #'
 #' @param sce an SCE object

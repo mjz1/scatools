@@ -10,7 +10,7 @@
 get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
   # Make sure binids consistent
   rownames(sce) <- SummarizedExperiment::rowRanges(sce)$bin_id <- get_bin_ids(SummarizedExperiment::rowRanges(sce))
-  
+
   sce <- sce[, cell_id]
 
   plot_dat <- lapply(X = assay_names, FUN = function(assay_name) {

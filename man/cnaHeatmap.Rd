@@ -22,6 +22,7 @@ cnaHeatmap(
   top_annotation = NULL,
   bulk_cn_col = NULL,
   raster_quality = 10,
+  row_split = NULL,
   ...
 )
 }
