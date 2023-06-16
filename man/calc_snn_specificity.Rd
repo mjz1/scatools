@@ -9,6 +9,7 @@ calc_snn_specificity(
   cell_idents1,
   cell_idents2,
   sampling_rate = 0.1,
+  weighted = T,
   ncores = 1
 )
 }
@@ -21,6 +22,8 @@ calc_snn_specificity(
 
 \item{sampling_rate}{Proportion of cells to subsample when performing calculations.}
 
+\item{weighted}{Logical. Whether to weight the identities by their inverse size. Only relevent for the neighbor purity estimated}
+
 \item{ncores}{Number of cores to use}
 }
 \value{
@@ -28,4 +31,7 @@ A dataframe
 }
 \description{
 Calculates the fraction of nearest neighbours divided by the expected fraction of nearest neighbours in the patient subgraph.
+}
+\details{
+Also computes the neighbor purity estimation for each identity.
 }
