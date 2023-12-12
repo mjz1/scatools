@@ -16,6 +16,9 @@
     <loc>https://mjz1.github.io/scatools/index.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/EM2.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/add_gc_cor.html</loc>
   </url>
   <url>
@@ -58,6 +61,9 @@
     <loc>https://mjz1.github.io/scatools/reference/calc_cnv_score.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/calc_snn_specificity.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/cluster_seurat.html</loc>
   </url>
   <url>
@@ -65,6 +71,9 @@
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/correct_atac_bias.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/disjoint_bins_map.html</loc>
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/filter_sce.html</loc>
@@ -82,9 +91,6 @@
     <loc>https://mjz1.github.io/scatools/reference/get_assay_dat.html</loc>
   </url>
   <url>
-    <loc>https://mjz1.github.io/scatools/reference/get_cancer_gene_copy.html</loc>
-  </url>
-  <url>
     <loc>https://mjz1.github.io/scatools/reference/get_chr_arm_bins.html</loc>
   </url>
   <url>
@@ -92,6 +98,9 @@
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/get_f_idx.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/get_gene_copy.html</loc>
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/get_ideal_mat.html</loc>
@@ -124,6 +133,9 @@
     <loc>https://mjz1.github.io/scatools/reference/is_ideal_bin.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/leiden_wrapper.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/length_normalize.html</loc>
   </url>
   <url>
@@ -148,6 +160,9 @@
     <loc>https://mjz1.github.io/scatools/reference/perform_umap_clustering.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/phase_snps.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/pipe.html</loc>
   </url>
   <url>
@@ -163,6 +178,9 @@
     <loc>https://mjz1.github.io/scatools/reference/plot_clone_comp.html</loc>
   </url>
   <url>
+    <loc>https://mjz1.github.io/scatools/reference/plot_gene_cna.html</loc>
+  </url>
+  <url>
     <loc>https://mjz1.github.io/scatools/reference/plot_segs.html</loc>
   </url>
   <url>
@@ -176,6 +194,9 @@
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/read_vartrix.html</loc>
+  </url>
+  <url>
+    <loc>https://mjz1.github.io/scatools/reference/rebin_sce.html</loc>
   </url>
   <url>
     <loc>https://mjz1.github.io/scatools/reference/run_sc_hmmcopy.html</loc>
