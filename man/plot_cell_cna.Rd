@@ -4,7 +4,13 @@
 \alias{plot_cell_cna}
 \title{Plot Cell Copy Number}
 \usage{
-plot_cell_cna(sce, cell_id = NULL, assay_name = "counts", col_fun = NULL)
+plot_cell_cna(
+  sce,
+  cell_id = NULL,
+  assay_name = "counts",
+  col_fun = NULL,
+  linewidth = 1
+)
 }
 \arguments{
 \item{sce}{sce object}
