@@ -1,4 +1,4 @@
-FROM zatzmanm/rstudio:v0.2
+FROM zatzmanm/rstudio:latest
 
 # install scatools
 RUN Rscript -e 'install.packages("devtools")'
