@@ -70,9 +70,11 @@ cluster_seurat <- function(sce,
     rownames(joint_data)[idx_1] <- paste0(assay_name[1], "_", rownames(joint_data)[idx_1])
     rownames(joint_data)[idx_2] <- paste0(assay_name[2], "_", rownames(joint_data)[idx_2])
 
-    srt <- Seurat::CreateSeuratObject(counts = joint_data, data = joint_data)
+    srt <- Seurat::CreateSeuratObject(counts = joint_data)
+    srt[["RNA"]]$data <- srt[["RNA"]]$counts
   } else {
-    srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name), data = assay(sce, assay_name))
+    srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name))
+    srt[["RNA"]]$data <- srt[["RNA"]]$counts
   }
 
   if (features.pca == "all") {
@@ -132,7 +134,7 @@ cluster_seurat <- function(sce,
   # Put the PCA, UMAP, and clustering results into the original SCE
   reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings
   reducedDim(sce_orig, UMAP_name) <- srt@reductions$umap@cell.embeddings
-  sce_orig[[cluster_name]] <- srt[[]]$seurat_clusters
+  sce_orig[[cluster_name]] <- srt$seurat_clusters
 
   # Keep the graphs stored in the metadata
   sce_orig@metadata[[paste("graphs", suffix, sep = "_")]] <- srt@graphs

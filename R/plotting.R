@@ -624,12 +624,23 @@ my_dens <- function(data, mapping, center_point = 0, ...) {
 }
 
 #' @export
-get_label_centers <- function(sce, group_var = "clusters", reduced_dim = "UMAP") {
+get_label_centers <- function(obj, group_var = "clusters", reduced_dim = "UMAP") {
   # To any scatter of a umap can add + geom_label_repel(data = get_label_centers(sce), aes(x = x, y = y, label = clusters))
-  x_means <- lapply(split(reducedDim(sce, reduced_dim)[, 1], sce[[group_var]]), mean) %>% unlist()
-  y_means <- lapply(split(reducedDim(sce, reduced_dim)[, 2], sce[[group_var]]), mean) %>% unlist()
-  centers <- data.frame(x = x_means, y = y_means)
-  centers[[group_var]] <- rownames(centers)
+
+  if ("SingleCellExperiment" %in% class(obj)) {
+    x_means <- lapply(split(reducedDim(obj, reduced_dim)[, 1], obj[[group_var]]), mean) %>% unlist()
+    y_means <- lapply(split(reducedDim(obj, reduced_dim)[, 2], obj[[group_var]]), mean) %>% unlist()
+    centers <- data.frame(x = x_means, y = y_means)
+    centers[[group_var]] <- rownames(centers)
+  }
+
+  if ("Seurat" %in% class(obj)) {
+    x_means <- lapply(split(Seurat::Embeddings(obj, reduced_dim)[, 1], obj[[group_var]]), mean) %>% unlist()
+    y_means <- lapply(split(Seurat::Embeddings(obj, reduced_dim)[, 2], obj[[group_var]]), mean) %>% unlist()
+    centers <- data.frame(x = x_means, y = y_means)
+    centers[[group_var]] <- rownames(centers)
+  }
+
   return(centers)
 }
 

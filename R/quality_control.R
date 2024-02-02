@@ -132,6 +132,49 @@ flagDoublets <- function(sce, cutEnrich = 1, cutScore = -Inf, filterRatio = 1, r
 }
 
 
+#' Basic QC
+#'
+#' @param sce sce
+#' @param assay_name assay
+#' @param plot logical plot
+#'
+#' @return sce
+#' @export
+#'
+do_qc <- function(sce, assay_name = "counts", plot = TRUE) {
+  sce$counts_per_cell <- Matrix::colSums(assay(sce, "counts"))
+  rowRanges(sce)$counts_per_bin <- Matrix::rowSums(assay(sce, "counts"))
+
+  sce$median_percell_counts <- MatrixGenerics::colMedians(assay(sce, "counts"))
+  rowRanges(sce)$median_perbin_counts <- MatrixGenerics::rowMedians(assay(sce, "counts"))
+
+  if (plot) {
+    p1 <- colData(sce) %>%
+      as.data.frame() %>%
+      ggplot(aes(x = counts_per_cell)) +
+      geom_histogram(bins = 50)
+
+    p2 <- colData(sce) %>%
+      as.data.frame() %>%
+      ggplot(aes(x = median_percell_counts)) +
+      geom_histogram(bins = 50)
+
+    p3 <- rowData(sce) %>%
+      as.data.frame() %>%
+      ggplot(aes(x = counts_per_bin)) +
+      geom_histogram(bins = 50)
+
+    p4 <- rowData(sce) %>%
+      as.data.frame() %>%
+      ggplot(aes(x = median_perbin_counts)) +
+      geom_histogram(bins = 50)
+
+    pcomb <- patchwork::wrap_plots(list(p1, p2, p3, p4), ncol = 2) + patchwork::plot_annotation(title = unique(sce$Sample), subtitle = glue::glue("{prettyMb(getmode(rowRanges(sce)$binwidth))} bins"))
+    print(pcomb)
+  }
+
+  return(sce)
+}
 
 
 #' GC modal QC filter

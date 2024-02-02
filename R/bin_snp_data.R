@@ -1,4 +1,3 @@
-
 #' Get SNP bin idx
 #'
 #' @inheritParams bin_snp_data
