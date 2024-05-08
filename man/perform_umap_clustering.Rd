@@ -36,8 +36,17 @@ which embedded points will be spread out.}
 
 \item{log2}{Logical: Log2 transform the matrix prior to plotting}
 
-\item{metric}{Type of distance metric to use to find nearest neighbors. One
-  of:
+\item{seed}{Integer seed to use to initialize the random number generator
+state. Combined with \code{n_sgd_threads = 1} or \code{batch = TRUE}, this
+should give consistent output across multiple runs on a given installation.
+Setting this value is equivalent to calling \code{\link[base]{set.seed}},
+but it may be more convenient in some situations than having to call a
+separate function. The default is to not set a seed. If
+\code{ret_model = TRUE}, the seed will be stored in the output model and
+then used to set the seed inside \code{\link[uwot]{umap_transform}}.}
+
+\item{metric}{Type of distance metric to use to find nearest neighbors. For
+ \code{nn_method = "annoy"} this can be one of:
 \itemize{
   \item \code{"euclidean"} (the default)
   \item \code{"cosine"}
@@ -46,8 +55,36 @@ which embedded points will be spread out.}
   \item \code{"correlation"} (a distance based on the Pearson correlation)
   \item \code{"categorical"} (see below)
 }
-Only applies if \code{nn_method = "annoy"} (for \code{nn_method = "fnn"}, the
-distance metric is always "euclidean").
+For \code{nn_method = "hnsw"} this can be one of:
+\itemize{
+  \item \code{"euclidean"}
+  \item \code{"cosine"}
+  \item \code{"correlation"}
+}
+If \href{https://cran.r-project.org/package=rnndescent}{rnndescent} is
+installed and \code{nn_method = "nndescent"} is specified then many more
+metrics are avaiable, including:
+\itemize{
+\item \code{"braycurtis"}
+\item \code{"canberra"}
+\item \code{"chebyshev"}
+\item \code{"dice"}
+\item \code{"hamming"}
+\item \code{"hellinger"}
+\item \code{"jaccard"}
+\item \code{"jensenshannon"}
+\item \code{"kulsinski"}
+\item \code{"rogerstanimoto"}
+\item \code{"russellrao"}
+\item \code{"sokalmichener"}
+\item \code{"sokalsneath"}
+\item \code{"spearmanr"}
+\item \code{"symmetrickl"}
+\item \code{"tsss"}
+\item \code{"yule"}
+}
+For more details see the package documentation of \code{rnndescent}.
+For \code{nn_method = "fnn"}, the distance metric is always "euclidean".
 
 If \code{X} is a data frame or matrix, then multiple metrics can be
 specified, by passing a list to this argument, where the name of each item in

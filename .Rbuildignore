@@ -1,3 +1,5 @@
+^renv$
+^renv\.lock$
 ^scatools\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
