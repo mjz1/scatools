@@ -8,8 +8,7 @@ smooth_counts(
   sce,
   assay_name,
   ncores = 1,
-  smooth_name = paste(assay_name, "smoothed", sep = "_"),
-  ...
+  smooth_name = paste(assay_name, "smoothed", sep = "_")
 )
 }
 \arguments{
@@ -20,8 +19,6 @@ smooth_counts(
 \item{ncores}{Number of cores to use}
 
 \item{smooth_name}{Name of returned assay with smoothed counts}
-
-\item{...}{}
 }
 \value{
 A SingleCellExperiument Object

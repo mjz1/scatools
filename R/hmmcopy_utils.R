@@ -316,7 +316,7 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
 #' @param return a character. One of `best` or `all` to either return the result for the best ploidy only, or a list of results for all ploidies
 #'
 #' @export
-#'
+#' @noRd
 run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = params_sc_hmm(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, return = c("best", "all")) {
   # check integer multipliers
   if (!all(multipliers %% 1 == 0) | any(multipliers < 0)) {

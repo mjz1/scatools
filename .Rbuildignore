@@ -11,3 +11,6 @@
 ^\.github$
 ^example$
 ^vignettes/example$
+Dockerfile
+^docker*
+^dev$

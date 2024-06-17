@@ -4,7 +4,7 @@
 \name{scatools-package}
 \alias{scatools}
 \alias{scatools-package}
-\title{scatools: scATAC tools and utilities}
+\title{scatools: scATAC Tools and Utilities For Copy Number Analysis}
 \description{
 A collection of useful code for handling scATAC data.
 }

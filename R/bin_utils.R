@@ -381,6 +381,8 @@ add_gc_freq <- function(bs_genome, bins) {
 #' @param ncores number of cores for parallel evaluation (requires `pbmcapply` package)
 #'
 #' @inherit is_ideal_bin
+#' @return Boolean matrices of ideal and valid bins
+
 #' @export
 #'
 get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
@@ -470,6 +472,7 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
 
 
 #' @rdname get_ideal_mat
+#' @return SCE object with ideal and valid boolean matrices
 #' @export
 add_ideal_mat <- function(sce, 
                           assay_name = "counts", 
@@ -580,6 +583,7 @@ get_bin_ids <- function(granges) {
 }
 
 #' @export
+#' @noRd
 get_bin_info <- function(bin_ids) {
   # get the bin_ids
   bin_info <- data.frame(stringr::str_split_fixed(bin_ids, pattern = "_", n = 3))
@@ -659,6 +663,7 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
 }
 
 #' @export
+#' @noRd
 get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/cancerGeneList.txt") {
   # Column names are problematic. Load these first
   colnames_cleaned <- read.table(
@@ -676,6 +681,7 @@ get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/canc
 }
 
 #' @export
+#' @noRd
 remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
   zeroes <- colSums(apply(assay(sce, assay_name), 1, function(x) x == 0))
 

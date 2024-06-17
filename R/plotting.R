@@ -413,6 +413,7 @@ cnaHeatmap <- function(sce,
 }
 
 #' @export
+#' @noRd
 cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clust_lab = TRUE, aggr_fun = mean, round = FALSE, ...) {
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
@@ -624,6 +625,7 @@ my_dens <- function(data, mapping, center_point = 0, ...) {
 }
 
 #' @export
+#' @noRd
 get_label_centers <- function(obj, group_var = "clusters", reduced_dim = "UMAP") {
   # To any scatter of a umap can add + geom_label_repel(data = get_label_centers(sce), aes(x = x, y = y, label = clusters))
 

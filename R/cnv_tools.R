@@ -4,12 +4,11 @@
 #' @param assay_name Name of assay to smooth
 #' @param ncores Number of cores to use
 #' @param smooth_name Name of returned assay with smoothed counts
-#' @param ...
 #'
 #' @return A SingleCellExperiument Object
 #' @export
 #'
-smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay_name, "smoothed", sep = "_"), ...) {
+smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay_name, "smoothed", sep = "_")) {
   chrs <- as.vector(seqnames(rowRanges(sce)))
   starts <- start(rowRanges(sce))
   sample_ids <- colnames(sce)
@@ -237,6 +236,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
 }
 
 #' @export
+#' @noRd
 calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = paste(assay_name, "ratios", sep = "_")) {
   fun <- match.arg(fun)
 
@@ -258,6 +258,7 @@ calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = 
 
 #' @export
 #' @importFrom stats ansari.test wilcox.test
+#' @noRd
 mergeLevels <- function(vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
                         thresMin = 0.05, thresMax = 0.5, verbose = 1, scale = TRUE) {
   if (thresMin > thresMax) {
@@ -358,6 +359,7 @@ mergeLevels <- function(vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
 
 
 #' @export
+#' @noRd
 combine.func <- function(diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1e-04,
                          thresAbs = 0) {
   vec1 <- vecObs[which(vecPredNow == mn1)]

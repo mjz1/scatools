@@ -52,6 +52,7 @@ load_atac_bins <- function(bin_dir,
 
 
 #' @export
+#' @noRd
 vcf_to_df <- function(vcf, verbose = FALSE) {
   vcf <- vcfR::read.vcfR(file = vcf, verbose = verbose)
   gts <- vcfR::extract.gt(vcf, element = "GT", return.alleles = F)[, 1] %>% as.factor()

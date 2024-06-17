@@ -151,6 +151,7 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = "none", 
 
 
 #' @export
+#' @noRd
 scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both"), center = FALSE) {
   mat <- as.matrix(mat)
 
@@ -266,7 +267,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
   return(sce)
 }
 
-
+#' @noRd
 .save_to <- function(object, save_to = "./", verbose = TRUE) {
   dir.create(dirname(save_to), recursive = TRUE, showWarnings = FALSE)
   if (verbose) {
@@ -336,6 +337,7 @@ get_f_idx <- function(f) {
 #'
 #' bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = FALSE)
 #'
+#' @noRd
 bind_sublist <- function(toplist, sublist, what = c("rbind", "cbind", "c"), .add_id = FALSE, .id_name = "id") {
   what <- match.arg(what)
 
@@ -358,12 +360,14 @@ bind_sublist <- function(toplist, sublist, what = c("rbind", "cbind", "c"), .add
 }
 
 #' @export
+#' @noRd
 getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
 
 #' @export
+#' @noRd
 prettyMb <- function(x, places = 3) {
   power <- pmin(6, floor(log(abs(x), 1000)))
   units <- c("B", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb")[power + 1]

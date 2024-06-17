@@ -15,6 +15,7 @@
 #' @param min_counts Minimum count number across all cells to keep a SNP
 #'
 #' @return A `SingleCellExperiment` object
+#' 
 #' @export
 read_vartrix <- function(dir_path = NULL,
                          mtx_ref = NULL,

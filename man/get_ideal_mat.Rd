@@ -56,7 +56,9 @@ add_ideal_mat(
 \item{ncores}{number of cores for parallel evaluation (requires \code{pbmcapply} package)}
 }
 \value{
-A dataframe of two columns meet the \code{valid} or \code{ideal} criteria
+Boolean matrices of ideal and valid bins
+
+SCE object with ideal and valid boolean matrices
 }
 \description{
 Given a matrix of bin counts, bin gc and N frequency, and filtering parameters, return a boolean matrix flagging ideal bins

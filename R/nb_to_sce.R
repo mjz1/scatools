@@ -1,4 +1,5 @@
 #' @export
+#' @noRd
 get_counts1 <- function(df_allele, column) {
   # This is less memory efficient but possible faster original version
   counts <- df_allele %>%
@@ -11,6 +12,7 @@ get_counts1 <- function(df_allele, column) {
 }
 
 #' @export
+#' @noRd
 get_counts <- function(df_allele, column, ncores = 1) {
   requireNamespace("data.table")
 
@@ -53,6 +55,7 @@ get_counts <- function(df_allele, column, ncores = 1) {
 }
 
 #' @export
+#' @noRd
 numbat_to_sce <- function(df_allele, ncores = 1, min_snp_cov = 1) {
   alt <- get_counts(df_allele, column = "AD", ncores = ncores)
   tot <- get_counts(df_allele, column = "DP", ncores = ncores)
@@ -92,7 +95,7 @@ numbat_to_sce <- function(df_allele, ncores = 1, min_snp_cov = 1) {
 #'
 #' @return A merged matrix
 #' @export
-#'
+#' @noRd
 merge.sparse <- function(l) {
   # https://stackoverflow.com/questions/43117608/r-binding-sparse-matrices-of-different-sizes-on-rows
 

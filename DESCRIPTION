@@ -1,5 +1,5 @@
 Package: scatools
-Title: scATAC tools and utilities
+Title: scATAC Tools and Utilities For Copy Number Analysis
 Version: 0.0.0.9000
 Authors@R: 
     person("Matthew", "Zatzman", , "matthew.zatzman@gmail.com", role = c("aut", "cre"))
