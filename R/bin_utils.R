@@ -231,7 +231,7 @@ bin_frags_chr <- function(chrom, bins, blacklist = NULL, fragment_file) {
 #' @examples
 #' bins <- get_chr_arm_bins("hg38")
 get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL) {
-  bins <- get_cytobands() %>%
+  bins <- get_cytobands(genome = genome) %>%
     dplyr::group_by(CHROM, arm, genome) %>%
     dplyr::summarise(
       "start" = min(start),
@@ -284,7 +284,6 @@ get_tiled_bins <- function(bs_genome = NULL,
   if (is.null(select_chrs)) {
     select_chrs <- paste("chr", c(1:22, "X"), sep = "")
   }
-
   logger::log_info("Creating chromosome bins for {unique(genome(bs_genome))[1]}")
   logger::log_info("respect_chr_arms = {respect_chr_arms}")
   logger::log_info("Chromosomes: {paste(select_chrs, collapse = ';')}")
@@ -324,13 +323,16 @@ get_tiled_bins <- function(bs_genome = NULL,
 
   bins <- add_gc_freq(bs_genome, bins)
   bins <- sort(bins)
+  idx <- which(as.vector(GenomeInfoDb::seqnames(bins)) %in% select_chrs)
+  bins <- bins[idx,]
+
   return(bins)
 }
 
 
 #' Get genome cytobands
 #'
-#' @param genome Genome version (hg38 or hg19)
+#' @param genome Genome version (hg38, hg19, mm10)
 #'
 #' @return Dataframe of genome cytobands
 #' @export
@@ -339,7 +341,7 @@ get_tiled_bins <- function(bs_genome = NULL,
 #' hg38_cyto <- get_cytobands("hg38")
 get_cytobands <- function(genome = "hg38") {
   cyto_url <- paste0("http://hgdownload.cse.ucsc.edu/goldenpath/", genome, "/database/cytoBand.txt.gz")
-  cyto <- readr::read_delim(file = "http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/cytoBand.txt.gz", col_names = c("CHROM", "start", "end", "cytoband", "unsure"), show_col_types = FALSE) %>%
+  cyto <- readr::read_delim(file = cyto_url, col_names = c("CHROM", "start", "end", "cytoband", "unsure"), show_col_types = FALSE) %>%
     dplyr::filter(!is.na(cytoband)) %>%
     dplyr::mutate(dplyr::across(where(is.character), as.factor),
       "start" = start + 1,
