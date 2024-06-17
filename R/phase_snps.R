@@ -138,7 +138,7 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL
 #' @param ref_table A SNP by cell read count matrix/ spare matrix for the reference alleles.
 #' @param alt_table A SNP by cell read count matrix/ spare matrix for the alternative alleles.
 #' @param max_iter An integer of maximum iteration number.
-#' @param sub_cells A vector of cell names for the cells used to estimate the phases.
+#' @param phases SNP phasing to use as priors
 #' @param seed An integer of random seed number for EM initialization.
 #' @param tol maximum liklihood stopping tolerance
 #'

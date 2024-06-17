@@ -15,9 +15,9 @@ EM2(ref_table, alt_table, max_iter = 50, seed = 3, phases = NULL, tol = 0.001)
 
 \item{seed}{An integer of random seed number for EM initialization.}
 
-\item{tol}{maximum liklihood stopping tolerance}
+\item{phases}{SNP phasing to use as priors}
 
-\item{sub_cells}{A vector of cell names for the cells used to estimate the phases.}
+\item{tol}{maximum liklihood stopping tolerance}
 }
 \value{
 A list of estimated indicators (I_hat) for each SNP and estimated major haplotype proportion (theta_hat) for each cell in one region. I_hat is the phasing result indicating whether reference allele is on the major haplotype for each SNP. Theta_hat represents the CNV states for each cell. A cell is considered as a CNV carrier if its theta_hat depart from 0.5.

@@ -7,7 +7,7 @@
 get_cytobands(genome = "hg38")
 }
 \arguments{
-\item{genome}{Genome version (hg38 or hg19)}
+\item{genome}{Genome version (hg38, hg19, mm10)}
 }
 \value{
 Dataframe of genome cytobands

@@ -4,7 +4,6 @@
 #'
 #' @inherit bin_frags
 #'
-#' @param fragment_files Named list or vector of fragment file paths
 #' @param bin_name Name of the bins (e.g. `'10Mb'`, `'500Kb'`, `'chr_arm'`). If not provided is automatically detected based on binwidth.
 #' @param overwrite Logical. Overwrite previously existing results (default = FALSE)
 #' @param return_mat Logical. Return the binned depth matrix (default = FALSE)
@@ -379,7 +378,7 @@ add_gc_freq <- function(bs_genome, bins) {
 #'
 #'
 #' @param mat,sce A count matrix or SCE object depending on the function
-#' @param ncores number of cores for parallel evaluation (requires [pbmcapply] package)
+#' @param ncores number of cores for parallel evaluation (requires `pbmcapply` package)
 #'
 #' @inherit is_ideal_bin
 #' @export
@@ -596,7 +595,7 @@ get_bin_info <- function(bin_ids) {
 #' Given an annotation object, this function will overlap genes with bins and place the results in the metadata slot `gene_overlaps`. This function will also attempt to annotate cancer genes using OncoKB.
 #'
 #' @param sce SingleCellExperiment object
-#' @param ensDb EnsemblDb object such as [EnsDb.Hsapiens.v86]
+#' @param ensDb EnsemblDb object such as [EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86]
 #' @param gene_biotype Gene biotypes to overlap. Defaults to "all". Use "protein_coding" to keep only protein coding genes
 #'
 #' @return SingleCellExperiment object with gene overlaps in `sce@metadata$gene_overlaps`

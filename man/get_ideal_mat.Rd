@@ -53,7 +53,7 @@ add_ideal_mat(
 
 \item{min_map}{Minimum allowable mappability score for a bin. Range (0, 1)}
 
-\item{ncores}{number of cores for parallel evaluation (requires \link{pbmcapply} package)}
+\item{ncores}{number of cores for parallel evaluation (requires \code{pbmcapply} package)}
 }
 \value{
 A dataframe of two columns meet the \code{valid} or \code{ideal} criteria

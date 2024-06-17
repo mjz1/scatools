@@ -3,64 +3,82 @@ Title: scATAC tools and utilities
 Version: 0.0.0.9000
 Authors@R: 
     person("Matthew", "Zatzman", , "matthew.zatzman@gmail.com", role = c("aut", "cre"))
-Description: A collection of useful code for handling scATAC data. 
+Description: A collection of useful code for handling scATAC data.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
-biocViews:
-Remotes: 
-    GreenleafLab/ArchR@master
-Imports: 
-    BiocParallel,
-    Biostrings,
-    BSgenome,
-    ComplexHeatmap,
-    DNAcopy,
-    dplyr,
-    DropletUtils,
-    GenomicRanges,
-    glue,
-    HMMcopy,
-    IRanges,
-    logger,
-    magrittr,
-    Matrix,
-    mclust,
-    methods,
-    patchwork,
-    pbmcapply,
-    polynom,
-    quantreg,
-    R.utils,
-    readr,
-    reshape2,
-    S4Vectors,
-    scuttle,
-    Seurat,
-    stringr,
-    tidyr,
-    tidyselect,
-    utils,
-    vroom,
-    withr
-URL: https://github.com/mjz1/scatools,
-    https://mjz1.github.io/scatools/
+URL: https://github.com/mjz1/scatools, https://mjz1.github.io/scatools/
 BugReports: https://github.com/mjz1/scatools/issues
-Suggests: 
-    anndata,
-    dbscan,
-    dittoSeq,
-    GGally,
-    gtools,
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0),
-    vegan,
-    zellkonverter
-Config/testthat/edition: 3
 Depends: 
     R (>= 4.0),
     SingleCellExperiment
+Imports: 
+    anndata,
+    BiocGenerics,
+    BiocParallel,
+    BSgenome,
+    BSgenome.Hsapiens.UCSC.hg38,
+    circlize,
+    ComplexHeatmap,
+    data.table,
+    DNAcopy,
+    dplyr,
+    DropletUtils,
+    EnsDb.Hsapiens.v86,
+    GenomeInfoDb,
+    GenomicFeatures,
+    GenomicRanges,
+    GGally,
+    ggplot2,
+    glue,
+    gtools,
+    HGC,
+    HMMcopy,
+    igraph,
+    IRanges,
+    janitor,
+    leidenbase,
+    logger,
+    magrittr,
+    MASS,
+    Matrix,
+    MatrixGenerics,
+    mclust,
+    methods,
+    mltools,
+    patchwork,
+    pbmcapply,
+    polynom,
+    purrr,
+    quantreg,
+    readr,
+    reshape2,
+    rtracklayer,
+    S4Vectors,
+    scales,
+    scater,
+    scuttle,
+    Seurat,
+    sparseMatrixStats,
+    stats,
+    stringr,
+    SummarizedExperiment,
+    tibble,
+    tidyr,
+    utils,
+    vcfR,
+    vegan,
+    withr,
+    zellkonverter
+Suggests: 
+    dittoSeq,
+    knitr,
+    rmarkdown
+VignetteBuilder: 
+    knitr
+Remotes: 
+    GreenleafLab/ArchR@master
+biocViews:
+Config/testthat/edition: 3
+Encoding: UTF-8
 LazyData: true
-VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1

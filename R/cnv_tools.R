@@ -88,7 +88,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
 
 #' Merge segment levels
 #'
-#' Wrapper for [mergeLevels] to merge segments
+#' Wrapper for [mergeLevels()] to merge segments
 #'
 #' @inheritParams segment_cnv
 #' @param smooth_assay name of assay with smoothed counts

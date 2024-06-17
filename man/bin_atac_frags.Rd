@@ -33,8 +33,6 @@ bin_atac_frags(
 \item{overwrite}{Logical. Overwrite previously existing results (default = FALSE)}
 
 \item{return_mat}{Logical. Return the binned depth matrix (default = FALSE)}
-
-\item{fragment_files}{Named list or vector of fragment file paths}
 }
 \value{
 If \code{return_mat=TRUE}, returns a sparse binned depth matrix. Otherwise returns \code{NULL}

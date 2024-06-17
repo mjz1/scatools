@@ -9,7 +9,7 @@ overlap_genes(sce, ensDb, gene_biotype = "all")
 \arguments{
 \item{sce}{SingleCellExperiment object}
 
-\item{ensDb}{EnsemblDb object such as \link{EnsDb.Hsapiens.v86}}
+\item{ensDb}{EnsemblDb object such as \link[EnsDb.Hsapiens.v86:package]{EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86}}
 
 \item{gene_biotype}{Gene biotypes to overlap. Defaults to "all". Use "protein_coding" to keep only protein coding genes}
 }

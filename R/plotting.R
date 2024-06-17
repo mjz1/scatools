@@ -279,7 +279,7 @@ cnaHeatmap <- function(sce,
     row_title <- NULL
   }
 
-  if (class(clust_annot) == "HeatmapAnnotation") {
+  if (is(clust_annot, "HeatmapAnnotation")) {
     left_annot <- clust_annot
   } else if (clust_annot & !is.null(clone_name)) {
     if (is.null(col_clones)) {

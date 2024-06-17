@@ -33,6 +33,7 @@ We start by loading `scatools`, as well as the filepath to an example `fragments
 
 ```{r setup, eval=TRUE, message=FALSE}
 library(scatools)
+library(BSgenome.Hsapiens.UCSC.hg38)
 ```
 
 
@@ -52,7 +53,7 @@ Now we process this data using `scatools`. Helper functions help us to create `G
 
 ```{r, eval=TRUE}
 # Generate bins
-bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, 
+bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38, 
                        tilewidth = 1e7, 
                        respect_chr_arms = TRUE
                        )
