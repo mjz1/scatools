@@ -40,8 +40,6 @@ jobs:
       #     extra-packages: any::pkgdown, any::XML, local::.
       #     needs: website
       - uses: r-lib/actions/setup-renv@v2
-        with:
-          profile: '"pkgdown"'
 
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
