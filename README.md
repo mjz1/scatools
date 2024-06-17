@@ -4,6 +4,8 @@
 # scatools
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/mjz1/scatools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mjz1/scatools/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 scatools is a package meant for performing copy number analysis in
