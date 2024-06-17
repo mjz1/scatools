@@ -8,7 +8,6 @@
 #' @param bin_name Name of the bins (e.g. `'10Mb'`, `'500Kb'`, `'chr_arm'`). If not provided is automatically detected based on binwidth.
 #' @param overwrite Logical. Overwrite previously existing results (default = FALSE)
 #' @param return_mat Logical. Return the binned depth matrix (default = FALSE)
-#' @param ... Additional parameters passed to `bplapply`
 #'
 #' @return If `return_mat=TRUE`, returns a sparse binned depth matrix. Otherwise returns `NULL`
 #'
@@ -25,8 +24,7 @@ bin_atac_frags <- function(sample_id,
                              progressbar = TRUE
                            ),
                            overwrite = FALSE,
-                           return_mat = FALSE,
-                           ...) {
+                           return_mat = FALSE) {
   # TODO: optional outdir if we don't want to save
 
   stopifnot(class(bins) %in% "GRanges")
@@ -39,19 +37,36 @@ bin_atac_frags <- function(sample_id,
   # Only bin frags if not done already
   if (!file.exists(file.path(bin_dir, "matrix.mtx.gz")) | overwrite) {
     logger::log_info("{sample_id} -- Computing fragments in {bin_name} bins using {ncores} cores")
-    tmp <- bin_frags(fragment_file = fragment_file, bins = bins, blacklist = blacklist, outdir = bin_dir, ncores = ncores, ...)
-    return(tmp)
+    count_mat <- do.call("rbind", BiocParallel::bplapply(
+      X = levels(BSgenome::seqnames(bins)),
+      FUN = bin_frags_chr,
+      bins = bins,
+      blacklist = blacklist,
+      fragment_file = fragment_file,
+      BPPARAM = bpparams
+    ))
+
+    if (!is.null(outdir)) {
+      cat("Writing to", bin_dir, "\n")
+      dir.create(bin_dir, showWarnings = FALSE, recursive = TRUE)
+
+      # Write output using dropletutils
+      DropletUtils::write10xCounts(
+        path = bin_dir,
+        x = count_mat,
+        barcodes = colnames(count_mat),
+        gene.id = rownames(count_mat),
+        version = "3",
+        overwrite = TRUE,
+        gene.type = "Bin Counts"
+      )
+    }
+
+    if (return_mat) {
+      return(count_mat)
+    }
   } else {
     logger::log_info("Binned counts file already found for {sample_id}")
-  }
-
-  # Invisible return
-  if (return_mat) {
-    # or bind and then return
-    res <- do.call("rbind", matlist)
-    return(res)
-  } else {
-    return(invisible(NULL))
   }
 }
 
@@ -70,7 +85,16 @@ bin_atac_frags <- function(sample_id,
 #'
 #' @return Binned depth sparse matrix
 #' @export
-bin_frags <- function(fragment_file, bins, blacklist = NULL, outdir = NULL, ncores = 1, bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE), verbose = FALSE, ...) {
+bin_frags <- function(fragment_file,
+                      bins,
+                      blacklist = NULL,
+                      outdir = NULL,
+                      ncores = 1,
+                      bpparams = BiocParallel::MulticoreParam(
+                        workers = ncores,
+                        progressbar = TRUE
+                      ),
+                      verbose = FALSE) {
   requireNamespace("BiocParallel")
 
   stopifnot(class(bins) %in% "GRanges")
@@ -246,9 +270,9 @@ get_chr_arm_bins <- function(genome = "hg38", calc_gc = FALSE, bs_genome = NULL)
 #' \dontrun{
 #' bins <- get_tiled_bins(BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 500000)
 #' }
-get_tiled_bins <- function(bs_genome = NULL, 
-                           tilewidth = 500000, 
-                           select_chrs = NULL, 
+get_tiled_bins <- function(bs_genome = NULL,
+                           tilewidth = 500000,
+                           select_chrs = NULL,
                            respect_chr_arms = TRUE) {
   if (is.null(bs_genome)) {
     logger::log_error("Must provide 'bs_genome'")
@@ -293,7 +317,7 @@ get_tiled_bins <- function(bs_genome = NULL,
   bins$binwidth <- IRanges::width(bins)
 
   bins$bin_id <- paste(seqnames(bins), start(bins), end(bins), sep = "_")
-  
+
   if (!is.null(select_chrs)) {
     bins <- keepSeqlevels(x = bins, value = select_chrs, pruning.mode = "coarse")
   }
@@ -446,7 +470,18 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
 
 #' @rdname get_ideal_mat
 #' @export
-add_ideal_mat <- function(sce, assay_name = "counts", gc = rowData(sce)$gc, n_freq = rowData(sce)$n_freq, map = rowData(sce)$map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
+add_ideal_mat <- function(sce, 
+                          assay_name = "counts", 
+                          gc = rowData(sce)$gc, 
+                          n_freq = rowData(sce)$n_freq, 
+                          map = rowData(sce)$map, 
+                          min_reads = 1, 
+                          max_N_freq = 0.05, 
+                          reads_outlier = 0.01,
+                          gc_outlier = 0.001, 
+                          min_map = 0.9, 
+                          ncores = 1, 
+                          verbose = FALSE) {
   id_val_mats <- get_ideal_mat(
     mat = assay(sce, assay_name),
     gc = gc,

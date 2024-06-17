@@ -5,11 +5,12 @@
 #' @param sce SingleCellExperiment object
 #' @param assay_name Name of assay to pull counts from. Ideally raw counts
 #' @param filt Filter cells or bins
-#' @param min_counts Minimum counts per cell/bin
-#' @param min_prop Minimum proportion of cells/bins with `min_counts`
+#' @param min_bin_counts A bin requires at least `min_bin_counts` across `min_bin_prop` proportion of cells to be kept
+#' @param min_bin_prop Minimum proportion of cells with at least `min_bin_counts` per bin in order to keep a bin
+#' @param min_cell_counts  A cell requires at least `min_cell_counts` across `min_cell_prop` proportion of bins to be kept
+#' @param min_cell_prop Minimum proportion of bins with at least `min_cell_counts` per cell in order to keep a cell
 #' @param flag_only Only flag cells/bins, do not remove
 #' @param gc_range Min and max GC values per bin to keep
-
 #'
 #' @return SingleCellExperiment object
 #' @export
@@ -17,8 +18,10 @@
 filter_sce <- function(sce, 
                        assay_name = "counts", 
                        which = c("bins", "cells"), 
-                       min_counts = 1, 
-                       min_prop = 0.95, 
+                       min_bin_counts = 1, 
+                       min_bin_prop = 0.95, 
+                       min_cell_counts = min_bin_counts,
+                       min_cell_prop = min_bin_prop,
                        flag_only = FALSE, 
                        gc_range = c(-Inf, Inf)) {
   which <- match.arg(arg = which, choices = c("bins", "cells"), several.ok = TRUE)
@@ -31,13 +34,14 @@ filter_sce <- function(sce,
 
   for (f in which) {
     if (f == "bins") {
-      m <- 1
-      bin_bool <- (colSums(apply(X = assay(sce, assay_name), MARGIN = m, function(X) X >= min_counts)) / ncol(sce)) >= min_prop
+      # m <- 1
+      # bin_bool <- (colSums(apply(X = assay(sce, assay_name), MARGIN = m, function(X) X >= min_counts)) / ncol(sce)) >= min_prop
+      bin_bool <- (Matrix::rowSums(assay(sce, assay_name) >= min_bin_counts) / ncol(sce)) >= min_bin_prop
 
       # Flag
       rowData(sce)[[paste0("keep_", f)]] <- bin_bool
 
-      logger::log_info("Keeping {sum(bin_bool)} of {length(bin_bool)} bins")
+      logger::log_info("Keeping {sum(bin_bool)} of {length(bin_bool)} bins with at least {min_bin_counts} counts in {min_bin_prop*100}% of cells")
 
       if (!flag_only) {
         sce <- sce[bin_bool, ]
@@ -46,13 +50,14 @@ filter_sce <- function(sce,
 
     if (f == "cells") {
       m <- 2
-      cell_bool <- (colSums(apply(X = assay(sce, assay_name), MARGIN = m, function(X) X >= min_counts)) / nrow(sce)) >= min_prop
-
+      # cell_bool <- (rowSums(apply(X = assay(sce, assay_name), MARGIN = m, function(X) X >= min_counts)) / nrow(sce)) >= min_prop
+      cell_bool <- (Matrix::colSums(assay(sce, assay_name) >= min_cell_counts) / nrow(sce)) >= min_cell_prop
+      
       # Flag
       colData(sce)[[paste0("keep_", f)]] <- cell_bool
 
-      logger::log_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells")
-
+      logger::log_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells with at least {min_cell_counts} counts in {min_cell_prop*100}% of cells")
+      
       if (!flag_only) {
         sce <- sce[, which(cell_bool)]
       }

@@ -14,8 +14,7 @@ bin_atac_frags(
   ncores = 1,
   bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
   overwrite = FALSE,
-  return_mat = FALSE,
-  ...
+  return_mat = FALSE
 )
 }
 \arguments{
@@ -34,8 +33,6 @@ bin_atac_frags(
 \item{overwrite}{Logical. Overwrite previously existing results (default = FALSE)}
 
 \item{return_mat}{Logical. Return the binned depth matrix (default = FALSE)}
-
-\item{...}{Additional parameters passed to \code{bplapply}}
 
 \item{fragment_files}{Named list or vector of fragment file paths}
 }

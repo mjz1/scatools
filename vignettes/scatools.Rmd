@@ -36,22 +36,21 @@ library(scatools)
 ```
 
 
-```{r, eval=FALSE}
+```{r, eval=TRUE, message=FALSE}
 ncores <- 4 # Adjust accordingly
 
 fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools")
-sample_id <- "test_sample"
 ```
 
 
 Now we process this data using `scatools`. Helper functions help us to create `GenomicRanges` bins, and compute GC content for downstream usage. Here we demonstrate using 10Mb bins.
 ```{r, include=FALSE}
 # Sideload bins
-bins <- get(data(bins_10mb))
-rm(bins_10mb)
+# bins <- get(data(bins_10mb))
+# rm(bins_10mb)
 ```
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 # Generate bins
 bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, 
                        tilewidth = 1e7, 
@@ -66,7 +65,7 @@ blacklist <- get_blacklist(genome = "hg38")
 A convenience wrapper is provided to perform the analysis
 ```{r, eval=FALSE}
 sce <- run_scatools(
-  sample_id = sample_id,
+  sample_id = "test_sample",
   fragment_file = fragment_file,
   blacklist = blacklist,
   outdir = "./example/",

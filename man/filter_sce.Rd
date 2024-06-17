@@ -8,8 +8,10 @@ filter_sce(
   sce,
   assay_name = "counts",
   which = c("bins", "cells"),
-  min_counts = 1,
-  min_prop = 0.95,
+  min_bin_counts = 1,
+  min_bin_prop = 0.95,
+  min_cell_counts = min_bin_counts,
+  min_cell_prop = min_bin_prop,
   flag_only = FALSE,
   gc_range = c(-Inf, Inf)
 )
@@ -19,9 +21,13 @@ filter_sce(
 
 \item{assay_name}{Name of assay to pull counts from. Ideally raw counts}
 
-\item{min_counts}{Minimum counts per cell/bin}
+\item{min_bin_counts}{A bin requires at least \code{min_bin_counts} across \code{min_bin_prop} proportion of cells to be kept}
 
-\item{min_prop}{Minimum proportion of cells/bins with \code{min_counts}}
+\item{min_bin_prop}{Minimum proportion of cells with at least \code{min_bin_counts} per bin in order to keep a bin}
+
+\item{min_cell_counts}{A cell requires at least \code{min_cell_counts} across \code{min_cell_prop} proportion of bins to be kept}
+
+\item{min_cell_prop}{Minimum proportion of bins with at least \code{min_cell_counts} per cell in order to keep a cell}
 
 \item{flag_only}{Only flag cells/bins, do not remove}
 

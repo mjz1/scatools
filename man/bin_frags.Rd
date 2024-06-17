@@ -11,8 +11,7 @@ bin_frags(
   outdir = NULL,
   ncores = 1,
   bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
-  verbose = FALSE,
-  ...
+  verbose = FALSE
 )
 }
 \arguments{
