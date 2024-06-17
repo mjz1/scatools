@@ -1,6 +1,6 @@
 Package: scatools
 Title: scATAC Tools and Utilities For Copy Number Analysis
-Version: 0.0.0.9000
+Version: 0.1
 Authors@R: 
     person("Matthew", "Zatzman", , "matthew.zatzman@gmail.com", role = c("aut", "cre"))
 Description: A collection of useful code for handling scATAC data.

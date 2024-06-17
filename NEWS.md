@@ -1,3 +1,5 @@
 # scatools (development version)
 
-* Initial CRAN submission.
+# SCAtools 0.1
+
+* Initial release
