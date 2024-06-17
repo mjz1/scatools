@@ -6,13 +6,14 @@
 \usage{
 run_scatools(
   sample_id,
-  bins,
-  fragments = NULL,
-  ArrowFile = NULL,
+  fragment_file,
+  bins = bins_10mb,
+  bin_name = prettyMb(getmode(width(bins))),
+  blacklist = NULL,
   outdir = sample_id,
+  rmsb_size = 0.1 * getmode(width(bins)),
+  gc_range = c(0.3, 0.8),
   overwrite = FALSE,
-  force_arrow = FALSE,
-  remove_doublets = FALSE,
   verbose = TRUE,
   save_h5ad = TRUE,
   ncores = 1
@@ -21,25 +22,27 @@ run_scatools(
 \arguments{
 \item{sample_id}{Sample id}
 
-\item{bins}{Bins granges}
+\item{bins}{Genomic ranges object with bins to use}
 
-\item{fragments}{Fragments file}
+\item{bin_name}{Name for the bins (e.g. 10Mb, 500Kb)}
 
-\item{ArrowFile}{ArrowFile}
+\item{blacklist}{Genome blacklist regions to filter against}
 
-\item{outdir}{Outdir}
+\item{outdir}{Output directory}
+
+\item{rmsb_size}{Remove small bins below a given size. Useful in cases where small bins are leftover at the ends of chromosomes. Defaults to 10\% of the binwidth.}
+
+\item{gc_range}{GC range for bins to keep. Removes large GC outliers}
 
 \item{overwrite}{Whether to overwrite previous results}
-
-\item{force_arrow}{recreate arrow file}
-
-\item{remove_doublets}{Logical. Whether to remove flagged doublets or not.}
 
 \item{verbose}{Verbosity}
 
 \item{save_h5ad}{Logical. Whether to save raw and processed h5ad files. Requires packages \code{zellkonverter} and \code{anndata}}
 
 \item{ncores}{Number of cores}
+
+\item{fragments}{Fragments file}
 }
 \value{
 \code{SingleCellExperiment} object

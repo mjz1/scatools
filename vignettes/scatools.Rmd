@@ -29,9 +29,8 @@ devtools::install_github("mjz1/scatools")
 
 ## Example
 
-We start by loading `scatools` and `ArchR`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells. This bed file was generated using the `reformatFragmentFiles()` function from the `ArchR` package.
+We start by loading `scatools`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells. This bed file was generated using the `reformatFragmentFiles()` function from the `ArchR` package.
 
-Note that all steps in this vignette work with a list of fragment files from multiple samples as well.
 ```{r setup, eval=TRUE, message=FALSE}
 library(scatools)
 ```
@@ -41,7 +40,7 @@ library(scatools)
 ncores <- 4 # Adjust accordingly
 
 fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools")
-names(fragment_file) <- "test_sample"
+sample_id <- "test_sample"
 ```
 
 
@@ -54,19 +53,25 @@ rm(bins_10mb)
 
 ```{r, eval=FALSE}
 # Generate bins
-bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, tilewidth = 1e7)
+bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38, 
+                       tilewidth = 1e7, 
+                       respect_chr_arms = TRUE
+                       )
+
+# Get blacklist regions
+blacklist <- get_blacklist(genome = "hg38")
 ```
 
 
 A convenience wrapper is provided to perform the analysis
 ```{r, eval=FALSE}
 sce <- run_scatools(
-  sample_id = names(fragment_file),
-  fragments = fragment_file,
+  sample_id = sample_id,
+  fragment_file = fragment_file,
+  blacklist = blacklist,
   outdir = "./example/",
   verbose = TRUE,
   overwrite = TRUE,
-  force_arrow = TRUE,
   ncores = ncores,
   bins = bins
 )

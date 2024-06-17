@@ -3,13 +3,14 @@
 #' Convenience wrapper to run a sample
 #'
 #' @param sample_id Sample id
-#' @param bins Bins granges
 #' @param fragments Fragments file
-#' @param ArrowFile ArrowFile
-#' @param outdir Outdir
+#' @param bins Genomic ranges object with bins to use
+#' @param bin_name Name for the bins (e.g. 10Mb, 500Kb)
+#' @param blacklist Genome blacklist regions to filter against
+#' @param outdir Output directory
+#' @param rmsb_size Remove small bins below a given size. Useful in cases where small bins are leftover at the ends of chromosomes. Defaults to 10% of the binwidth.
+#' @param gc_range GC range for bins to keep. Removes large GC outliers
 #' @param overwrite Whether to overwrite previous results
-#' @param force_arrow recreate arrow file
-#' @param remove_doublets Logical. Whether to remove flagged doublets or not.
 #' @param verbose Verbosity
 #' @param save_h5ad Logical. Whether to save raw and processed h5ad files. Requires packages `zellkonverter` and `anndata`
 #' @param ncores Number of cores
@@ -18,70 +19,51 @@
 #' @export
 #'
 run_scatools <- function(sample_id,
-                         bins,
-                         fragments = NULL,
-                         ArrowFile = NULL,
+                         fragment_file,
+                         bins = bins_10mb,
+                         bin_name = prettyMb(getmode(width(bins))),
+                         blacklist = NULL,
                          outdir = sample_id,
+                         rmsb_size = 0.1*getmode(width(bins)),
+                         gc_range = c(0.3, 0.8),
                          overwrite = FALSE,
-                         force_arrow = FALSE,
-                         remove_doublets = FALSE,
                          verbose = TRUE,
                          save_h5ad = TRUE,
                          ncores = 1) {
   # TODO INPUT VALIDATION
-
-  dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   outdir <- normalizePath(outdir)
+  dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
   logger::log_info("Output directory: {outdir}")
 
-  bin_name <- prettyMb(getmode(width(bins)))
-
   # sample directories
-  archr_dir <- file.path(outdir, "ArchR")
-  cnv_out <- file.path(outdir, "cnv")
-  bins_out <- file.path(cnv_out, "binned_counts")
-  processed <- file.path(cnv_out, "processed")
+  # cnv_out <- file.path(outdir)
+  # bins_out <- file.path(cnv_out, "binned_counts")
+  # processed <- file.path(cnv_out, "processed")
 
   # Check for final output and skip if present
-  final_out <- file.path(processed, glue::glue("{bin_name}_processed.sce"))
+  final_out <- file.path(outdir, glue::glue("{bin_name}_processed.sce"))
 
   if (file.exists(final_out) & !overwrite) {
     logger::log_info("Processed output already exists: {final_out}")
     return(get(load(final_out)))
   }
 
-  if (is.null(ArrowFile) & is.null(fragments)) {
-    stop(logger::log_error("Must provide either fragments.tsv or ArrowFile"), call. = FALSE)
+  if (is.null(fragment_file)) {
+    stop(logger::log_error("Must provide fragments.tsv"), call. = FALSE)
   }
-
-  # Default arrow file
-  if (is.null(ArrowFile)) {
-    ArrowFile <- glue::glue("{archr_dir}/{sample_id}.arrow")
-  }
-
-  proj <- create_arrow_file(
-    archr_dir = archr_dir,
-    ArrowFile = ArrowFile,
-    fragments = fragments,
-    sample_id = sample_id,
-    ncores = ncores,
-    force = force_arrow
-  )
-
-  # Binning and CNV processing
-  dir.create(bins_out, recursive = TRUE, showWarnings = FALSE)
-  dir.create(processed, recursive = TRUE, showWarnings = FALSE)
 
   # Scatools processing
   logger::log_info("BINNING FRAGMENTS")
 
   # Bin the fragments
   bin_atac_frags(
-    ArrowFile = ArrowFile,
-    blacklist = ArchR::getBlacklist(proj),
+    sample_id = sample_id,
+    fragment_file = fragment_file,
+    blacklist = blacklist,
     bins = bins,
-    outdir = bins_out,
+    bin_name = bin_name,
+    outdir = outdir,
     ncores = ncores,
     return_mat = FALSE,
     overwrite = overwrite
@@ -89,31 +71,22 @@ run_scatools <- function(sample_id,
 
   # Load the binned fragments and process
   sce <- load_atac_bins(
-    samples = file.path(bins_out, bin_name),
-    sample.names = sample_id,
-    ArchR_Proj = proj,
+    bin_dir = file.path(outdir, bin_name),
+    sample_id = sample_id,
     bins = bins,
-    BPPARAM = BiocParallel::bpparam(),
     verbose = verbose
   )
 
-  sce <- flagDoublets(sce, filterRatio = 2, remove = FALSE)
-
-  save_to(object = sce, save_to = file.path(processed, glue::glue("{bin_name}_raw.sce")))
+  save_to(object = sce, save_to = file.path(outdir, glue::glue("{bin_name}_raw.sce")))
 
   # Remove any small leftover bins less than 10% of the full bin length
-  sce_processed <- sce[rowRanges(sce)$binwidth > 0.1 * getmode(width(bins)), ]
+  sce_processed <- sce[!width(rowRanges(sce)) <= rmsb_size, ]
 
   # Length normalize so the tail end bins are in the same scale
   sce_processed <- length_normalize(sce_processed, assay_name = "counts", assay_to = "counts")
 
-  # Flag and remove doublets
-  if (remove_doublets) {
-    sce_processed <- flagDoublets(sce_processed, filterRatio = 2, remove = TRUE)
-  }
-
   sce_processed <- sce_processed %>%
-    filter_sce(gc_range = c(0.3, 1)) %>%
+    filter_sce(gc_range = gc_range) %>%
     add_ideal_mat(verbose = TRUE, ncores = ncores) %>%
     add_gc_cor(method = "modal", verbose = TRUE, ncores = ncores) %>%
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%

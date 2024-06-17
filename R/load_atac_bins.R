@@ -2,32 +2,21 @@
 #'
 #' Loads binned atac reads, merges cell-wise and bin-wise metadata, and performs QC.
 #'
-#' @param directory Folder containing samples
-#' @param ArchR_Proj Optional: ArchR project with matching cells and metadata
+#' @param bin_dir Directory with the bin counts
+#' @param sample_id Sample ID
 #' @param bins Optional: GRanges bins object
-#' @param BPPARAM Options to pass to `bplapply` for data loading. Provides minor speedup if loading many samples
 #' @param save_to File path in which to save the final output. Note: Will still return the sce object for downstream analysis.
-#' @param save_as NOT IMPLEMENTED YET. Select file formats to save the object. Can provide multiple values
-#' @param verbose Message verbosity (TRUE/FALSE)
-#'
-#' @inheritParams DropletUtils::read10xCounts
+#' @param verbose Message verbosity
 #'
 #' @return A `SingleCellExperiment` object.
 #' @export
 #'
-load_atac_bins <- function(samples,
-                           sample.names,
-                           ArchR_Proj = NULL,
+load_atac_bins <- function(bin_dir,
+                           sample_id,
                            bins = NULL,
-                           BPPARAM = BiocParallel::bpparam(),
                            save_to = NULL,
-                           verbose = FALSE,
-                           save_as = c("sce", "adata", "seurat")) {
-  if (verbose) {
-    logger::log_info("Loading bin counts in {length(samples)} samples using {BPPARAM$workers} threads")
-  }
-
-  sce <- DropletUtils::read10xCounts(samples = samples, sample.names = sample.names, col.names = TRUE, BPPARAM = BPPARAM)
+                           verbose = TRUE) {
+  sce <- DropletUtils::read10xCounts(samples = bin_dir, sample.names = sample_id, col.names = TRUE)
 
   # Save raw counts in a seperate slot
   assay(sce, "raw_counts") <- assay(sce, "counts")
@@ -35,55 +24,19 @@ load_atac_bins <- function(samples,
   # Reset the barcodes to remove prepended index (in case of multi-sample loading)
   colnames(sce) <- sce$Barcode
 
-  # Additional processing if matching ArchR project is provided
-  if (!is.null(ArchR_Proj)) {
-    if (verbose) {
-      logger::log_info("ArchR project provided. Merging cell metadata")
-    }
-    # Filter down these cells to be those in the ArchR project
-    # TODO: Allow for custom filtering
-    # TODO: Enable more flexible metadata provision
-    sce <- sce[, which(colnames(sce) %in% rownames(ArchR_Proj@cellColData))]
-
-    if (!all(rownames(ArchR_Proj@cellColData[colnames(sce), ]) == colnames(sce))) {
-      logger::log_error("Cells in ArchR project not matching with sce object")
-    }
-    # Line up and merge
-    # TODO: check this line for error:
-    # Error in .validInput(input = ArchRProj, name = "ArchRProj", valid = c("ArchRProject",  :
-    # Input value for 'ArchRProj' is not a null,archrproject, (ArchRProj = function) please supply valid input!
-    colData(sce) <- cbind(colData(sce), subset(ArchR_Proj@cellColData[colnames(sce), ], select = -c(Sample)))
-
-    # Merge blacklist information if present
-    try(metadata(sce)$blacklist <- ArchR::getBlacklist(ArchR_Proj))
-  }
-
   # Merge bin level information if provided
   if (!is.null(bins)) {
     # Merge bin level information as GRanges
     rowRanges(sce) <- sort(GenomicRanges::makeGRangesFromDataFrame(merge(rowData(sce), as.data.frame(bins), by.x = "ID", by.y = "bin_id"), keep.extra.columns = TRUE))
     rownames(sce) <- rowData(sce)$ID
-
-    # Grab these values from the bins df
-    if (!is.null(bins$gc)) {
-      gc <- bins$gc
-    }
-    if (!is.null(bins$n_freq)) {
-      n_freq <- bins$n_freq
-    }
-
-    # TODO: add bin arm information
-    # rowRanges(sce)$chr_arm <- with(rowRanges(sce), interaction(seqnames, arm, sep = "", lex.order = T))
   }
 
   if (verbose) {
     logger::log_info("Adding cellwise and binwise QC metrics")
   }
+  
   sce <- scuttle::addPerCellQCMetrics(sce)
   sce <- scuttle::addPerFeatureQCMetrics(sce, subsets = get_f_idx(sce$Sample))
-
-  # Throw error if row names are not matching
-  stopifnot(all(rownames(sce) == rowData(sce)$ID))
 
   if (!is.null(save_to)) {
     .save_to(object = sce, save_to = save_to, verbose = verbose)

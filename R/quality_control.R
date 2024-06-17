@@ -14,7 +14,13 @@
 #' @return SingleCellExperiment object
 #' @export
 #'
-filter_sce <- function(sce, assay_name = "counts", which = c("bins", "cells"), min_counts = 1, min_prop = 0.95, flag_only = FALSE, gc_range = c(-Inf, Inf)) {
+filter_sce <- function(sce, 
+                       assay_name = "counts", 
+                       which = c("bins", "cells"), 
+                       min_counts = 1, 
+                       min_prop = 0.95, 
+                       flag_only = FALSE, 
+                       gc_range = c(-Inf, Inf)) {
   which <- match.arg(arg = which, choices = c("bins", "cells"), several.ok = TRUE)
 
 

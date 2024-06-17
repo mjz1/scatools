@@ -37,6 +37,7 @@ Imports:
     reshape2,
     S4Vectors,
     scuttle,
+    Seurat,
     stringr,
     tidyr,
     tidyselect,
@@ -54,8 +55,8 @@ Suggests:
     gtools,
     knitr,
     rmarkdown,
-    Seurat,
     testthat (>= 3.0.0),
+    vegan,
     zellkonverter
 Config/testthat/edition: 3
 Depends: 

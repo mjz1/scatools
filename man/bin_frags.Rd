@@ -5,7 +5,7 @@
 \title{Bin fragments from ArrowFile}
 \usage{
 bin_frags(
-  ArrowFile,
+  fragment_file,
   bins,
   blacklist = NULL,
   outdir = NULL,
@@ -16,7 +16,7 @@ bin_frags(
 )
 }
 \arguments{
-\item{ArrowFile}{ArrowFile}
+\item{fragment_file}{Fragment file}
 
 \item{bins}{Bins GRanges object}
 
@@ -34,5 +34,5 @@ bin_frags(
 Binned depth sparse matrix
 }
 \description{
-Parallel enabled depth counting of read fragments in given genomic bins from \code{ArchR} processed ArrowFiles
+Parallel enabled depth counting of read fragments in given genomic bins from fragment files
 }

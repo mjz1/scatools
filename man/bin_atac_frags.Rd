@@ -5,11 +5,12 @@
 \title{Bin atac fragments}
 \usage{
 bin_atac_frags(
-  ArrowFiles,
+  sample_id,
+  fragment_file,
   bins,
-  blacklist = NULL,
+  bin_name,
+  blacklist = blacklist,
   outdir,
-  bin_name = prettyMb(getmode(width(bins))),
   ncores = 1,
   bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
   overwrite = FALSE,
@@ -18,13 +19,13 @@ bin_atac_frags(
 )
 }
 \arguments{
-\item{ArrowFiles}{Named list or vector of ArrowFile paths}
+\item{fragment_file}{Fragment file}
 
 \item{bins}{Bins GRanges object}
 
-\item{outdir}{Optional: Directory to write the \code{.mtx}, \code{barcodes}, and \code{bins} files}
-
 \item{bin_name}{Name of the bins (e.g. \code{'10Mb'}, \code{'500Kb'}, \code{'chr_arm'}). If not provided is automatically detected based on binwidth.}
+
+\item{outdir}{Optional: Directory to write the \code{.mtx}, \code{barcodes}, and \code{bins} files}
 
 \item{ncores}{Number of cores to use}
 
@@ -35,6 +36,8 @@ bin_atac_frags(
 \item{return_mat}{Logical. Return the binned depth matrix (default = FALSE)}
 
 \item{...}{Additional parameters passed to \code{bplapply}}
+
+\item{fragment_files}{Named list or vector of fragment file paths}
 }
 \value{
 If \code{return_mat=TRUE}, returns a sparse binned depth matrix. Otherwise returns \code{NULL}
