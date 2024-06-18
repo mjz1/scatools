@@ -7,28 +7,33 @@
 bin_atac_frags(
   sample_id,
   fragment_file,
+  cells,
   bins,
   bin_name,
-  blacklist = blacklist,
+  blacklist,
   outdir,
   ncores = 1,
-  bpparams = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
+  BPPARAM = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
   overwrite = FALSE,
   return_mat = FALSE
 )
 }
 \arguments{
-\item{fragment_file}{Fragment file}
+\item{sample_id}{Sample id}
 
-\item{bins}{Bins GRanges object}
+\item{fragment_file}{Fragments file}
+
+\item{cells}{A vector of cell barcodes. If not provided will use all barcodes}
+
+\item{bins}{Genomic ranges object with bins to use}
 
 \item{bin_name}{Name of the bins (e.g. \code{'10Mb'}, \code{'500Kb'}, \code{'chr_arm'}). If not provided is automatically detected based on binwidth.}
 
-\item{outdir}{Optional: Directory to write the \code{.mtx}, \code{barcodes}, and \code{bins} files}
+\item{blacklist}{Genome blacklist regions to filter against}
 
-\item{ncores}{Number of cores to use}
+\item{outdir}{Output directory}
 
-\item{bpparams}{Options to \code{BPPARAM} to enable multithreading}
+\item{ncores}{Number of cores}
 
 \item{overwrite}{Logical. Overwrite previously existing results (default = FALSE)}
 

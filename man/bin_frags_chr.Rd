@@ -4,23 +4,18 @@
 \alias{bin_frags_chr}
 \title{Bin scATAC fragments}
 \usage{
-bin_frags_chr(chrom, bins, blacklist = NULL, fragment_file)
+bin_frags_chr(fragments_chr, bins, blacklist = NULL)
 }
 \arguments{
-\item{chrom}{A single chromosome to compute depth information}
+\item{fragments_chr}{A single chromosome fragments}
 
-\item{bins}{A list of bins (can include all chromosomes)}
+\item{bins}{A GRanges bins (can include all chromosomes)}
 
-\item{fragment_file}{Path to an fragment file to bin}
+\item{blacklist}{Genome blacklist regions to filter against}
 }
 \value{
 Sparse matrix of binned fragment counts
 }
 \description{
 \code{bin_frags_chr} computes the fragments across bins in a single chromosome from an ArchR ArrowFile
-}
-\examples{
-\dontrun{
-dp_mat <- bin_frags_chr(chrom = "chr1", bins = get_chr_arm_bins("hg38"), ArrowFile = ArrowFile)
-}
 }

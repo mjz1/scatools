@@ -3,7 +3,8 @@
 #' Convenience wrapper to run a sample
 #'
 #' @param sample_id Sample id
-#' @param fragments Fragments file
+#' @param fragment_file Fragments file
+#' @param cells A vector of cell barcodes. If not provided will use all barcodes
 #' @param bins Genomic ranges object with bins to use
 #' @param bin_name Name for the bins (e.g. 10Mb, 500Kb)
 #' @param blacklist Genome blacklist regions to filter against
@@ -20,6 +21,7 @@
 #'
 run_scatools <- function(sample_id,
                          fragment_file,
+                         cells = NULL,
                          bins = bins_10mb,
                          bin_name = prettyMb(getmode(width(bins))),
                          blacklist = NULL,
@@ -60,6 +62,7 @@ run_scatools <- function(sample_id,
   bin_atac_frags(
     sample_id = sample_id,
     fragment_file = fragment_file,
+    cells = cells,
     blacklist = blacklist,
     bins = bins,
     bin_name = bin_name,

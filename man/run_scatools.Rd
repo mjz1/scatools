@@ -7,6 +7,7 @@
 run_scatools(
   sample_id,
   fragment_file,
+  cells = NULL,
   bins = bins_10mb,
   bin_name = prettyMb(getmode(width(bins))),
   blacklist = NULL,
@@ -21,6 +22,10 @@ run_scatools(
 }
 \arguments{
 \item{sample_id}{Sample id}
+
+\item{fragment_file}{Fragments file}
+
+\item{cells}{A vector of cell barcodes. If not provided will use all barcodes}
 
 \item{bins}{Genomic ranges object with bins to use}
 
@@ -41,8 +46,6 @@ run_scatools(
 \item{save_h5ad}{Logical. Whether to save raw and processed h5ad files. Requires packages \code{zellkonverter} and \code{anndata}}
 
 \item{ncores}{Number of cores}
-
-\item{fragments}{Fragments file}
 }
 \value{
 \code{SingleCellExperiment} object

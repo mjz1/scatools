@@ -6,7 +6,7 @@
 \usage{
 get_tiled_bins(
   bs_genome = NULL,
-  tilewidth = 5e+05,
+  tilewidth = 500000,
   select_chrs = NULL,
   respect_chr_arms = TRUE
 )
