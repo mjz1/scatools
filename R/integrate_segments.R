@@ -45,10 +45,10 @@ integrate_segments <- function(x, y, granges_signal_colname, drop_na = TRUE) {
   }
 
 
-  gr.comb <- bind_rows(df_x, df_y) %>% makeGRangesFromDataFrame(keep.extra.columns = TRUE)
+  gr.comb <- dplyr::bind_rows(df_x, df_y) %>% GenomicRanges::makeGRangesFromDataFrame(keep.extra.columns = TRUE)
 
-  x <- makeGRangesFromDataFrame(df_x, keep.extra.columns = TRUE)
-  y <- makeGRangesFromDataFrame(df_y, keep.extra.columns = TRUE)
+  x <- GenomicRanges::makeGRangesFromDataFrame(df_x, keep.extra.columns = TRUE)
+  y <- GenomicRanges::makeGRangesFromDataFrame(df_y, keep.extra.columns = TRUE)
 
   # Disjoin all overlapping ranges
   gr.comb.disjoin <- disjoin(gr.comb)
