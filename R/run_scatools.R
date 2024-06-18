@@ -15,6 +15,7 @@
 #' @param verbose Verbosity
 #' @param save_h5ad Logical. Whether to save raw and processed h5ad files. Requires packages `zellkonverter` and `anndata`
 #' @param ncores Number of cores
+#' @param BPPARAM BiocParallel Parameters
 #'
 #' @return `SingleCellExperiment` object
 #' @export
@@ -31,7 +32,8 @@ run_scatools <- function(sample_id,
                          overwrite = FALSE,
                          verbose = TRUE,
                          save_h5ad = TRUE,
-                         ncores = 1) {
+                         ncores = 1,
+                         BPPARAM = BiocParallel::SerialParam()) {
   # TODO INPUT VALIDATION
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   outdir <- normalizePath(outdir)
@@ -68,6 +70,7 @@ run_scatools <- function(sample_id,
     bin_name = bin_name,
     outdir = outdir,
     ncores = ncores,
+    BPPARAM = BPPARAM,
     return_mat = FALSE,
     overwrite = overwrite
   )

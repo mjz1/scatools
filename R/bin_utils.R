@@ -13,16 +13,13 @@
 #' @export
 bin_atac_frags <- function(sample_id,
                            fragment_file,
-                           cells,
+                           cells = NULL,
                            bins,
-                           bin_name,
-                           blacklist,
+                           bin_name = prettyMb(getmode(width(bins))),
+                           blacklist = NULL,
                            outdir,
                            ncores = 1,
-                           BPPARAM = BiocParallel::MulticoreParam(
-                             workers = ncores,
-                             progressbar = TRUE
-                           ),
+                           BPPARAM = BiocParallel::SerialParam(),
                            overwrite = FALSE,
                            return_mat = FALSE) {
 
@@ -42,7 +39,8 @@ bin_atac_frags <- function(sample_id,
 
     # Convert to GenomicRanges
     logger::log_info("{sample_id} -- Loading fragments...")
-    fragments <- data.table::fread(fragment_file)
+    fragments <- data.table::fread(fragment_file, header = FALSE)
+    logger::log_success("Fragments loaded!")
     colnames(fragments)[1:5] <- c("chr", "start", "end", "barcode", "umi")
     fragments <- fragments[fragments$barcode %in% cells & fragments$chr %in% GenomeInfoDb::seqlevelsInUse(bins),]
     fragments <- GenomicRanges::makeGRangesFromDataFrame(fragments, keep.extra.columns = T)
@@ -107,6 +105,8 @@ bin_frags_chr <- function(fragments_chr,
 
   chrom <- GenomeInfoDb::seqlevelsInUse(fragments_chr)
 
+  cli::cli_alert_info("Binning {chrom}")
+
   # Remove fragments overlapping with blacklist regions
   if (!is.null(blacklist)) {
     if (!class(blacklist) %in% "GRanges") {
@@ -168,9 +168,6 @@ bin_frags_chr <- function(fragments_chr,
                          sep = "_"
   )
 
-  # Clean and return
-  rm(fragments_chr, matchID)
-  gc()
   return(mat)
 }
 
