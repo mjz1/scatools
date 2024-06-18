@@ -25,7 +25,6 @@ bin_atac_frags <- function(sample_id,
                            ),
                            overwrite = FALSE,
                            return_mat = FALSE) {
-  # TODO: optional outdir if we don't want to save
 
   stopifnot(class(bins) %in% "GRanges")
 
@@ -48,10 +47,8 @@ bin_atac_frags <- function(sample_id,
     fragments <- fragments[fragments$barcode %in% cells & fragments$chr %in% GenomeInfoDb::seqlevelsInUse(bins),]
     fragments <- GenomicRanges::makeGRangesFromDataFrame(fragments, keep.extra.columns = T)
     fragments <- GenomicRanges::split(fragments, GenomeInfoDb::seqnames(fragments))
-    # fragments <- GenomicRanges::makeGRangesFromDataFrame(.process_chr_chunk(fragments), keep.extra.columns = T)
 
     # Only keep fragments in called cells
-    # fragments <- fragments[S4Vectors::mcols(fragments)$barcode %in% cells]
     logger::log_info("{sample_id} -- Computing fragments in {bin_name} bins using {ncores} cores")
     count_mat <- BiocParallel::bplapply(
       X = fragments,
@@ -110,24 +107,6 @@ bin_frags_chr <- function(fragments_chr,
 
   chrom <- GenomeInfoDb::seqlevelsInUse(fragments_chr)
 
-  # # Create and open TabixFile object
-  # tabix <- Rsamtools::TabixFile(fragment_file)
-  # Rsamtools::open.TabixFile(tabix)
-  # # Read data for the specified chromosome
-  # fragments <- Rsamtools::scanTabix(tabix, param = GRanges(seqnames = chrom, ranges = IRanges(start = 1, end = 536870912)))[[1]]
-  # # Close the Tabix file
-  # Rsamtools::close.TabixFile(tabix)
-  #
-  # # Convert to genomicranges
-  # fragments <- GenomicRanges::makeGRangesFromDataFrame(.process_chr_chunk(fragments), keep.extra.columns = T)
-  #
-  # if (is.null(cells)) {
-  #   cells = unique(S4Vectors::mcols(fragments)$barcode)
-  # }
-  #
-  # # Only keep fragments in called cells
-  # fragments <- fragments[S4Vectors::mcols(fragments)$barcode %in% cells]
-
   # Remove fragments overlapping with blacklist regions
   if (!is.null(blacklist)) {
     if (!class(blacklist) %in% "GRanges") {
@@ -170,9 +149,6 @@ bin_frags_chr <- function(fragments_chr,
     )
   )
 
-  # Subset in case of missing cells
-  # cells <- cells[cells %in% S4Vectors::mcols(fragments)$barcode
-
   # Match Cells
   matchID <- S4Vectors::match(S4Vectors::mcols(fragments_chr)$barcode, cells)
 
@@ -197,23 +173,6 @@ bin_frags_chr <- function(fragments_chr,
   gc()
   return(mat)
 }
-
-
-.process_chr_chunk <- function(data_chr) {
-  # Split the data into columns (assuming tab-separated values)
-  dt <- data.table::rbindlist(lapply(strsplit(data_chr, "\t"), function(x) as.list(x)))
-
-  # Assign appropriate column names
-  colnames(dt)[1:5] <- c("chr", "start", "end", "barcode", "umi")
-  # Convert columns to appropriate types
-  dt$chr <- as.factor(dt$chr)
-  dt$start <- as.integer(dt$start)
-  dt$end <- as.integer(dt$end)
-  dt$barcode <- as.factor(dt$barcode)
-  dt$umi <- as.integer(dt$umi)
-  return(dt)
-}
-
 
 #' Get chromosome arm bins
 #'
