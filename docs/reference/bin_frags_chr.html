@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scatools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,13 @@
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/TCGA.html">Patient: `r params$patient`</a>
+    <a class="dropdown-item" href="../articles/Untitled.html">Untitled</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -54,21 +61,25 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">bin_frags_chr</span><span class="op">(</span><span class="va">chrom</span>, <span class="va">bins</span>, blacklist <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">fragment_file</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">bin_frags_chr</span><span class="op">(</span><span class="va">fragments_chr</span>, <span class="va">bins</span>, <span class="va">cells</span>, blacklist <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-    <dl><dt>chrom</dt>
-<dd><p>A single chromosome to compute depth information</p></dd>
+    <dl><dt>fragments_chr</dt>
+<dd><p>A single chromosome fragments</p></dd>
 
 
 <dt>bins</dt>
-<dd><p>A list of bins (can include all chromosomes)</p></dd>
+<dd><p>Genomic ranges object with bins to use</p></dd>
 
 
-<dt>fragment_file</dt>
-<dd><p>Path to an fragment file to bin</p></dd>
+<dt>cells</dt>
+<dd><p>A vector of cell barcodes. If not provided will use all barcodes</p></dd>
+
+
+<dt>blacklist</dt>
+<dd><p>Genome blacklist regions to filter against</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -78,13 +89,6 @@
 <p>Sparse matrix of binned fragment counts</p>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">dp_mat</span> <span class="op">&lt;-</span> <span class="fu">bin_frags_chr</span><span class="op">(</span>chrom <span class="op">=</span> <span class="st">"chr1"</span>, bins <span class="op">=</span> <span class="fu"><a href="get_chr_arm_bins.html">get_chr_arm_bins</a></span><span class="op">(</span><span class="st">"hg38"</span><span class="op">)</span>, ArrowFile <span class="op">=</span> <span class="va">ArrowFile</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 

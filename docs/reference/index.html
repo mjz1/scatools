@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scatools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,13 @@
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/TCGA.html">Patient: `r params$patient`</a>
+    <a class="dropdown-item" href="../articles/Untitled.html">Untitled</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -84,11 +91,6 @@
         <dd>Bin atac fragments</dd>
       </dl><dl><dt>
           
-          <code><a href="bin_frags.html">bin_frags()</a></code> 
-        </dt>
-        <dd>Bin fragments from ArrowFile</dd>
-      </dl><dl><dt>
-          
           <code><a href="bin_frags_chr.html">bin_frags_chr()</a></code> 
         </dt>
         <dd>Bin scATAC fragments</dd>
@@ -97,6 +99,16 @@
           <code><a href="bin_snp_data.html">bin_snp_data()</a></code> 
         </dt>
         <dd>Bin SNPs into genomic segments</dd>
+      </dl><dl><dt>
+          
+          <code><a href="bin_snp_data2.html">bin_snp_data2()</a></code> 
+        </dt>
+        <dd>Bin SNP Data</dd>
+      </dl><dl><dt>
+          
+          <code><a href="bind_sublist.html">bind_sublist()</a></code> 
+        </dt>
+        <dd>Bind sublists within lists</dd>
       </dl><dl><dt>
           
           <code><a href="bins_10mb.html">bins_10mb</a></code> 
@@ -134,7 +146,7 @@
         <dd>Cluster using Seurat</dd>
       </dl><dl><dt>
           
-          <code><a href="cnaHeatmap.html">cnaHeatmap()</a></code> 
+          <code><a href="cnaHeatmap.html">cnaHeatmap()</a></code> <code><a href="cnaHeatmap.html">cloneCnaHeatmap()</a></code> 
         </dt>
         <dd>Plot copy number heatmap</dd>
       </dl><dl><dt>
@@ -264,6 +276,11 @@
         <dd>logNorm()</dd>
       </dl><dl><dt>
           
+          <code><a href="logr_col_fun.html">logr_col_fun()</a></code> 
+        </dt>
+        <dd>Log Ratio Colors</dd>
+      </dl><dl><dt>
+          
           <code><a href="merge_segments.html">merge_segments()</a></code> 
         </dt>
         <dd>Merge segment levels</dd>
@@ -342,6 +359,11 @@
           <code><a href="rebin_sce.html">rebin_sce()</a></code> 
         </dt>
         <dd>Rebin <code>SingleCellExperiment</code> object</dd>
+      </dl><dl><dt>
+          
+          <code><a href="run_sc_hmmcopy.html">run_sc_hmmcopy()</a></code> 
+        </dt>
+        <dd>Single Cell HMMcopy</dd>
       </dl><dl><dt>
           
           <code><a href="run_scatools.html">run_scatools()</a></code> 

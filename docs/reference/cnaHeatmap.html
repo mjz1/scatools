@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scatools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,13 @@
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/TCGA.html">Patient: `r params$patient`</a>
+    <a class="dropdown-item" href="../articles/Untitled.html">Untitled</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -73,6 +80,19 @@
 <span>  bulk_cn_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  raster_quality <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  row_split <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">cloneCnaHeatmap</span><span class="op">(</span></span>
+<span>  <span class="va">sce</span>,</span>
+<span>  assay_name <span class="op">=</span> <span class="st">"counts"</span>,</span>
+<span>  clone_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"cells"</span>, <span class="st">"bins"</span>, <span class="st">"both"</span><span class="op">)</span>,</span>
+<span>  log2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  center <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  clust_lab <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  aggr_fun <span class="op">=</span> <span class="va">mean</span>,</span>
+<span>  round <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -135,6 +155,10 @@
 <dd><p>Logical: Message verbosity</p></dd>
 
 
+<dt>top_annotation</dt>
+<dd><p>Top annotation as per <code><a href="https://rdrr.io/pkg/ComplexHeatmap/man/columnAnnotation.html" class="external-link">ComplexHeatmap::columnAnnotation()</a></code></p></dd>
+
+
 <dt>bulk_cn_col</dt>
 <dd><p>Name of column in <code>rowRanges(sce)</code> that contains bulk copy number data to plot on top of heatmap</p></dd>
 
@@ -143,8 +167,24 @@
 <dd><p>Quality of raster (default: 10)</p></dd>
 
 
+<dt>row_split</dt>
+<dd><p>Row split for <code><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">ComplexHeatmap::Heatmap()</a></code></p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional parameters that can be passed to <code><a href="https://rdrr.io/pkg/ComplexHeatmap/man/Heatmap.html" class="external-link">ComplexHeatmap::Heatmap()</a></code></p></dd>
+
+
+<dt>clust_lab</dt>
+<dd><p>Cluster labels</p></dd>
+
+
+<dt>aggr_fun</dt>
+<dd><p>Aggregation function</p></dd>
+
+
+<dt>round</dt>
+<dd><p>Round pseudobulked values to integers</p></dd>
 
 </dl></div>
     <div class="section level2">

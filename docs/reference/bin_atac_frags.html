@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scatools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,13 @@
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/TCGA.html">Patient: `r params$patient`</a>
+    <a class="dropdown-item" href="../articles/Untitled.html">Untitled</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -57,12 +64,13 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">bin_atac_frags</span><span class="op">(</span></span>
 <span>  <span class="va">sample_id</span>,</span>
 <span>  <span class="va">fragment_file</span>,</span>
+<span>  cells <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">bins</span>,</span>
-<span>  <span class="va">bin_name</span>,</span>
-<span>  blacklist <span class="op">=</span> <span class="va">blacklist</span>,</span>
+<span>  bin_name <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  blacklist <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">outdir</span>,</span>
 <span>  ncores <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  bpparams <span class="op">=</span> <span class="fu">BiocParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/MulticoreParam-class.html" class="external-link">MulticoreParam</a></span><span class="op">(</span>workers <span class="op">=</span> <span class="va">ncores</span>, progressbar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  BPPARAM <span class="op">=</span> <span class="fu">BiocParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_mat <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -70,32 +78,44 @@
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
-    <dl><dt>fragment_file</dt>
-<dd><p>Fragment file</p></dd>
+    <dl><dt>sample_id</dt>
+<dd><p>Sample id</p></dd>
+
+
+<dt>fragment_file</dt>
+<dd><p>Fragments file</p></dd>
+
+
+<dt>cells</dt>
+<dd><p>A vector of cell barcodes. If not provided will use all barcodes</p></dd>
 
 
 <dt>bins</dt>
-<dd><p>Bins GRanges object</p></dd>
+<dd><p>Genomic ranges object with bins to use</p></dd>
 
 
 <dt>bin_name</dt>
-<dd><p>Name of the bins (e.g. <code>'10Mb'</code>, <code>'500Kb'</code>, <code>'chr_arm'</code>). If not provided is automatically detected based on binwidth.</p></dd>
+<dd><p>bin_name Name of the bins (e.g. <code>'10Mb'</code>, <code>'500Kb'</code>, <code>'chr_arm'</code>). If not provided is automatically detected based on binwidth.</p></dd>
+
+
+<dt>blacklist</dt>
+<dd><p>Genome blacklist regions to filter against</p></dd>
 
 
 <dt>outdir</dt>
-<dd><p>Optional: Directory to write the <code>.mtx</code>, <code>barcodes</code>, and <code>bins</code> files</p></dd>
+<dd><p>Output directory</p></dd>
 
 
 <dt>ncores</dt>
-<dd><p>Number of cores to use</p></dd>
+<dd><p>Number of cores</p></dd>
 
 
-<dt>bpparams</dt>
-<dd><p>Options to <code>BPPARAM</code> to enable multithreading</p></dd>
+<dt>BPPARAM</dt>
+<dd><p>BiocParallel Parameters</p></dd>
 
 
 <dt>overwrite</dt>
-<dd><p>Logical. Overwrite previously existing results (default = FALSE)</p></dd>
+<dd><p>Whether to overwrite previous results</p></dd>
 
 
 <dt>return_mat</dt>
@@ -106,7 +126,7 @@
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>If <code>return_mat=TRUE</code>, returns a sparse binned depth matrix. Otherwise returns <code>NULL</code></p>
+<p>If <code>return_mat=TRUE</code>, returns a sparse binned depth matrix. Otherwise returns <code>NULL</code>, but will save the results to a 10X style market matrix <code>outdir</code></p>
 
 
     </div>

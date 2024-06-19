@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scatools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -23,6 +23,13 @@
 </li>
 <li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/TCGA.html">Patient: `r params$patient`</a>
+    <a class="dropdown-item" href="../articles/Untitled.html">Untitled</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -57,6 +64,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">run_scatools</span><span class="op">(</span></span>
 <span>  <span class="va">sample_id</span>,</span>
 <span>  <span class="va">fragment_file</span>,</span>
+<span>  cells <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bins <span class="op">=</span> <span class="va">bins_10mb</span>,</span>
 <span>  bin_name <span class="op">=</span> <span class="fu">prettyMb</span><span class="op">(</span><span class="fu">getmode</span><span class="op">(</span><span class="fu">width</span><span class="op">(</span><span class="va">bins</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  blacklist <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -66,7 +74,8 @@
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  save_h5ad <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  ncores <span class="op">=</span> <span class="fl">1</span></span>
+<span>  ncores <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  BPPARAM <span class="op">=</span> <span class="fu">BiocParallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -76,12 +85,20 @@
 <dd><p>Sample id</p></dd>
 
 
+<dt>fragment_file</dt>
+<dd><p>Fragments file</p></dd>
+
+
+<dt>cells</dt>
+<dd><p>A vector of cell barcodes. If not provided will use all barcodes</p></dd>
+
+
 <dt>bins</dt>
 <dd><p>Genomic ranges object with bins to use</p></dd>
 
 
 <dt>bin_name</dt>
-<dd><p>Name for the bins (e.g. 10Mb, 500Kb)</p></dd>
+<dd><p>bin_name Name of the bins (e.g. <code>'10Mb'</code>, <code>'500Kb'</code>, <code>'chr_arm'</code>). If not provided is automatically detected based on binwidth.</p></dd>
 
 
 <dt>blacklist</dt>
@@ -116,8 +133,8 @@
 <dd><p>Number of cores</p></dd>
 
 
-<dt>fragments</dt>
-<dd><p>Fragments file</p></dd>
+<dt>BPPARAM</dt>
+<dd><p>BiocParallel Parameters</p></dd>
 
 </dl></div>
     <div class="section level2">

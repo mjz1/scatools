@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 # Introduction
+
 We start by loading `scatools` and `ArchR`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells. This bed file was generated using the `reformatFragmentFiles()` function from the `ArchR` package.
 
 Note this vignette is currently set up with dummy normal data and is purely intended to demonstrate package functionality. There are no CNV changes in the test data.
@@ -29,28 +30,22 @@ devtools::install_github("mjz1/scatools")
 
 ## Example
 
-We start by loading `scatools`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells. This bed file was generated using the `reformatFragmentFiles()` function from the `ArchR` package.
+We start by loading `scatools`, as well as the filepath to an example `fragments.bed.gz` file containing scATAC fragments from 100 normal mammary cells.
 
-```{r setup, eval=TRUE, message=FALSE}
+```{r setup, eval=TRUE, message=FALSE, warning=FALSE}
 library(scatools)
-```
+library(dittoSeq)
+library(ComplexHeatmap)
+library(patchwork)
 
-
-```{r, eval=TRUE, message=FALSE}
 ncores <- 4 # Adjust accordingly
 
 fragment_file <- system.file("extdata", "fragments.bed.gz", package = "scatools")
 ```
 
-
 Now we process this data using `scatools`. Helper functions help us to create `GenomicRanges` bins, and compute GC content for downstream usage. Here we demonstrate using 10Mb bins.
-```{r, include=FALSE}
-# Sideload bins
-# bins <- get(data(bins_10mb))
-# rm(bins_10mb)
-```
 
-To generate your own `bins` object, a helper function is provided. Please note that running this function requires installation of 
+**Note**: To generate your own `bins` object, a helper function is provided. Please note that running this function requires installation of a `BSgenome` of your choice. Here we use hg38.
 
 ```{r, eval=FALSE}
 # if (!require("BiocManager", quietly = TRUE))
@@ -65,19 +60,20 @@ bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38,
 ```
 
 ```{r, include=FALSE}
-bins <- data("bins_10mb")
+# Sideload bins
+bins <- get(data(bins_10mb))
+rm(bins_10mb)
 ```
 
-
-We load blacklist regions for our genome
+We load blacklist regions for our genome. These are used to remove fragments found in low mappability or high signal regions as defined [here](https://github.com/Boyle-Lab/Blacklist).
 
 ```{r, eval=TRUE}
 # Get blacklist regions
 blacklist <- get_blacklist(genome = "hg38")
 ```
 
+Then we run the pipeline:
 
-A convenience wrapper is provided to perform the analysis
 ```{r, eval=FALSE}
 sce <- run_scatools(
   sample_id = "test_sample",
@@ -91,30 +87,24 @@ sce <- run_scatools(
 )
 ```
 
-
 ```{r, include=FALSE}
 # Sideload the SCE object
 sce <- get(data(test_sce))
 rm(test_sce)
 ```
 
-
 Plot the results using the `dittoSeq` package.
-```{r}
-library(dittoSeq)
-library(patchwork)
 
+```{r, fig.width = 8, fig.height = 3}
 p1 <- dittoDimPlot(sce, var = "clusters")
 p2 <- dittoDimPlot(sce, var = "tumor_cell")
 
 p1 + p2 & theme(aspect.ratio = 1)
 ```
 
-
 We can visualize the results as a heatmap.
-```{r cnaheatmap_plot, message=FALSE}
-library(ComplexHeatmap)
 
+```{r cnaheatmap_plot, message=FALSE, fig.width = 10, fig.height = 5}
 sce <- sce[, order(sce$tumor_cell, sce$clusters)]
 
 col_clones <- dittoColors()
@@ -136,7 +126,8 @@ p_ht_cna
 
 
 Or plot individual cells
-```{r cell_cna_plot}
+
+```{r cell_cna_plot, fig.width = 9, fig.height = 6, warning=FALSE}
 # Plot the first five cells
 plot_cell_cna(sce = sce, cell_id = 1:5, assay_name = "logr_modal")
 ```
