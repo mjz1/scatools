@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-We start by loading `scatools` and `ArchR`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells. This bed file was generated using the `reformatFragmentFiles()` function from the `ArchR` package.
+We start by loading `scatools` and `ArchR`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells.
 
 Note this vignette is currently set up with dummy normal data and is purely intended to demonstrate package functionality. There are no CNV changes in the test data.
 
