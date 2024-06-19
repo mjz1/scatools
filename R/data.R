@@ -13,6 +13,6 @@
 #' A subset of cells from normal mammary
 #'
 #' @format ## `bins_10mb`
-#' A GenomicRanges object with 331 bins.
+#' A GenomicRanges object with 324 bins.
 #'
 "bins_10mb"

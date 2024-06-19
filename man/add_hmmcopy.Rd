@@ -27,7 +27,7 @@ add_hmmcopy(
 
 \item{slot_suffix}{Suffix to add to newly created \code{copy} and \code{state} assay slots.}
 
-\item{...}{Additional parameters to pass to \link{run_sc_hmmcopy}, such as \code{param}}
+\item{...}{Additional parameters to pass to \code{\link[=run_sc_hmmcopy]{run_sc_hmmcopy()}}, such as \code{param}}
 }
 \value{
 an sce object with hmm copy metadata added to coldata, and new slots \code{copy} and \code{state}

@@ -21,6 +21,8 @@ filter_sce(
 
 \item{assay_name}{Name of assay to pull counts from. Ideally raw counts}
 
+\item{which}{Filter cells or bins}
+
 \item{min_bin_counts}{A bin requires at least \code{min_bin_counts} across \code{min_bin_prop} proportion of cells to be kept}
 
 \item{min_bin_prop}{Minimum proportion of cells with at least \code{min_bin_counts} per bin in order to keep a bin}
@@ -32,8 +34,6 @@ filter_sce(
 \item{flag_only}{Only flag cells/bins, do not remove}
 
 \item{gc_range}{Min and max GC values per bin to keep}
-
-\item{filt}{Filter cells or bins}
 }
 \value{
 SingleCellExperiment object

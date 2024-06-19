@@ -98,6 +98,6 @@ atac_ascpf <- function(...) {
   assay(sce_bulk_new, "ratios_jointseg")[, tum_idx] <- tum_logr_seg[rownames(sce_bulk_new), ]
 
 
-  sce_bulk_new <- logNorm(sce_bulk_new, transform = "log2", assay = "ratios_jointseg", name = "logratios_jointseg")
+  sce_bulk_new <- logNorm(sce_bulk_new, transform = "log2", assay_name = "ratios_jointseg", name = "logratios_jointseg")
   # assay(sce_bulk_new, "ratios_jointseg")[, ] <- tum_logr_seg[rownames(sce_bulk_new), ]
 }

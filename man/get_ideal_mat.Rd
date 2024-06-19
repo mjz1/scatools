@@ -54,6 +54,10 @@ add_ideal_mat(
 \item{min_map}{Minimum allowable mappability score for a bin. Range (0, 1)}
 
 \item{ncores}{number of cores for parallel evaluation (requires \code{pbmcapply} package)}
+
+\item{verbose}{message verbosity}
+
+\item{assay_name}{Name of assay}
 }
 \value{
 Boolean matrices of ideal and valid bins

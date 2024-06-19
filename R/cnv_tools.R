@@ -87,8 +87,6 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
 
 #' Merge segment levels
 #'
-#' Wrapper for [mergeLevels()] to merge segments
-#'
 #' @inheritParams segment_cnv
 #' @param smooth_assay name of assay with smoothed counts
 #' @param segment_assay name of assay with segmented counts
@@ -126,7 +124,7 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
   rownames(seg_ratios) <- rownames(sce)
   assay(sce, paste(new_assay, "ratios", sep = "_")) <- as.matrix(round(seg_ratios, 2))
 
-  sce <- logNorm(sce, assay = paste(new_assay, "ratios", sep = "_"), name = paste(new_assay, "logratios", sep = "_"))
+  sce <- logNorm(sce, assay_name = paste(new_assay, "ratios", sep = "_"), name = paste(new_assay, "logratios", sep = "_"))
 
   logger::log_info("Merged segments in: {new_assay}")
   logger::log_info("Merged segments ratios in: {paste(new_assay, 'ratios', sep = '_')}")
@@ -235,8 +233,6 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
   return(sce)
 }
 
-#' @export
-#' @noRd
 calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = paste(assay_name, "ratios", sep = "_")) {
   fun <- match.arg(fun)
 
@@ -256,9 +252,7 @@ calc_ratios <- function(sce, assay_name, fun = c("mean", "median"), new_assay = 
 
 # This is taken from copykit to avoid additional dependencies
 
-#' @export
 #' @importFrom stats ansari.test wilcox.test
-#' @noRd
 mergeLevels <- function(vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
                         thresMin = 0.05, thresMax = 0.5, verbose = 1, scale = TRUE) {
   if (thresMin > thresMax) {
@@ -357,9 +351,6 @@ mergeLevels <- function(vecObs, vecPred, pv.thres = 1e-04, ansari.sign = 0.05,
   ))
 }
 
-
-#' @export
-#' @noRd
 combine.func <- function(diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1e-04,
                          thresAbs = 0) {
   vec1 <- vecObs[which(vecPredNow == mn1)]
@@ -401,7 +392,7 @@ combine.func <- function(diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1
 #' @param scCNA scCNA object.
 #' @param transform String specifying the transformation to apply to the selected
 #' assay.
-#' @param assay String with the name of the assay to pull data from to run the
+#' @param assay_name String with the name of the assay to pull data from to run the
 #' segmentation.
 #' @param name String with the name for the target slot for the resulting
 #' transformed counts.

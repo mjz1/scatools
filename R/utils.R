@@ -1,13 +1,15 @@
 #' Utility to pull assay data and merge with features
 #'
 #' @param sce SingleCellExperiment object
-#' @param assays Vector list of assays
+#' @param assay_names Vector list of assays
 #' @param cell_id Cell id to grab data
 #'
 #' @return data frame with merged data
 #' @export
 #'
-get_assay_dat <- function(sce, assay_names, cell_id = colnames(sce)) {
+get_assay_dat <- function(sce,
+                          assay_names,
+                          cell_id = colnames(sce)) {
   # Make sure binids consistent
   rownames(sce) <- SummarizedExperiment::rowRanges(sce)$bin_id <- get_bin_ids(SummarizedExperiment::rowRanges(sce))
 
@@ -149,9 +151,6 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = "none", 
   return(sce)
 }
 
-
-#' @export
-#' @noRd
 scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "both"), center = FALSE) {
   mat <- as.matrix(mat)
 
@@ -267,17 +266,13 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
   return(sce)
 }
 
-#' @noRd
-.save_to <- function(object, save_to = "./", verbose = TRUE) {
+save_to <- function(object, save_to = "./", verbose = TRUE) {
   dir.create(dirname(save_to), recursive = TRUE, showWarnings = FALSE)
   if (verbose) {
     logger::log_info("Saving {deparse(substitute(object))} to \"{save_to}\"")
   }
   save(object, file = save_to)
 }
-
-#' @export
-save_to <- .save_to
 
 #' Get factor indices
 #'
@@ -337,7 +332,6 @@ get_f_idx <- function(f) {
 #'
 #' bind_sublist(toplist, sublist = 2, what = "rbind", .add_id = FALSE)
 #'
-#' @noRd
 bind_sublist <- function(toplist, sublist, what = c("rbind", "cbind", "c"), .add_id = FALSE, .id_name = "id") {
   what <- match.arg(what)
 
@@ -359,15 +353,12 @@ bind_sublist <- function(toplist, sublist, what = c("rbind", "cbind", "c"), .add
   return(res)
 }
 
-#' @export
-#' @noRd
 getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
 
-#' @export
-#' @noRd
+
 prettyMb <- function(x, places = 3) {
   power <- pmin(6, floor(log(abs(x), 1000)))
   units <- c("B", "Kb", "Mb", "Gb", "Tb", "Pb", "Eb")[power + 1]

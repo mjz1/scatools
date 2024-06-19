@@ -210,6 +210,8 @@ plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
 #' @param legend_name Name of the legend
 #' @param clust_annot Annotate cluster and sample labels
 #' @param bulk_cn_col Name of column in `rowRanges(sce)` that contains bulk copy number data to plot on top of heatmap
+#' @param top_annotation Top annotation as per [ComplexHeatmap::columnAnnotation()]
+#' @param row_split Row split for [ComplexHeatmap::Heatmap()]
 #' @param raster_quality Quality of raster (default: 10)
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
@@ -422,8 +424,13 @@ cnaHeatmap <- function(sce,
   return(ht_plot)
 }
 
+
+#' @rdname cnaHeatmap
+#' @param aggr_fun Aggregation function
+#' @param clust_lab Cluster labels
+#' @param round Round pseudobulked values to integers
 #' @export
-#' @noRd
+#'
 cloneCnaHeatmap <- function(sce, assay_name = "counts", clone_name = NULL, scale = c("none", "cells", "bins", "both"), log2 = FALSE, center = FALSE, clust_lab = TRUE, aggr_fun = mean, round = FALSE, ...) {
   if (is.null(rownames(sce))) {
     rownames(sce) <- 1:nrow(sce)
@@ -634,8 +641,6 @@ my_dens <- function(data, mapping, center_point = 0, ...) {
     geom_vline(xintercept = center_point, linetype = "dashed", alpha = 0.75)
 }
 
-#' @export
-#' @noRd
 get_label_centers <- function(obj, group_var = "clusters", reduced_dim = "UMAP") {
   # To any scatter of a umap can add + geom_label_repel(data = get_label_centers(sce), aes(x = x, y = y, label = clusters))
 

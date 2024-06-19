@@ -82,7 +82,7 @@ cluster_seurat <- function(sce,
   } else if (features.pca == "variable") {
     if (is.null(nvar.features)) {
       logger::log_error("Variable features must provide 'nvar.features")
-      break
+      stop()
     }
     srt <- Seurat::FindVariableFeatures(srt)
     # Will use Seurats find variable features

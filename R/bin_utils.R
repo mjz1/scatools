@@ -13,7 +13,7 @@ bin_atac_frags <- function(sample_id,
                            fragment_file,
                            cells = NULL,
                            bins,
-                           bin_name = prettyMb(getmode(width(bins))),
+                           bin_name = NULL,
                            blacklist = NULL,
                            outdir,
                            ncores = 1,
@@ -22,6 +22,10 @@ bin_atac_frags <- function(sample_id,
                            return_mat = FALSE) {
 
   stopifnot(class(bins) %in% "GRanges")
+
+  if (is.null(bin_name)) {
+    bin_name = prettyMb(getmode(width(bins)))
+  }
 
   # Compute fragments per bins and combine
   bin_dir <- normalizePath(file.path(outdir, bin_name))
@@ -291,8 +295,6 @@ get_tiled_bins <- function(bs_genome = NULL,
 #'
 #' @return Dataframe of genome cytobands
 #'
-#' @examples
-#' hg38_cyto <- get_cytobands("hg38")
 get_cytobands <- function(genome = "hg38") {
   cyto_url <- paste0("http://hgdownload.cse.ucsc.edu/goldenpath/", genome, "/database/cytoBand.txt.gz")
   cyto <- readr::read_delim(file = cyto_url, col_names = c("CHROM", "start", "end", "cytoband", "unsure"), show_col_types = FALSE) %>%
@@ -329,9 +331,10 @@ add_gc_freq <- function(bs_genome, bins) {
 #'
 #' Given a matrix of bin counts, bin gc and N frequency, and filtering parameters, return a boolean matrix flagging ideal bins
 #'
-#'
 #' @param mat,sce A count matrix or SCE object depending on the function
 #' @param ncores number of cores for parallel evaluation (requires `pbmcapply` package)
+#' @param assay_name Name of assay
+#' @param verbose message verbosity
 #'
 #' @inherit is_ideal_bin
 #' @return Boolean matrices of ideal and valid bins

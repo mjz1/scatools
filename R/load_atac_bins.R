@@ -34,7 +34,7 @@ load_atac_bins <- function(bin_dir,
   if (verbose) {
     logger::log_info("Adding cellwise and binwise QC metrics")
   }
-  
+
   sce <- scuttle::addPerCellQCMetrics(sce)
   sce <- scuttle::addPerFeatureQCMetrics(sce, subsets = get_f_idx(sce$Sample))
 
@@ -51,37 +51,9 @@ load_atac_bins <- function(bin_dir,
 }
 
 
-#' @export
-#' @noRd
-vcf_to_df <- function(vcf, verbose = FALSE) {
-  vcf <- vcfR::read.vcfR(file = vcf, verbose = verbose)
-  gts <- vcfR::extract.gt(vcf, element = "GT", return.alleles = F)[, 1] %>% as.factor()
-  alleles <- vcfR::extract.gt(vcf, element = "GT", return.alleles = T)[, 1] %>% stringr::str_split_fixed(string = ., pattern = "/|\\|", n = 2)
-  stopifnot(all(names(gts) == names(alleles)))
-
-  # Remove indels and non het SNPs
-  keeps <- names(which((!vcfR::is.indel(vcf) & vcfR::is_het(as.matrix(gts)))[, 1]))
-  vcf_df <- cbind.data.frame(gts, alleles)[keeps, ] %>%
-    dplyr::mutate(across(where(is.character), as.factor))
-  colnames(vcf_df) <- c("gt", "ref", "alt")
-  vcf_df$snp_id <- rownames(vcf_df)
-
-  pos <- stringr::str_split_fixed(vcf_df$snp_id, pattern = "_", n = 2)
-  vcf_df$chr <- as.factor(pos[, 1])
-  vcf_df$start <- vcf_df$end <- as.integer(pos[, 2])
-
-  # Reordering columns and sorting
-  vcf_df <- vcf_df %>%
-    dplyr::select(snp_id, chr, start, end, ref, alt, gt) %>%
-    dplyr::mutate(chr = factor(chr, levels = chr_reorder(unique(levels(chr))))) %>%
-    dplyr::arrange(chr, start)
-
-  return(vcf_df)
-}
-
-#' Title
+#' Bin SNP Data
 #'
-#' @param snp_granges SNP granges object with GT column
+#' @param snp_sce SCE with snp data
 #' @param binsize Size of bins
 #' @param select_chrs Chromosomes to include
 #' @param bins Optional override of bins
@@ -89,7 +61,7 @@ vcf_to_df <- function(vcf, verbose = FALSE) {
 #' @return SCE object with phased binned snps
 #' @export
 #'
-bin_snp_data <- function(snp_sce, binsize = 500000, select_chrs = NULL, bins = NULL) {
+bin_snp_data2 <- function(snp_sce, binsize = 500000, select_chrs = NULL, bins = NULL) {
   # THIS FUNCTION NEEDS WORK
   # TODO
   if (is.null(select_chrs)) {

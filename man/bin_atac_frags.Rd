@@ -9,7 +9,7 @@ bin_atac_frags(
   fragment_file,
   cells = NULL,
   bins,
-  bin_name = prettyMb(getmode(width(bins))),
+  bin_name = NULL,
   blacklist = NULL,
   outdir,
   ncores = 1,

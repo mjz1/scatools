@@ -9,9 +9,9 @@ get_assay_dat(sce, assay_names, cell_id = colnames(sce))
 \arguments{
 \item{sce}{SingleCellExperiment object}
 
-\item{cell_id}{Cell id to grab data}
+\item{assay_names}{Vector list of assays}
 
-\item{assays}{Vector list of assays}
+\item{cell_id}{Cell id to grab data}
 }
 \value{
 data frame with merged data

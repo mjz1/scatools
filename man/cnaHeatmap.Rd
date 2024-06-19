@@ -2,6 +2,7 @@
 % Please edit documentation in R/plotting.R
 \name{cnaHeatmap}
 \alias{cnaHeatmap}
+\alias{cloneCnaHeatmap}
 \title{Plot copy number heatmap}
 \usage{
 cnaHeatmap(
@@ -23,6 +24,19 @@ cnaHeatmap(
   bulk_cn_col = NULL,
   raster_quality = 10,
   row_split = NULL,
+  ...
+)
+
+cloneCnaHeatmap(
+  sce,
+  assay_name = "counts",
+  clone_name = NULL,
+  scale = c("none", "cells", "bins", "both"),
+  log2 = FALSE,
+  center = FALSE,
+  clust_lab = TRUE,
+  aggr_fun = mean,
+  round = FALSE,
   ...
 )
 }
@@ -55,11 +69,21 @@ cnaHeatmap(
 
 \item{verbose}{Logical: Message verbosity}
 
+\item{top_annotation}{Top annotation as per \code{\link[ComplexHeatmap:columnAnnotation]{ComplexHeatmap::columnAnnotation()}}}
+
 \item{bulk_cn_col}{Name of column in \code{rowRanges(sce)} that contains bulk copy number data to plot on top of heatmap}
 
 \item{raster_quality}{Quality of raster (default: 10)}
 
+\item{row_split}{Row split for \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
+
 \item{...}{Additional parameters that can be passed to \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
+
+\item{clust_lab}{Cluster labels}
+
+\item{aggr_fun}{Aggregation function}
+
+\item{round}{Round pseudobulked values to integers}
 }
 \value{
 A heatmap

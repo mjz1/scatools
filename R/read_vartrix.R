@@ -15,7 +15,7 @@
 #' @param min_counts Minimum count number across all cells to keep a SNP
 #'
 #' @return A `SingleCellExperiment` object
-#' 
+#'
 #' @export
 read_vartrix <- function(dir_path = NULL,
                          mtx_ref = NULL,
@@ -119,7 +119,6 @@ read_vartrix <- function(dir_path = NULL,
   return(sce)
 }
 
-#' @export
 vcf_to_df <- function(vcf, verbose = FALSE) {
   vcf <- vcfR::read.vcfR(file = vcf, verbose = verbose)
   gts <- vcfR::extract.gt(vcf, element = "GT", return.alleles = F)[, 1] %>% as.factor()

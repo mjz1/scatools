@@ -27,5 +27,5 @@ merge_segments(
 A \code{SingleCellExperiment} object
 }
 \description{
-Wrapper for \code{\link[=mergeLevels]{mergeLevels()}} to merge segments
+Merge segment levels
 }

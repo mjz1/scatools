@@ -33,7 +33,6 @@ We start by loading `scatools`, as well as the filepath to an example `fragments
 
 ```{r setup, eval=TRUE, message=FALSE}
 library(scatools)
-library(BSgenome.Hsapiens.UCSC.hg38)
 ```
 
 
@@ -51,13 +50,28 @@ Now we process this data using `scatools`. Helper functions help us to create `G
 # rm(bins_10mb)
 ```
 
-```{r, eval=TRUE}
-# Generate bins
+To generate your own `bins` object, a helper function is provided. Please note that running this function requires installation of 
+
+```{r, eval=FALSE}
+# if (!require("BiocManager", quietly = TRUE))
+    # install.packages("BiocManager")
+
+# BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
+
 bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38, 
                        tilewidth = 1e7, 
                        respect_chr_arms = TRUE
                        )
+```
 
+```{r, include=FALSE}
+bins <- data("bins_10mb")
+```
+
+
+We load blacklist regions for our genome
+
+```{r, eval=TRUE}
 # Get blacklist regions
 blacklist <- get_blacklist(genome = "hg38")
 ```
@@ -91,7 +105,7 @@ library(dittoSeq)
 library(patchwork)
 
 p1 <- dittoDimPlot(sce, var = "clusters")
-p2 <- dittoDimPlot(sce, var = "tumor_cell") + scale_color_manual(values = col_tumor_cells(), name = "Tumor cell")
+p2 <- dittoDimPlot(sce, var = "tumor_cell")
 
 p1 + p2 & theme(aspect.ratio = 1)
 ```
@@ -111,7 +125,7 @@ names(col_clones) <- levels(factor(sce[["clusters"]]))
 left_annot <- ComplexHeatmap::HeatmapAnnotation(
   tumor_cell = sce[["tumor_cell"]],
   cnv_cluster = sce[["clusters"]],
-  col = list(tumor_cell = col_tumor_cells(), cnv_cluster = col_clones),
+  col = list(cnv_cluster = col_clones),
   which = "row"
 )
 

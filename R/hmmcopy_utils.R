@@ -6,7 +6,7 @@
 #' @param save_raw_hmm Path to save raw hmm data in an `rda` file
 #' @param slot_suffix Suffix to add to newly created `copy` and `state` assay slots.
 #' @param assay_name Name of the assay with counts to input into HMMcopy. Ideally these are GC corrected.
-#' @param ... Additional parameters to pass to [run_sc_hmmcopy], such as `param`
+#' @param ... Additional parameters to pass to [run_sc_hmmcopy()], such as `param`
 #'
 #' @return an sce object with hmm copy metadata added to coldata, and new slots `copy` and `state`
 #' @export
@@ -87,7 +87,7 @@ add_hmmcopy <- function(sce,
   }
 
   # Merge the metadata
-  colData(sce) <- cbind(colData(sce), hmm_metadata[match(hmm_metadata$cell_id, rownames(colData(sce))), ])
+  SummarizedExperiment::colData(sce) <- cbind(colData(sce), hmm_metadata[match(hmm_metadata$cell_id, rownames(colData(sce))), ])
 
   if (verbose) {
     logger::log_info("Adding HMMcopy data to sce")
@@ -315,8 +315,6 @@ hmmcopy_singlecell <- function(chr, start, end, counts, reads, ideal = rep(TRUE,
 #' @param multipliers Positive integer list of ploidy multipliers to test
 #' @param return a character. One of `best` or `all` to either return the result for the best ploidy only, or a list of results for all ploidies
 #'
-#' @export
-#' @noRd
 run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, length(counts)), param = params_sc_hmm(), cell_id, multipliers = 1:6, verbose = FALSE, maxiter = 200, n_cutoff = NULL, return = c("best", "all")) {
   # check integer multipliers
   if (!all(multipliers %% 1 == 0) | any(multipliers < 0)) {

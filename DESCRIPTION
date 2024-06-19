@@ -12,6 +12,7 @@ Depends:
     SingleCellExperiment
 Imports: 
     BiocGenerics,
+    BiocParallel,
     circlize,
     ComplexHeatmap,
     data.table,
@@ -55,6 +56,7 @@ Imports:
     sparseMatrixStats,
     stats,
     stringr,
+    SummarizedExperiment,
     tibble,
     tidyr,
     utils,
@@ -62,9 +64,14 @@ Imports:
     vegan,
     withr
 Suggests: 
+    anndata,
+    BSgenome,
+    BSgenome.Hsapiens.UCSC.hg38,
     dittoSeq,
+    HGC,
     knitr,
-    rmarkdown
+    rmarkdown,
+    zellkonverter
 VignetteBuilder: 
     knitr
 Remotes: 
