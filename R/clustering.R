@@ -146,6 +146,7 @@ cluster_seurat <- function(sce,
 #' Wrapper for the Leiden Algorithm
 #'
 #' @param adj_mat Adjacency matrix
+#' @param group_singletons Group singletons into nearest cluster. If FALSE, assign all singletons to a "singleton" group
 #' @param resolution Resolution paramter
 #'
 #' @return cluster memberships
@@ -179,7 +180,7 @@ leiden_wrapper <- function(adj_mat, group_singletons = TRUE, resolution = 1) {
   names(ids) <- colnames(adj_mat)
 
   if (group_singletons) {
-    ids <- Seurat:::GroupSingletons(ids, SNN = adj_mat, group.singletons = TRUE, verbose = TRUE)
+    ids <- Seurat:::GroupSingletons(ids, SNN = adj_mat, group.singletons = group_singletons, verbose = TRUE)
   }
 
   return(ids)

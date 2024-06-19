@@ -11,11 +11,7 @@ Depends:
     R (>= 4.0),
     SingleCellExperiment
 Imports: 
-    anndata,
     BiocGenerics,
-    BiocParallel,
-    BSgenome,
-    BSgenome.Hsapiens.UCSC.hg38,
     circlize,
     ComplexHeatmap,
     data.table,
@@ -30,7 +26,6 @@ Imports:
     ggplot2,
     glue,
     gtools,
-    HGC,
     HMMcopy,
     igraph,
     IRanges,
@@ -60,14 +55,12 @@ Imports:
     sparseMatrixStats,
     stats,
     stringr,
-    SummarizedExperiment,
     tibble,
     tidyr,
     utils,
     vcfR,
     vegan,
-    withr,
-    zellkonverter
+    withr
 Suggests: 
     dittoSeq,
     knitr,

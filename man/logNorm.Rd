@@ -7,7 +7,7 @@
 logNorm(
   scCNA,
   transform = c("log", "log2", "log10", "log1p"),
-  assay = "segment_ratios",
+  assay_name = "segment_ratios",
   name = "logr"
 )
 }
@@ -17,11 +17,11 @@ logNorm(
 \item{transform}{String specifying the transformation to apply to the selected
 assay.}
 
-\item{assay}{String with the name of the assay to pull data from to run the
-segmentation.}
-
 \item{name}{String with the name for the target slot for the resulting
 transformed counts.}
+
+\item{assay}{String with the name of the assay to pull data from to run the
+segmentation.}
 }
 \value{
 A data frame with log transformed counts inside the \code{assay} slot.

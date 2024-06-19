@@ -4,11 +4,9 @@
 #'
 #' @inherit run_scatools
 #'
-#' @param bin_name Name of the bins (e.g. `'10Mb'`, `'500Kb'`, `'chr_arm'`). If not provided is automatically detected based on binwidth.
-#' @param overwrite Logical. Overwrite previously existing results (default = FALSE)
 #' @param return_mat Logical. Return the binned depth matrix (default = FALSE)
 #'
-#' @return If `return_mat=TRUE`, returns a sparse binned depth matrix. Otherwise returns `NULL`
+#' @return If `return_mat=TRUE`, returns a sparse binned depth matrix. Otherwise returns `NULL`, but will save the results to a 10X style market matrix `outdir`
 #'
 #' @export
 bin_atac_frags <- function(sample_id,
@@ -33,15 +31,21 @@ bin_atac_frags <- function(sample_id,
 
   # Only bin frags if not done already
   if (!file.exists(file.path(bin_dir, "matrix.mtx.gz")) | overwrite) {
-    if (is.null(cells)) {
-      cells = unique(S4Vectors::mcols(fragments)$barcode)
-    }
 
     # Convert to GenomicRanges
     logger::log_info("{sample_id} -- Loading fragments...")
     fragments <- data.table::fread(fragment_file, header = FALSE)
     logger::log_success("Fragments loaded!")
     colnames(fragments)[1:5] <- c("chr", "start", "end", "barcode", "umi")
+
+    # If no cells provided use all barcodes and warn
+    if (is.null(cells)) {
+      cells = unique(fragments$barcode)
+      if (length(cells) >= 1e5) {
+       logger::log_warn("No cell barcodes specified. {length(cells)} unique cells in fragments file..." )
+      }
+    }
+
     fragments <- fragments[fragments$barcode %in% cells & fragments$chr %in% GenomeInfoDb::seqlevelsInUse(bins),]
     fragments <- GenomicRanges::makeGRangesFromDataFrame(fragments, keep.extra.columns = T)
     fragments <- GenomicRanges::split(fragments, GenomeInfoDb::seqnames(fragments))
@@ -53,6 +57,7 @@ bin_atac_frags <- function(sample_id,
       FUN = bin_frags_chr,
       bins = bins,
       blacklist = blacklist,
+      cells = cells,
       BPPARAM = BPPARAM
     ) %>%
       do.call("rbind", .)
@@ -86,18 +91,16 @@ bin_atac_frags <- function(sample_id,
 
 #' Bin scATAC fragments
 #'
-#' \code{bin_frags_chr} computes the fragments across bins in a single chromosome from an ArchR ArrowFile
+#' `bin_frags_chr` computes the fragments across bins in a single chromosome from an ArchR ArrowFile
 #'
 #' @param fragments_chr A single chromosome fragments
-#' @param bins A GRanges bins (can include all chromosomes)
 #'
 #' @inherit run_scatools
 #'
 #' @return Sparse matrix of binned fragment counts
-#' @export
-#'
 bin_frags_chr <- function(fragments_chr,
                           bins,
+                          cells,
                           blacklist = NULL) {
   stopifnot(dplyr::n_distinct(as.vector(GenomeInfoDb::seqnames(fragments_chr))) == 1)
   stopifnot(class(bins) %in% "GRanges")
@@ -105,7 +108,7 @@ bin_frags_chr <- function(fragments_chr,
 
   chrom <- GenomeInfoDb::seqlevelsInUse(fragments_chr)
 
-  cli::cli_alert_info("Binning {chrom}")
+  logger::log_info("Binning {chrom}")
 
   # Remove fragments overlapping with blacklist regions
   if (!is.null(blacklist)) {
@@ -115,7 +118,7 @@ bin_frags_chr <- function(fragments_chr,
       blacklisted <- GenomicRanges::findOverlaps(subject = fragments_chr, query = blacklist)
 
       fragments_chr$blacklist <- FALSE
-      S4Vectors::mcols(fragments_chr)[S4Vectors::to(blacklisted), "blacklist"] <- TRUE
+      mcols(fragments_chr)[S4Vectors::to(blacklisted), "blacklist"] <- TRUE
 
       fragments_chr <- fragments_chr[!fragments_chr$blacklist]
     }
@@ -150,7 +153,7 @@ bin_frags_chr <- function(fragments_chr,
   )
 
   # Match Cells
-  matchID <- S4Vectors::match(S4Vectors::mcols(fragments_chr)$barcode, cells)
+  matchID <- S4Vectors::match(mcols(fragments_chr)$barcode, cells)
 
   # Create Sparse Matrix
   mat <- Matrix::sparseMatrix(
@@ -251,8 +254,8 @@ get_tiled_bins <- function(bs_genome = NULL,
     bins <- lapply(X = seq_along(arm_bins), FUN = function(i) {
       r <- arm_bins[i]
 
-      starts <- seq(start(r), end(r), by = tilewidth)
-      ends <- c(starts[2:(length(starts))] - 1, end(r))
+      starts <- seq(GenomicRanges::start(r), GenomicRanges::end(r), by = tilewidth)
+      ends <- c(starts[2:(length(starts))] - 1, GenomicRanges::end(r))
 
       r_new <- GenomicRanges::GRanges(seqnames = seqnames(r), ranges = IRanges(start = starts, end = ends), arm = r$arm)
     }) %>%
@@ -267,7 +270,7 @@ get_tiled_bins <- function(bs_genome = NULL,
 
   bins$binwidth <- IRanges::width(bins)
 
-  bins$bin_id <- paste(seqnames(bins), start(bins), end(bins), sep = "_")
+  bins$bin_id <- paste(GenomeInfoDb::seqnames(bins), GenomicRanges::start(bins), GenomicRanges::end(bins), sep = "_")
 
   if (!is.null(select_chrs)) {
     bins <- GenomeInfoDb::keepSeqlevels(x = bins, value = select_chrs, pruning.mode = "coarse")
@@ -287,7 +290,6 @@ get_tiled_bins <- function(bs_genome = NULL,
 #' @param genome Genome version (hg38, hg19, mm10)
 #'
 #' @return Dataframe of genome cytobands
-#' @export
 #'
 #' @examples
 #' hg38_cyto <- get_cytobands("hg38")
@@ -310,8 +312,6 @@ get_cytobands <- function(genome = "hg38") {
 #' @param bins GRanges bins object
 #'
 #' @return GRanges bin object with GC and N frequency per bin
-#' @export
-#'
 add_gc_freq <- function(bs_genome, bins) {
   stopifnot(class(bs_genome) %in% "BSgenome")
   logger::log_info("Computing GC content for {prettyMb(getmode(width(bins)))} size bins")
@@ -335,9 +335,6 @@ add_gc_freq <- function(bs_genome, bins) {
 #'
 #' @inherit is_ideal_bin
 #' @return Boolean matrices of ideal and valid bins
-
-#' @export
-#'
 get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
   if (verbose) {
     logger::log_info("Computing ideal bins in {ncol(mat)} cells using {ncores} threads")
@@ -401,14 +398,18 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
 #'
 #' @param sce SCE object
 #' @param assay_name Name of assay to normalize
-#' @param binwidth Vector of binwidths
+#' @param assay_to Name of assay to save
+#' @param binwidths Vector of binwidths
 #' @param by_factor Multiplication factor for counts
 #' @param verbose Print verbose (TRUE/FALSE)
 #'
 #' @return An sce object with counts length normalized in `assay(sce, 'counts_permb')`
-#' @export
-#'
-length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenNorm", binwidths = width(rowRanges(sce)), by_factor = getmode(binwidths), verbose = FALSE) {
+length_normalize <- function(sce,
+                             assay_name = "counts",
+                             assay_to = "counts_lenNorm",
+                             binwidths = width(rowRanges(sce)),
+                             by_factor = getmode(binwidths),
+                             verbose = FALSE) {
   if (verbose) {
     logger::log_info("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
   }
@@ -426,7 +427,6 @@ length_normalize <- function(sce, assay_name = "counts", assay_to = "counts_lenN
 
 #' @rdname get_ideal_mat
 #' @return SCE object with ideal and valid boolean matrices
-#' @export
 add_ideal_mat <- function(sce,
                           assay_name = "counts",
                           gc = rowData(sce)$gc,
@@ -475,8 +475,6 @@ add_ideal_mat <- function(sce,
 #' @param min_map Minimum allowable mappability score for a bin. Range (0, 1)
 #'
 #' @return A dataframe of two columns meet the `valid` or `ideal` criteria
-#' @export
-#'
 is_ideal_bin <- function(counts, gc, n_freq, map = NULL, min_reads = 0, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9) {
   counts <- as.vector(counts)
   gc <- as.vector(gc)
@@ -525,7 +523,6 @@ is_valid_bin <- function(counts, n_freq, min_reads = 0, max_N_freq = 0.05) {
   counts > min_reads & n_freq <= max_N_freq
 }
 
-#' @export
 get_bin_ids <- function(granges) {
   # get the bin_ids
   bin_ids <- as.data.frame(granges) %>%
@@ -535,7 +532,6 @@ get_bin_ids <- function(granges) {
   return(bin_ids)
 }
 
-#' @export
 #' @noRd
 get_bin_info <- function(bin_ids) {
   # get the bin_ids
@@ -576,7 +572,7 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
 
   if (gene_biotype != "all") {
     logger::log_info("Filtering for gene_biotypes: {paste(gene_biotype, collapse = '; ')}")
-    g <- g[which(S4Vectors::mcols(g)$gene_biotype %in% gene_biotype)]
+    g <- g[which(mcols(g)$gene_biotype %in% gene_biotype)]
   }
 
   hits <- IRanges::findOverlaps(bin_ranges, g)
@@ -584,9 +580,9 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
   # Want to attach this as a metadata granges to the sce where the new range for
   # each gene is the bin in which it resides
 
-  S4Vectors::mcols(g)["bin_id"] <- NA
+  mcols(g)["bin_id"] <- NA
 
-  S4Vectors::mcols(g[S4Vectors::subjectHits(hits)])["bin_id"] <- get_bin_ids(bin_ranges[S4Vectors::queryHits(hits)])
+  mcols(g[S4Vectors::subjectHits(hits)])["bin_id"] <- get_bin_ids(bin_ranges[S4Vectors::queryHits(hits)])
 
   # Label oncogenes and TS
   oncokb_df <- get_oncokb_genelist()
@@ -608,14 +604,13 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
   oncokb_df <- oncokb_df[!is.na(oncokb_df$match_idx), ]
 
   # Perform the merge
-  S4Vectors::mcols(g)[oncokb_df$match_idx, colnames(oncokb_df)] <- oncokb_df
+  mcols(g)[oncokb_df$match_idx, colnames(oncokb_df)] <- oncokb_df
 
   sce@metadata$gene_overlap <- g
 
   return(sce)
 }
 
-#' @export
 #' @noRd
 get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/cancerGeneList.txt") {
   # Column names are problematic. Load these first
@@ -633,8 +628,6 @@ get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/canc
   return(df)
 }
 
-#' @export
-#' @noRd
 remove_zero_bins <- function(sce, assay_name = "counts", threshold = 0.85) {
   zeroes <- colSums(apply(assay(sce, assay_name), 1, function(x) x == 0))
 

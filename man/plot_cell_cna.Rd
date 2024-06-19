@@ -20,6 +20,8 @@ plot_cell_cna(
 \item{assay_name}{Name of assay to plot}
 
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
+
+\item{linewidth}{Width of the line segments in plot}
 }
 \value{
 A ggplot object

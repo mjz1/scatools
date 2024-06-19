@@ -17,7 +17,9 @@ plot_cell_psuedobulk_cna(
 
 \item{assay_name}{Name of assay to plot}
 
-\item{aggr_fun}{Function to use to psuedobulk data.}
+\item{group_var}{Grouping variable. If \code{all} will pseudobulk all cells}
+
+\item{aggr_fun}{Function to use to psuedobulk data}
 
 \item{col_fun}{Color mapping function from \code{\link[circlize:colorRamp2]{circlize::colorRamp2()}}}
 }

@@ -18,11 +18,13 @@ length_normalize(
 
 \item{assay_name}{Name of assay to normalize}
 
+\item{assay_to}{Name of assay to save}
+
+\item{binwidths}{Vector of binwidths}
+
 \item{by_factor}{Multiplication factor for counts}
 
 \item{verbose}{Print verbose (TRUE/FALSE)}
-
-\item{binwidth}{Vector of binwidths}
 }
 \value{
 An sce object with counts length normalized in \code{assay(sce, 'counts_permb')}

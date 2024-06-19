@@ -10,7 +10,7 @@ plot_gene_cna(
   assay_type = "counts",
   group_by = NULL,
   color_by = group_by,
-  return_data = F
+  return_data = FALSE
 )
 }
 \arguments{
@@ -23,6 +23,8 @@ plot_gene_cna(
 \item{group_by}{grouping variable}
 
 \item{color_by}{coloring variable}
+
+\item{return_data}{If \code{TRUE}, will return plot data without plotting}
 }
 \value{
 plot

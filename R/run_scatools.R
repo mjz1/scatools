@@ -6,7 +6,7 @@
 #' @param fragment_file Fragments file
 #' @param cells A vector of cell barcodes. If not provided will use all barcodes
 #' @param bins Genomic ranges object with bins to use
-#' @param bin_name Name for the bins (e.g. 10Mb, 500Kb)
+#' @param bin_name bin_name Name of the bins (e.g. `'10Mb'`, `'500Kb'`, `'chr_arm'`). If not provided is automatically detected based on binwidth.
 #' @param blacklist Genome blacklist regions to filter against
 #' @param outdir Output directory
 #' @param rmsb_size Remove small bins below a given size. Useful in cases where small bins are leftover at the ends of chromosomes. Defaults to 10% of the binwidth.
@@ -96,8 +96,8 @@ run_scatools <- function(sample_id,
     add_ideal_mat(verbose = TRUE, ncores = ncores) %>%
     add_gc_cor(method = "modal", verbose = TRUE, ncores = ncores) %>%
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
-    calc_ratios(assay = "counts_gc_modal_smoothed") %>%
-    logNorm(assay = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
+    calc_ratios(assay_name = "counts_gc_modal_smoothed") %>%
+    logNorm(assay_name = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
     cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE) %>%
     segment_cnv(assay_name = "counts_gc_modal_smoothed", ncores = ncores) %>%
     merge_segments(smooth_assay = "counts_gc_modal_smoothed", segment_assay = "counts_gc_modal_smoothed_segment", ncores = ncores) %>%
@@ -106,7 +106,9 @@ run_scatools <- function(sample_id,
 
   # Save anndata
   if (save_h5ad == TRUE) {
-    if (requireNamespace("zellkonverter", quietly = T) & requireNamespace("anndata")) {
+    if (!requireNamespace("zellkonverter", quietly = T)) {
+      logger::log_error("Package 'zellkonverter' must be installed to save as h5ad")
+    } else {
       logger::log_info("Writing output to anndata")
       # Save raw anndata
       adata <- zellkonverter::SCE2AnnData(sce)
@@ -115,5 +117,7 @@ run_scatools <- function(sample_id,
       anndata::write_h5ad(adata2, filename = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")))
     }
   }
+  logger::log_success("SCATools run completed!")
+
   return(sce_processed)
 }

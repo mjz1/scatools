@@ -15,7 +15,13 @@
 #' @return sce object with corrected GC count matrix in `assay(sce, 'counts_gc_[method]')`. See [perform_gc_cor] for more information.
 #' @export
 #'
-add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method = c("modal", "copykit", "loess"), verbose = FALSE, ncores = 1, ...) {
+add_gc_cor <- function(sce,
+                       gc = rowData(sce)$gc,
+                       assay_name = "counts",
+                       method = c("modal", "copykit", "loess"),
+                       verbose = FALSE,
+                       ncores = 1,
+                       ...) {
   method <- match.arg(method)
 
   gc_slot <- paste0("counts_gc_", method)
@@ -58,7 +64,7 @@ add_gc_cor <- function(sce, gc = rowData(sce)$gc, assay_name = "counts", method 
     )
   }
 
-  metadata(sce)$gc_cor_method <- method
+  S4Vectors::metadata(sce)$gc_cor_method <- method
 
   return(sce)
 }

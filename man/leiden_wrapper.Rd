@@ -9,6 +9,8 @@ leiden_wrapper(adj_mat, group_singletons = TRUE, resolution = 1)
 \arguments{
 \item{adj_mat}{Adjacency matrix}
 
+\item{group_singletons}{Group singletons into nearest cluster. If FALSE, assign all singletons to a "singleton" group}
+
 \item{resolution}{Resolution paramter}
 }
 \value{

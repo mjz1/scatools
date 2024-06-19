@@ -4,11 +4,16 @@
 #' @param cell_id Vector of cell ids
 #' @param assay_name Name of assay to plot
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
+#' @param linewidth Width of the line segments in plot
 #'
 #' @return A ggplot object
 #' @export
 #'
-plot_cell_cna <- function(sce, cell_id = NULL, assay_name = "counts", col_fun = NULL, linewidth = 1) {
+plot_cell_cna <- function(sce,
+                          cell_id = NULL,
+                          assay_name = "counts",
+                          col_fun = NULL,
+                          linewidth = 1) {
   if (is.null(cell_id)) {
     if (length(cell_id) > 20) {
       logger::log_warn("No cell ids provided and plotting many cells. Are you sure you want to do this!?")
@@ -110,12 +115,17 @@ plot_sc_track <- function(plot_dat, assay_name, col_fun = NULL, linewidth = 1) {
 #'
 #' @inheritParams plot_cell_cna
 #' @param col_fun Color mapping function from [circlize::colorRamp2()]
-#' @param aggr_fun Function to use to psuedobulk data.
+#' @param aggr_fun Function to use to psuedobulk data
+#' @param group_var Grouping variable. If `all` will pseudobulk all cells
 #'
 #' @return ggplot
 #' @export
 #'
-plot_cell_psuedobulk_cna <- function(sce, assay_name, group_var = "all", aggr_fun = mean, col_fun = NULL) {
+plot_cell_psuedobulk_cna <- function(sce,
+                                     assay_name,
+                                     group_var = "all",
+                                     aggr_fun = mean,
+                                     col_fun = NULL) {
   if (group_var == "all") {
     sce[[group_var]] <- "all"
   }
@@ -654,6 +664,7 @@ get_label_centers <- function(obj, group_var = "clusters", reduced_dim = "UMAP")
 #' @param assay_type assay
 #' @param group_by grouping variable
 #' @param color_by coloring variable
+#' @param return_data If `TRUE`, will return plot data without plotting
 #'
 #' @return plot
 #' @export
@@ -663,7 +674,7 @@ plot_gene_cna <- function(sce,
                           assay_type = "counts",
                           group_by = NULL,
                           color_by = group_by,
-                          return_data = F) {
+                          return_data = FALSE) {
   # Check for the overlaps and create if possible
   if (is.null(sce@metadata$gene_overlap)) {
     # Attempt to perform the overlaps on the fly

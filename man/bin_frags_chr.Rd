@@ -4,12 +4,14 @@
 \alias{bin_frags_chr}
 \title{Bin scATAC fragments}
 \usage{
-bin_frags_chr(fragments_chr, bins, blacklist = NULL)
+bin_frags_chr(fragments_chr, bins, cells, blacklist = NULL)
 }
 \arguments{
 \item{fragments_chr}{A single chromosome fragments}
 
-\item{bins}{A GRanges bins (can include all chromosomes)}
+\item{bins}{Genomic ranges object with bins to use}
+
+\item{cells}{A vector of cell barcodes. If not provided will use all barcodes}
 
 \item{blacklist}{Genome blacklist regions to filter against}
 }

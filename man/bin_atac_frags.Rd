@@ -7,13 +7,13 @@
 bin_atac_frags(
   sample_id,
   fragment_file,
-  cells,
+  cells = NULL,
   bins,
-  bin_name,
-  blacklist,
+  bin_name = prettyMb(getmode(width(bins))),
+  blacklist = NULL,
   outdir,
   ncores = 1,
-  BPPARAM = BiocParallel::MulticoreParam(workers = ncores, progressbar = TRUE),
+  BPPARAM = BiocParallel::SerialParam(),
   overwrite = FALSE,
   return_mat = FALSE
 )
@@ -27,7 +27,7 @@ bin_atac_frags(
 
 \item{bins}{Genomic ranges object with bins to use}
 
-\item{bin_name}{Name of the bins (e.g. \code{'10Mb'}, \code{'500Kb'}, \code{'chr_arm'}). If not provided is automatically detected based on binwidth.}
+\item{bin_name}{bin_name Name of the bins (e.g. \code{'10Mb'}, \code{'500Kb'}, \code{'chr_arm'}). If not provided is automatically detected based on binwidth.}
 
 \item{blacklist}{Genome blacklist regions to filter against}
 
@@ -35,12 +35,14 @@ bin_atac_frags(
 
 \item{ncores}{Number of cores}
 
-\item{overwrite}{Logical. Overwrite previously existing results (default = FALSE)}
+\item{BPPARAM}{BiocParallel Parameters}
+
+\item{overwrite}{Whether to overwrite previous results}
 
 \item{return_mat}{Logical. Return the binned depth matrix (default = FALSE)}
 }
 \value{
-If \code{return_mat=TRUE}, returns a sparse binned depth matrix. Otherwise returns \code{NULL}
+If \code{return_mat=TRUE}, returns a sparse binned depth matrix. Otherwise returns \code{NULL}, but will save the results to a 10X style market matrix \code{outdir}
 }
 \description{
 Convenience wrapper to bin fragments of a given size and save them as \code{.mtx} files

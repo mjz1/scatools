@@ -4,9 +4,9 @@
 \alias{bin_snp_data}
 \title{Bin SNPs into genomic segments}
 \usage{
-bin_snp_data(snp_sce, binsize = 500000, select_chrs = NULL, bins = NULL)
+bin_snp_data(snp_sce, binsize = 5e+05, select_chrs = NULL, bins = NULL)
 
-bin_snp_data(snp_sce, binsize = 500000, select_chrs = NULL, bins = NULL)
+bin_snp_data(snp_sce, binsize = 5e+05, select_chrs = NULL, bins = NULL)
 }
 \arguments{
 \item{binsize}{Size of bins}

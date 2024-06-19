@@ -43,9 +43,9 @@ add_hmmcopy <- function(sce,
     ideal_mat <- matrix(nrow = nrow(reads_mat), ncol = ncol(reads_mat), data = TRUE)
   }
 
-  chr <- as.factor(seqnames(rowRanges(sce)))
-  start <- BiocGenerics::start(rowRanges(sce))
-  end <- BiocGenerics::end(rowRanges(sce))
+  chr <- as.factor(GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce)))
+  start <- BiocGenerics::start(SummarizedExperiment::rowRanges(sce))
+  end <- BiocGenerics::end(SummarizedExperiment::rowRanges(sce))
 
   hmm_results <- pbmcapply::pbmclapply(X = seq_len(ncol(count_mat)), mc.cores = ncores, FUN = function(i) {
     res <- suppressMessages(run_sc_hmmcopy(
@@ -82,7 +82,7 @@ add_hmmcopy <- function(sce,
     logger::log_info("Adding HMMcopy metadata to sce")
   }
   hmm_metadata <- bind_sublist(hmm_results_best, "mstats")
-  if (!all(hmm_metadata$cell_id == rownames(colData(sce)))) {
+  if (!all(hmm_metadata$cell_id == rownames(SummarizedExperiment::colData(sce)))) {
     logger::log_warn("Cell ids in HMMcopy metadata do not match the original sce object. Merge may be incomplete")
   }
 

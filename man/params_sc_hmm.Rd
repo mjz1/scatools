@@ -5,7 +5,7 @@
 \title{Single Cell HMMcopy parameters}
 \usage{
 params_sc_hmm(
-  e = (1 - 0.000001),
+  e = (1 - 1e-06),
   strength = 1000,
   mu = 0:11,
   lambda = 20,

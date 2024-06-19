@@ -9,8 +9,8 @@
 #' @export
 #'
 smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay_name, "smoothed", sep = "_")) {
-  chrs <- as.vector(seqnames(rowRanges(sce)))
-  starts <- start(rowRanges(sce))
+  chrs <- as.vector(GenomeInfoDb::seqnames(rowRanges(sce)))
+  starts <- GenomicRanges::start(SummarizedExperiment::rowRanges(sce))
   sample_ids <- colnames(sce)
   logger::log_info("Smoothing {assay_name}")
   smoothed_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
@@ -48,8 +48,8 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
 #' @export
 #'
 segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, ncores = 1, ...) {
-  chrs <- as.vector(seqnames(rowRanges(sce)))
-  starts <- start(rowRanges(sce))
+  chrs <- as.vector(GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce)))
+  starts <- GenomicRanges::start(SummarizedExperiment::rowRanges(sce))
   sample_ids <- colnames(sce)
   # Perform segmentation
   # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
@@ -411,12 +411,12 @@ combine.func <- function(diff, vecObs, vecPredNow, mnNow, mn1, mn2, pv.thres = 1
 #' @export
 logNorm <- function(scCNA,
                     transform = c("log", "log2", "log10", "log1p"),
-                    assay = "segment_ratios",
+                    assay_name = "segment_ratios",
                     name = "logr") {
   transform <- match.arg(transform)
 
   # obtaining data
-  seg_ratios <- assay(scCNA, assay)
+  seg_ratios <- assay(scCNA, assay_name)
 
   # saving logr
   seg_ratios[seg_ratios == 0] <- 1e-3

@@ -17,7 +17,8 @@ run_scatools(
   overwrite = FALSE,
   verbose = TRUE,
   save_h5ad = TRUE,
-  ncores = 1
+  ncores = 1,
+  BPPARAM = BiocParallel::SerialParam()
 )
 }
 \arguments{
@@ -29,7 +30,7 @@ run_scatools(
 
 \item{bins}{Genomic ranges object with bins to use}
 
-\item{bin_name}{Name for the bins (e.g. 10Mb, 500Kb)}
+\item{bin_name}{bin_name Name of the bins (e.g. \code{'10Mb'}, \code{'500Kb'}, \code{'chr_arm'}). If not provided is automatically detected based on binwidth.}
 
 \item{blacklist}{Genome blacklist regions to filter against}
 
@@ -46,6 +47,8 @@ run_scatools(
 \item{save_h5ad}{Logical. Whether to save raw and processed h5ad files. Requires packages \code{zellkonverter} and \code{anndata}}
 
 \item{ncores}{Number of cores}
+
+\item{BPPARAM}{BiocParallel Parameters}
 }
 \value{
 \code{SingleCellExperiment} object
