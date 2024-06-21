@@ -28,10 +28,8 @@ bin_atac_frags <- function(sample_id,
   }
 
   # Compute fragments per bins and combine
-  bin_dir <- normalizePath(file.path(outdir, bin_name))
-
   dir.create(bin_dir, showWarnings = FALSE, recursive = TRUE)
-
+  bin_dir <- normalizePath(file.path(outdir, bin_name))
 
   # Only bin frags if not done already
   if (!file.exists(file.path(bin_dir, "matrix.mtx.gz")) | overwrite) {
