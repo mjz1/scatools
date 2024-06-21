@@ -35,9 +35,7 @@ bin_atac_frags(
 
 \item{ncores}{Number of cores}
 
-\item{BPPARAM}{BiocParallel Parameters}
-
-\item{overwrite}{Whether to overwrite previous results}
+\item{overwrite}{Whether to overwrite previous binned counts}
 
 \item{return_mat}{Logical. Return the binned depth matrix (default = FALSE)}
 }

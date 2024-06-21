@@ -1,5 +1,7 @@
 # scatools (development version)
 
+* Replace `perform_gc_cor` parallel backend to use `BiocParallel`
+
 # scatools 0.1.1
 
 * Fixed H5AD conversion

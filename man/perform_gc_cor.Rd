@@ -9,7 +9,7 @@ perform_gc_cor(
   gc,
   valid_mat = NULL,
   method = c("modal", "copykit", "loess"),
-  ncores = 1,
+  bpparam,
   verbose = FALSE,
   ...
 )
@@ -23,11 +23,13 @@ perform_gc_cor(
 
 \item{method}{Specifies the type of GC correction to perform. One of \verb{'modal', 'copykit', or 'loess'}}
 
-\item{ncores}{Number of cores to use if parallel backend is available}
+\item{bpparam}{BiocParallel params}
 
 \item{verbose}{Message verbosity (TRUE/FALSE)}
 
 \item{...}{Additional arguments to be passed to GC correction methods}
+
+\item{ncores}{Number of cores to use if parallel backend is available}
 }
 \value{
 Sparse matrix of corrected counts

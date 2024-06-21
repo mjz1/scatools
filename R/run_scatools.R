@@ -11,11 +11,11 @@
 #' @param outdir Output directory
 #' @param rmsb_size Remove small bins below a given size. Useful in cases where small bins are leftover at the ends of chromosomes. Defaults to 10% of the binwidth.
 #' @param gc_range GC range for bins to keep. Removes large GC outliers
-#' @param overwrite Whether to overwrite previous results
+#' @param overwrite Whether to overwrite previous binned counts
 #' @param verbose Verbosity
 #' @param save_h5ad Logical. Whether to save raw and processed h5ad files. Requires packages `zellkonverter` and `anndata`
 #' @param ncores Number of cores
-#' @param BPPARAM BiocParallel Parameters
+#' @param bpparam BiocParallel Parameters
 #'
 #' @return `SingleCellExperiment` object
 #' @export
@@ -33,7 +33,7 @@ run_scatools <- function(sample_id,
                          verbose = TRUE,
                          save_h5ad = TRUE,
                          ncores = 1,
-                         BPPARAM = BiocParallel::SerialParam()) {
+                         bpparam = BiocParallel::SerialParam()) {
   # TODO INPUT VALIDATION
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   outdir <- normalizePath(outdir)
@@ -70,7 +70,7 @@ run_scatools <- function(sample_id,
     bin_name = bin_name,
     outdir = outdir,
     ncores = ncores,
-    BPPARAM = BPPARAM,
+    bpparam = bpparam,
     return_mat = FALSE,
     overwrite = overwrite
   )
@@ -94,7 +94,7 @@ run_scatools <- function(sample_id,
   sce_processed <- sce_processed %>%
     filter_sce(gc_range = gc_range) %>%
     add_ideal_mat(verbose = TRUE, ncores = ncores) %>%
-    add_gc_cor(method = "modal", verbose = TRUE, ncores = ncores) %>%
+    add_gc_cor(method = "modal", verbose = TRUE, bpparam = bpparam) %>%
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
     calc_ratios(assay_name = "counts_gc_modal_smoothed") %>%
     logNorm(assay_name = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%

@@ -20,7 +20,7 @@ add_gc_cor <- function(sce,
                        assay_name = "counts",
                        method = c("modal", "copykit", "loess"),
                        verbose = FALSE,
-                       ncores = 1,
+                       bpparam,
                        ...) {
   method <- match.arg(method)
 
@@ -43,7 +43,7 @@ add_gc_cor <- function(sce,
       gc = gc,
       valid_mat = valid_mat,
       method = method,
-      ncores = ncores,
+      bpparam = bpparam,
       verbose = verbose,
       results = "default",
       ...
@@ -81,13 +81,19 @@ add_gc_cor <- function(sce,
 #' @param valid_mat Matrix of TRUE/FALSE for valid bins. If none provided defaults to all TRUE
 #' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
 #' @param ncores Number of cores to use if parallel backend is available
+#' @param bpparam BiocParallel params
 #' @param verbose Message verbosity (TRUE/FALSE)
 #' @param ... Additional arguments to be passed to GC correction methods
 #'
 #' @return Sparse matrix of corrected counts
 #'
 #' @export
-perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copykit", "loess"), ncores = 1, verbose = FALSE, ...) {
+perform_gc_cor <- function(mat, 
+  gc, 
+  valid_mat = NULL, 
+  method = c("modal", "copykit", "loess"), 
+  bpparam, 
+  verbose = FALSE, ...) {
   if (verbose) {
     logger::log_info("Performing GC correction on {ncol(mat)} cells using {ncores} threads.")
     logger::log_info("GC correction method: {method}")
@@ -111,17 +117,14 @@ perform_gc_cor <- function(mat, gc, valid_mat = NULL, method = c("modal", "copyk
   )
 
   # Parallel apply over the matrix
-  if (requireNamespace("pbmcapply", quietly = TRUE)) {
-    # Bug here for perform_gc_cor with method copykit if cores == 1 returns list with warning
-    counts_gc_list <- pbmcapply::pbmclapply(X = seq_len(ncol(mat)), mc.cores = ncores, FUN = function(i) {
-      FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
-    })
-  } else {
-    logger::log_warn("No parallel backend used. GC correction may be slow.", call. = FALSE)
-    counts_gc_list <- lapply(X = seq_len(ncol(mat)), FUN = function(i) {
-      FUN(gc = gc, counts = as.vector(mat[, i]), valid = as.vector(valid_mat[, i]), bin_ids = rownames(mat), ...)
-    })
-  }
+  counts_gc_list <- BiocParallel::bplapply(X = seq_len(ncol(mat)), 
+    BPPARAM = bpparam, 
+    FUN = function(i) {
+      FUN(gc = gc, 
+        counts = as.vector(mat[, i]), 
+        valid = as.vector(valid_mat[, i]), 
+        bin_ids = rownames(mat), ...)
+  })
 
   if (verbose) {
     logger::log_success("GC correction completed!")

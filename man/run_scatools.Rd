@@ -18,7 +18,7 @@ run_scatools(
   verbose = TRUE,
   save_h5ad = TRUE,
   ncores = 1,
-  BPPARAM = BiocParallel::SerialParam()
+  bpparam = BiocParallel::SerialParam()
 )
 }
 \arguments{
@@ -40,7 +40,7 @@ run_scatools(
 
 \item{gc_range}{GC range for bins to keep. Removes large GC outliers}
 
-\item{overwrite}{Whether to overwrite previous results}
+\item{overwrite}{Whether to overwrite previous binned counts}
 
 \item{verbose}{Verbosity}
 
@@ -48,7 +48,7 @@ run_scatools(
 
 \item{ncores}{Number of cores}
 
-\item{BPPARAM}{BiocParallel Parameters}
+\item{bpparam}{BiocParallel Parameters}
 }
 \value{
 \code{SingleCellExperiment} object

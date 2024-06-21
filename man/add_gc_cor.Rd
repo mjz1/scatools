@@ -10,7 +10,7 @@ add_gc_cor(
   assay_name = "counts",
   method = c("modal", "copykit", "loess"),
   verbose = FALSE,
-  ncores = 1,
+  bpparam,
   ...
 )
 }
@@ -25,7 +25,7 @@ add_gc_cor(
 
 \item{verbose}{Message verbosity (TRUE/FALSE)}
 
-\item{ncores}{Number of cores to use if parallel backend is available}
+\item{bpparam}{BiocParallel params}
 
 \item{...}{Additional arguments to be passed to GC correction methods}
 }
