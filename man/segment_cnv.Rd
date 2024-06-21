@@ -13,7 +13,7 @@ segment_cnv(
   min.width = 2,
   undo.splits = "none",
   verbose = 0,
-  ncores = 1,
+  bpparam = BiocParallel::SerialParam(),
   ...
 )
 }
@@ -40,7 +40,7 @@ segment_cnv(
 
 \item{verbose}{Verbosity}
 
-\item{ncores}{Number of cores to use}
+\item{bpparam}{BiocParallel Parameters}
 
 \item{...}{Additional parameters to pass to \link[DNAcopy:segment]{DNAcopy::segment}}
 }

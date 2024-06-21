@@ -7,12 +7,10 @@ utils::globalVariables("where")
 
 
 ## usethis namespace: start
+#' @importFrom BiocParallel bplapply
 #' @importFrom methods as
 #' @importFrom methods is
 #' @importFrom S4Vectors mcols
-#' @importFrom SummarizedExperiment assay
-#' @importFrom SummarizedExperiment assay<-
-#' @importFrom SummarizedExperiment assays
 #' @importFrom stats acf
 #' @importFrom stats approx
 #' @importFrom stats as.dist
@@ -34,6 +32,9 @@ utils::globalVariables("where")
 #' @importFrom stats start
 #' @importFrom stats var
 #' @importFrom stats weighted.mean
+#' @importFrom SummarizedExperiment assay
+#' @importFrom SummarizedExperiment assay<-
+#' @importFrom SummarizedExperiment assays
 #' @importFrom utils read.table
 #' @importFrom utils write.table
 ## usethis namespace: end

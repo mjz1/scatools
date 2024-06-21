@@ -12,6 +12,7 @@ run_scatools(
   bin_name = prettyMb(getmode(width(bins))),
   blacklist = NULL,
   outdir = sample_id,
+  segment = TRUE,
   rmsb_size = 0.1 * getmode(width(bins)),
   gc_range = c(0.3, 0.8),
   overwrite = FALSE,
@@ -39,6 +40,8 @@ run_scatools(
 \item{blacklist}{Genome blacklist regions to filter against}
 
 \item{outdir}{Output directory}
+
+\item{segment}{Logical. Determines whether to run segmentation or not}
 
 \item{rmsb_size}{Remove small bins below a given size. Useful in cases where small bins are leftover at the ends of chromosomes. Defaults to 10\% of the binwidth.}
 

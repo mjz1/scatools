@@ -39,23 +39,23 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
 #' @param assay_name Name of the assay to segment
 #' @param new_assay Name of the new assay
 #' @param verbose Verbosity
-#' @param ncores Number of cores to use
 #' @param ... Additional parameters to pass to [DNAcopy::segment]
 #'
 #' @inheritParams DNAcopy::segment
+#' @inheritParams run_scatools
 #'
 #' @return A `SingleCellExperiment` object
 #' @export
 #'
-segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, ncores = 1, ...) {
+segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, bpparam = BiocParallel::SerialParam(), ...) {
   chrs <- as.vector(GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce)))
   starts <- GenomicRanges::start(SummarizedExperiment::rowRanges(sce))
   sample_ids <- colnames(sce)
   # Perform segmentation
   # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
   logger::log_info("Segmenting CNVs")
-  segmented_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
-    x <- as.vector(assay(sce, assay_name)[, i])
+  segmented_counts <- BiocParallel::bplapply(X = 1:ncol(sce), BPPARAM = bpparam, FUN = function(i) {
+    x <- as.vector(SummarizedExperiment::assay(sce, assay_name)[, i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
     res <- withr::with_seed(3, smoothed_CNA_counts <- DNAcopy::segment(obj,
       alpha = alpha,
@@ -80,7 +80,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   segmented_counts <- as.matrix(dplyr::bind_rows(segmented_counts))
   rownames(segmented_counts) <- rownames(sce)
 
-  assay(sce, new_assay) <- segmented_counts
+  SummarizedExperiment::assay(sce, new_assay) <- segmented_counts
   return(sce)
 }
 
@@ -88,22 +88,23 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
 #' Merge segment levels
 #'
 #' @inheritParams segment_cnv
+#' @inheritParams run_scatools
 #' @param smooth_assay name of assay with smoothed counts
 #' @param segment_assay name of assay with segmented counts
 #'
 #' @return A `SingleCellExperiment` object
 #' @export
 #'
-merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segment_merged", ncores = 1) {
+merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segment_merged", bpparam = bpparam) {
   smooth_counts <- log2(assay(sce, smooth_assay))
 
-  segment_df <- as.data.frame(assay(sce, segment_assay))
+  segment_df <- as.data.frame(SummarizedExperiment::assay(sce, segment_assay))
   segment_df[segment_df == 0] <- 1e-4
   segment_df <- log2(segment_df)
 
-  logger::log_info("Merging segments using {ncores} cores for {ncol(segment_df)} cells")
+  logger::log_info("Merging segments using {bpparam$workers} cores for {ncol(segment_df)} cells")
 
-  seg_ml_list <- pbmcapply::pbmclapply(seq_along(segment_df), mc.cores = ncores, function(i) {
+  seg_ml_list <- BiocParallel::bplapply(X = seq_along(segment_df), BPPARAM = bpparam, function(i) {
     cell_name <- names(segment_df)[i]
     seg_means_ml <- mergeLevels(
       vecObs = smooth_counts[, i],
@@ -169,7 +170,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
     n_normal_clusts <- 1
   }
 
-  sce$seg_sd <- colSds(assay(sce, assay_name), na.rm = TRUE)
+  sce$seg_sd <- colSds(SummarizedExperiment::assay(sce, assay_name), na.rm = TRUE)
 
 
   # Take the per cluster medians

@@ -16,7 +16,7 @@
 #' @export
 #'
 add_gc_cor <- function(sce,
-                       gc = rowData(sce)$gc,
+                       gc = SummarizedExperiment::rowData(sce)$gc,
                        assay_name = "counts",
                        method = c("modal", "copykit", "loess"),
                        verbose = FALSE,
@@ -27,11 +27,11 @@ add_gc_cor <- function(sce,
   gc_slot <- paste0("counts_gc_", method)
 
   # Check if valid bins exists and pass correctly
-  if ("valid_bins" %in% names(assays(sce))) {
+  if ("valid_bins" %in% names(SummarizedExperiment::assays(sce))) {
     if (verbose) {
       logger::log_info("Found valid bins in sce object")
     }
-    valid_mat <- assay(sce, "valid_bins")
+    valid_mat <- SummarizedExperiment::assay(sce, "valid_bins")
   } else {
     warning("No valid bins matrix in sce object. Defaulting to all valid.")
     valid_mat <- NULL
@@ -39,7 +39,7 @@ add_gc_cor <- function(sce,
 
   if (method == "modal") {
     res <- perform_gc_cor(
-      mat = assay(sce, assay_name),
+      mat = SummarizedExperiment::assay(sce, assay_name),
       gc = gc,
       valid_mat = valid_mat,
       method = method,
@@ -49,16 +49,16 @@ add_gc_cor <- function(sce,
       ...
     )
 
-    assay(sce, gc_slot) <- res$counts
+    SummarizedExperiment::assay(sce, gc_slot) <- res$counts
 
     sce$modal_quantile <- as.integer(gsub("q", "", res$modal_quantiles))
   } else {
-    assay(sce, gc_slot) <- perform_gc_cor(
-      mat = assay(sce, assay_name),
+    SummarizedExperiment::assay(sce, gc_slot) <- perform_gc_cor(
+      mat = SummarizedExperiment::assay(sce, assay_name),
       gc = gc,
       valid_mat = valid_mat,
       method = method,
-      ncores = ncores,
+      bpparam = bpparam,
       verbose = verbose,
       ...
     )
@@ -80,7 +80,6 @@ add_gc_cor <- function(sce,
 #' @param gc GC corresponding to bins (rows) in the matrix
 #' @param valid_mat Matrix of TRUE/FALSE for valid bins. If none provided defaults to all TRUE
 #' @param method Specifies the type of GC correction to perform. One of `'modal', 'copykit', or 'loess'`
-#' @param ncores Number of cores to use if parallel backend is available
 #' @param bpparam BiocParallel params
 #' @param verbose Message verbosity (TRUE/FALSE)
 #' @param ... Additional arguments to be passed to GC correction methods
@@ -95,7 +94,7 @@ perform_gc_cor <- function(mat,
   bpparam, 
   verbose = FALSE, ...) {
   if (verbose) {
-    logger::log_info("Performing GC correction on {ncol(mat)} cells")
+    logger::log_info("Performing GC correction on {ncol(mat)} cells using {bpparam$workers} cores")
     logger::log_info("GC correction method: {method}")
   }
 

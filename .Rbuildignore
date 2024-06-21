@@ -9,9 +9,9 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+^\.vscode$
 ^example$
-^vignettes/example$
-^vignettes/results$
+^results$
 Dockerfile
 ^docker*
 ^dev$

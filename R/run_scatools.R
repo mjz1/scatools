@@ -11,6 +11,7 @@
 #' @param outdir Output directory
 #' @param rmsb_size Remove small bins below a given size. Useful in cases where small bins are leftover at the ends of chromosomes. Defaults to 10% of the binwidth.
 #' @param gc_range GC range for bins to keep. Removes large GC outliers
+#' @param segment Logical. Determines whether to run segmentation or not
 #' @param min_bin_counts A bin requires at least `min_bin_counts` across `min_bin_prop` proportion of cells to be kept
 #' @param min_bin_prop Minimum proportion of cells with at least `min_bin_counts` per bin in order to keep a bin
 #' @param min_cell_counts  A cell requires at least `min_cell_counts` across `min_cell_prop` proportion of bins to be kept
@@ -31,6 +32,7 @@ run_scatools <- function(sample_id,
                          bin_name = prettyMb(getmode(width(bins))),
                          blacklist = NULL,
                          outdir = sample_id,
+                         segment = TRUE,
                          rmsb_size = 0.1*getmode(width(bins)),
                          gc_range = c(0.3, 0.8),
                          overwrite = FALSE,
@@ -110,11 +112,15 @@ run_scatools <- function(sample_id,
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
     calc_ratios(assay_name = "counts_gc_modal_smoothed") %>%
     logNorm(assay_name = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
-    cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE) %>%
-    segment_cnv(assay_name = "counts_gc_modal_smoothed", ncores = ncores) %>%
-    merge_segments(smooth_assay = "counts_gc_modal_smoothed", segment_assay = "counts_gc_modal_smoothed_segment", ncores = ncores) %>%
-    identify_normal(assay_name = "segment_merged_logratios", group_by = "clusters", method = "gmm")
-  save_to(object = sce_processed, save_to = final_out)
+    cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE) 
+
+    if (segment) {
+    sce_processed <- segment_cnv(assay_name = "counts_gc_modal_smoothed", bpparam = bpparam) %>%
+      merge_segments(smooth_assay = "counts_gc_modal_smoothed", segment_assay = "counts_gc_modal_smoothed_segment", bpparam = bpparam) %>%
+      identify_normal(assay_name = "segment_merged_logratios", group_by = "clusters", method = "gmm")
+    save_to(object = sce_processed, save_to = final_out)
+    }
+
 
   # Save anndata
   if (save_h5ad == TRUE) {

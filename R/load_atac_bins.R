@@ -39,7 +39,7 @@ load_atac_bins <- function(bin_dir,
   sce <- scuttle::addPerFeatureQCMetrics(sce, subsets = get_f_idx(sce$Sample))
 
   if (!is.null(save_to)) {
-    .save_to(object = sce, save_to = save_to, verbose = verbose)
+    save_to(object = sce, save_to = save_to, verbose = verbose)
   }
 
   if (verbose) {

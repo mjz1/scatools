@@ -9,7 +9,7 @@ merge_segments(
   smooth_assay,
   segment_assay,
   new_assay = "segment_merged",
-  ncores = 1
+  bpparam = bpparam
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ merge_segments(
 
 \item{new_assay}{Name of the new assay}
 
-\item{ncores}{Number of cores to use}
+\item{bpparam}{BiocParallel Parameters}
 }
 \value{
 A \code{SingleCellExperiment} object

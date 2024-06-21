@@ -6,7 +6,7 @@
 \usage{
 add_gc_cor(
   sce,
-  gc = rowData(sce)$gc,
+  gc = SummarizedExperiment::rowData(sce)$gc,
   assay_name = "counts",
   method = c("modal", "copykit", "loess"),
   verbose = FALSE,

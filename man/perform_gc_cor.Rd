@@ -28,8 +28,6 @@ perform_gc_cor(
 \item{verbose}{Message verbosity (TRUE/FALSE)}
 
 \item{...}{Additional arguments to be passed to GC correction methods}
-
-\item{ncores}{Number of cores to use if parallel backend is available}
 }
 \value{
 Sparse matrix of corrected counts
