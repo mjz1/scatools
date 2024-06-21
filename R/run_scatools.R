@@ -77,7 +77,7 @@ run_scatools <- function(sample_id,
 
   # Load the binned fragments and process
   sce <- load_atac_bins(
-    bin_dir = file.path(outdir, bin_name),
+    bin_dir = file.path(outdir, paste0(bin_name, "_counts")),
     sample_id = sample_id,
     bins = bins,
     verbose = verbose
@@ -111,10 +111,8 @@ run_scatools <- function(sample_id,
     } else {
       logger::log_info("Writing output to anndata")
       # Save raw anndata
-      adata <- zellkonverter::SCE2AnnData(sce)
-      anndata::write_h5ad(adata, filename = file.path(outdir, glue::glue("{bin_name}_raw.h5ad")))
-      adata2 <- zellkonverter::SCE2AnnData(sce_processed, verbose = TRUE, reducedDims = FALSE) # Bug in reduced dims conversion nbd
-      anndata::write_h5ad(adata2, filename = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")))
+      zellkonverter::writeH5AD(sce, file = file.path(outdir, glue::glue("{bin_name}_raw.h5ad")), compression = "gzip")
+      zellkonverter::writeH5AD(sce_processed, file = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")), compression = "gzip") 
     }
   }
   logger::log_success("SCATools run completed!")
