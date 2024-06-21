@@ -17,7 +17,7 @@ bin_atac_frags <- function(sample_id,
                            blacklist = NULL,
                            outdir,
                            ncores = 1,
-                           BPPARAM = BiocParallel::SerialParam(),
+                           bpparam = BiocParallel::SerialParam(),
                            overwrite = FALSE,
                            return_mat = FALSE) {
 
@@ -60,7 +60,7 @@ bin_atac_frags <- function(sample_id,
       bins = bins,
       blacklist = blacklist,
       cells = cells,
-      BPPARAM = BPPARAM
+      BPPARAM = BiocParallel::SerialParam()
     ) %>%
       do.call("rbind", .)
 

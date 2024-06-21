@@ -5,13 +5,9 @@
 #' @param sce SingleCellExperiment object
 #' @param assay_name Name of assay to pull counts from. Ideally raw counts
 #' @param which Filter cells or bins
-#' @param min_bin_counts A bin requires at least `min_bin_counts` across `min_bin_prop` proportion of cells to be kept
-#' @param min_bin_prop Minimum proportion of cells with at least `min_bin_counts` per bin in order to keep a bin
-#' @param min_cell_counts  A cell requires at least `min_cell_counts` across `min_cell_prop` proportion of bins to be kept
-#' @param min_cell_prop Minimum proportion of bins with at least `min_cell_counts` per cell in order to keep a cell
 #' @param flag_only Only flag cells/bins, do not remove
-#' @param gc_range Min and max GC values per bin to keep
 #'
+#' @inheritParams run_scatools
 #' @return SingleCellExperiment object
 #' @export
 #'
@@ -56,7 +52,7 @@ filter_sce <- function(sce,
       # Flag
       colData(sce)[[paste0("keep_", f)]] <- cell_bool
 
-      logger::log_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells with at least {min_cell_counts} counts in {min_cell_prop*100}% of cells")
+      logger::log_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells with at least {min_cell_counts} counts in {min_cell_prop*100}% of bins")
 
       if (!flag_only) {
         sce <- sce[, which(cell_bool)]

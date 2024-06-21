@@ -13,7 +13,7 @@ bin_atac_frags(
   blacklist = NULL,
   outdir,
   ncores = 1,
-  BPPARAM = BiocParallel::SerialParam(),
+  bpparam = BiocParallel::SerialParam(),
   overwrite = FALSE,
   return_mat = FALSE
 )
@@ -34,6 +34,8 @@ bin_atac_frags(
 \item{outdir}{Output directory}
 
 \item{ncores}{Number of cores}
+
+\item{bpparam}{BiocParallel Parameters}
 
 \item{overwrite}{Whether to overwrite previous binned counts}
 

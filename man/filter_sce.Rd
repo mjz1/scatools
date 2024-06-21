@@ -33,7 +33,7 @@ filter_sce(
 
 \item{flag_only}{Only flag cells/bins, do not remove}
 
-\item{gc_range}{Min and max GC values per bin to keep}
+\item{gc_range}{GC range for bins to keep. Removes large GC outliers}
 }
 \value{
 SingleCellExperiment object

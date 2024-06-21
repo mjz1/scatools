@@ -17,6 +17,10 @@ run_scatools(
   overwrite = FALSE,
   verbose = TRUE,
   save_h5ad = TRUE,
+  min_bin_counts = 1,
+  min_bin_prop = 0.95,
+  min_cell_counts = min_bin_counts,
+  min_cell_prop = min_bin_prop,
   ncores = 1,
   bpparam = BiocParallel::SerialParam()
 )
@@ -45,6 +49,14 @@ run_scatools(
 \item{verbose}{Verbosity}
 
 \item{save_h5ad}{Logical. Whether to save raw and processed h5ad files. Requires packages \code{zellkonverter} and \code{anndata}}
+
+\item{min_bin_counts}{A bin requires at least \code{min_bin_counts} across \code{min_bin_prop} proportion of cells to be kept}
+
+\item{min_bin_prop}{Minimum proportion of cells with at least \code{min_bin_counts} per bin in order to keep a bin}
+
+\item{min_cell_counts}{A cell requires at least \code{min_cell_counts} across \code{min_cell_prop} proportion of bins to be kept}
+
+\item{min_cell_prop}{Minimum proportion of bins with at least \code{min_cell_counts} per cell in order to keep a cell}
 
 \item{ncores}{Number of cores}
 

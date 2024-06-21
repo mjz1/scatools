@@ -95,7 +95,7 @@ perform_gc_cor <- function(mat,
   bpparam, 
   verbose = FALSE, ...) {
   if (verbose) {
-    logger::log_info("Performing GC correction on {ncol(mat)} cells using {ncores} threads.")
+    logger::log_info("Performing GC correction on {ncol(mat)} cells")
     logger::log_info("GC correction method: {method}")
   }
 
