@@ -118,9 +118,10 @@ run_scatools <- function(sample_id,
     sce_processed <- segment_cnv(assay_name = "counts_gc_modal_smoothed", bpparam = bpparam) %>%
       merge_segments(smooth_assay = "counts_gc_modal_smoothed", segment_assay = "counts_gc_modal_smoothed_segment", bpparam = bpparam) %>%
       identify_normal(assay_name = "segment_merged_logratios", group_by = "clusters", method = "gmm")
-    save_to(object = sce_processed, save_to = final_out)
     }
 
+  save_to(object = sce_processed, save_to = final_out)
+  logger::log_success("SCATools run completed!")
 
   # Save anndata
   if (save_h5ad == TRUE) {
@@ -133,7 +134,6 @@ run_scatools <- function(sample_id,
       zellkonverter::writeH5AD(sce_processed, file = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")), compression = "gzip") 
     }
   }
-  logger::log_success("SCATools run completed!")
 
   return(sce_processed)
 }
