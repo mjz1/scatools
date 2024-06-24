@@ -271,7 +271,7 @@ save_to <- function(object, save_to = "./", verbose = TRUE) {
   if (verbose) {
     logger::log_info("Saving {deparse(substitute(object))} to \"{save_to}\"")
   }
-  save(object, file = save_to)
+  saveRDS(object, file = save_to)
 }
 
 #' Get factor indices
