@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scatools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,14 +107,15 @@ requires installation of a <code>BSgenome</code> of your choice. Here we
 use hg38.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># if (!require("BiocManager", quietly = TRUE))</span></span>
-<span>    <span class="co"># install.packages("BiocManager")</span></span>
+<span><span class="co"># install.packages("BiocManager")</span></span>
 <span></span>
 <span><span class="co"># BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")</span></span>
 <span></span>
-<span><span class="va">bins</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_tiled_bins.html">get_tiled_bins</a></span><span class="op">(</span>bs_genome <span class="op">=</span> <span class="va">BSgenome.Hsapiens.UCSC.hg38</span>, </span>
-<span>                       tilewidth <span class="op">=</span> <span class="fl">1e7</span>, </span>
-<span>                       respect_chr_arms <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>                       <span class="op">)</span></span></code></pre></div>
+<span><span class="va">bins</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_tiled_bins.html">get_tiled_bins</a></span><span class="op">(</span></span>
+<span>  bs_genome <span class="op">=</span> <span class="va">BSgenome.Hsapiens.UCSC.hg38</span>,</span>
+<span>  tilewidth <span class="op">=</span> <span class="fl">1e7</span>,</span>
+<span>  respect_chr_arms <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>We load blacklist regions for our genome. These are used to remove
 fragments found in low mappability or high signal regions as defined <a href="https://github.com/Boyle-Lab/Blacklist" class="external-link">here</a>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
