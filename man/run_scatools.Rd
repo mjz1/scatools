@@ -12,7 +12,7 @@ run_scatools(
   bin_name = prettyMb(getmode(width(bins))),
   blacklist = NULL,
   outdir = sample_id,
-  segment = TRUE,
+  segment = FALSE,
   rmsb_size = 0.1 * getmode(width(bins)),
   gc_range = c(0.3, 0.8),
   overwrite = FALSE,
