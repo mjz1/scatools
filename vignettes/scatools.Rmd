@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-We start by loading `scatools` and `ArchR`, as well as the filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells.
+We start by loading `scatools` and a filepath to an example `fragments.bed.gz` file containing fragments from 100 normal mammary cells.
 
 Note this vignette is currently set up with dummy normal data and is purely intended to demonstrate package functionality. There are no CNV changes in the test data.
 
@@ -49,14 +49,15 @@ Now we process this data using `scatools`. Helper functions help us to create `G
 
 ```{r, eval=FALSE}
 # if (!require("BiocManager", quietly = TRUE))
-    # install.packages("BiocManager")
+# install.packages("BiocManager")
 
 # BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
 
-bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38, 
-                       tilewidth = 1e7, 
-                       respect_chr_arms = TRUE
-                       )
+bins <- get_tiled_bins(
+  bs_genome = BSgenome.Hsapiens.UCSC.hg38,
+  tilewidth = 1e7,
+  respect_chr_arms = TRUE
+)
 ```
 
 ```{r, include=FALSE}

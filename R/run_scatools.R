@@ -32,8 +32,8 @@ run_scatools <- function(sample_id,
                          bin_name = prettyMb(getmode(width(bins))),
                          blacklist = NULL,
                          outdir = sample_id,
-                         segment = TRUE,
-                         rmsb_size = 0.1*getmode(width(bins)),
+                         segment = FALSE,
+                         rmsb_size = 0.1 * getmode(width(bins)),
                          gc_range = c(0.3, 0.8),
                          overwrite = FALSE,
                          verbose = TRUE,
@@ -102,23 +102,25 @@ run_scatools <- function(sample_id,
   sce_processed <- length_normalize(sce_processed, assay_name = "counts", assay_to = "counts")
 
   sce_processed <- sce_processed %>%
-    filter_sce(gc_range = gc_range,
-      min_bin_counts = min_bin_counts, 
-      min_bin_prop = min_bin_prop, 
+    filter_sce(
+      gc_range = gc_range,
+      min_bin_counts = min_bin_counts,
+      min_bin_prop = min_bin_prop,
       min_cell_counts = min_cell_counts,
-      min_cell_prop = min_cell_prop) %>%
+      min_cell_prop = min_cell_prop
+    ) %>%
     add_ideal_mat(verbose = TRUE, ncores = ncores) %>%
     add_gc_cor(method = "modal", verbose = TRUE, bpparam = bpparam) %>%
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
     calc_ratios(assay_name = "counts_gc_modal_smoothed") %>%
     logNorm(assay_name = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
-    cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE) 
+    cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE)
 
-    if (segment) {
+  if (segment) {
     sce_processed <- segment_cnv(assay_name = "counts_gc_modal_smoothed", bpparam = bpparam) %>%
       merge_segments(smooth_assay = "counts_gc_modal_smoothed", segment_assay = "counts_gc_modal_smoothed_segment", bpparam = bpparam) %>%
       identify_normal(assay_name = "segment_merged_logratios", group_by = "clusters", method = "gmm")
-    }
+  }
 
   save_to(object = sce_processed, save_to = final_out)
   logger::log_success("SCATools run completed!")
@@ -131,7 +133,7 @@ run_scatools <- function(sample_id,
       logger::log_info("Writing output to anndata")
       # Save raw anndata
       zellkonverter::writeH5AD(sce, file = file.path(outdir, glue::glue("{bin_name}_raw.h5ad")), compression = "gzip")
-      zellkonverter::writeH5AD(sce_processed, file = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")), compression = "gzip") 
+      zellkonverter::writeH5AD(sce_processed, file = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")), compression = "gzip")
     }
   }
 

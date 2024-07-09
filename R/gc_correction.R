@@ -87,12 +87,13 @@ add_gc_cor <- function(sce,
 #' @return Sparse matrix of corrected counts
 #'
 #' @export
-perform_gc_cor <- function(mat, 
-  gc, 
-  valid_mat = NULL, 
-  method = c("modal", "copykit", "loess"), 
-  bpparam, 
-  verbose = FALSE, ...) {
+perform_gc_cor <- function(
+    mat,
+    gc,
+    valid_mat = NULL,
+    method = c("modal", "copykit", "loess"),
+    bpparam,
+    verbose = FALSE, ...) {
   if (verbose) {
     logger::log_info("Performing GC correction on {ncol(mat)} cells using {bpparam$workers} cores")
     logger::log_info("GC correction method: {method}")
@@ -116,14 +117,18 @@ perform_gc_cor <- function(mat,
   )
 
   # Parallel apply over the matrix
-  counts_gc_list <- BiocParallel::bplapply(X = seq_len(ncol(mat)), 
-    BPPARAM = bpparam, 
+  counts_gc_list <- BiocParallel::bplapply(
+    X = seq_len(ncol(mat)),
+    BPPARAM = bpparam,
     FUN = function(i) {
-      FUN(gc = gc, 
-        counts = as.vector(mat[, i]), 
-        valid = as.vector(valid_mat[, i]), 
-        bin_ids = rownames(mat), ...)
-  })
+      FUN(
+        gc = gc,
+        counts = as.vector(mat[, i]),
+        valid = as.vector(valid_mat[, i]),
+        bin_ids = rownames(mat), ...
+      )
+    }
+  )
 
   if (verbose) {
     logger::log_success("GC correction completed!")

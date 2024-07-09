@@ -20,11 +20,10 @@ bin_atac_frags <- function(sample_id,
                            bpparam = BiocParallel::SerialParam(),
                            overwrite = FALSE,
                            return_mat = FALSE) {
-
   stopifnot(class(bins) %in% "GRanges")
 
   if (is.null(bin_name)) {
-    bin_name = prettyMb(getmode(width(bins)))
+    bin_name <- prettyMb(getmode(width(bins)))
   }
 
   # Compute fragments per bins and combine
@@ -33,7 +32,6 @@ bin_atac_frags <- function(sample_id,
 
   # Only bin frags if not done already
   if (!file.exists(file.path(bin_dir, "matrix.mtx.gz")) | overwrite) {
-
     # Convert to GenomicRanges
     logger::log_info("{sample_id} -- Loading fragments...")
     fragments <- data.table::fread(fragment_file, header = FALSE)
@@ -42,13 +40,13 @@ bin_atac_frags <- function(sample_id,
 
     # If no cells provided use all barcodes and warn
     if (is.null(cells)) {
-      cells = unique(fragments$barcode)
+      cells <- unique(fragments$barcode)
       if (length(cells) >= 1e5) {
-       logger::log_warn("No cell barcodes specified. {length(cells)} unique cells in fragments file..." )
+        logger::log_warn("No cell barcodes specified. {length(cells)} unique cells in fragments file...")
       }
     }
 
-    fragments <- fragments[fragments$barcode %in% cells & fragments$chr %in% GenomeInfoDb::seqlevelsInUse(bins),]
+    fragments <- fragments[fragments$barcode %in% cells & fragments$chr %in% GenomeInfoDb::seqlevelsInUse(bins), ]
     fragments <- GenomicRanges::makeGRangesFromDataFrame(fragments, keep.extra.columns = T)
     fragments <- GenomicRanges::split(fragments, GenomeInfoDb::seqnames(fragments))
 
@@ -168,9 +166,9 @@ bin_frags_chr <- function(fragments_chr,
   # Name matrix
   colnames(mat) <- cells
   rownames(mat) <- paste(GenomicRanges::seqnames(bins_chr),
-                         GenomicRanges::start(bins_chr),
-                         GenomicRanges::end(bins_chr),
-                         sep = "_"
+    GenomicRanges::start(bins_chr),
+    GenomicRanges::end(bins_chr),
+    sep = "_"
   )
 
   return(mat)
@@ -265,8 +263,8 @@ get_tiled_bins <- function(bs_genome = NULL,
       unlist()
   } else {
     bins <- GenomicRanges::tileGenome(BSgenome::seqinfo(bs_genome)[select_chrs],
-                                      tilewidth = tilewidth,
-                                      cut.last.tile.in.chrom = TRUE
+      tilewidth = tilewidth,
+      cut.last.tile.in.chrom = TRUE
     )
   }
 
@@ -281,7 +279,7 @@ get_tiled_bins <- function(bs_genome = NULL,
   bins <- add_gc_freq(bs_genome, bins)
   bins <- sort(bins)
   idx <- which(as.vector(GenomeInfoDb::seqnames(bins)) %in% select_chrs)
-  bins <- bins[idx,]
+  bins <- bins[idx, ]
 
   return(bins)
 }
@@ -298,9 +296,9 @@ get_cytobands <- function(genome = "hg38") {
   cyto <- readr::read_delim(file = cyto_url, col_names = c("CHROM", "start", "end", "cytoband", "unsure"), show_col_types = FALSE) %>%
     dplyr::filter(!is.na(cytoband)) %>%
     dplyr::mutate(dplyr::across(where(is.character), as.factor),
-                  "start" = start + 1,
-                  "arm" = factor(substr(cytoband, 0, 1)),
-                  "genome" = genome
+      "start" = start + 1,
+      "arm" = factor(substr(cytoband, 0, 1)),
+      "genome" = genome
     )
   return(cyto)
 }

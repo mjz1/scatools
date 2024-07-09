@@ -17,3 +17,5 @@ Dockerfile
 ^dev$
 ^doc$
 ^Meta$
+^vignettes/*_files$
+^vignettes/articles$
