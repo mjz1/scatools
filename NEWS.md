@@ -1,3 +1,5 @@
+# scatools (development version)
+
 # scatools 0.1.2
 
 * Replace `add_gc_cor`, `segment_cnv`, and `merge_segments` parallel backend to use `BiocParallel`
