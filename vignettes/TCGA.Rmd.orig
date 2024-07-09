@@ -1,0 +1,237 @@
+---
+title: "TGCA Sample Vignettes"
+output: rmarkdown::html_vignette
+date: "Compiled: `r Sys.Date()`"
+execute:
+  cache: false
+format:
+  html:
+    code-fold: false
+    code-tools: false
+    code-link: true
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{TCGA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Setup
+
+## Load libraries
+
+```{r setup, results='hide'}
+#| output: false
+library(tidyverse)
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(patchwork)
+library(dittoSeq)
+library(purrr)
+library(scatools)
+library(ggplotify)
+```
+
+
+## Fragment files
+
+```{r, eval=FALSE}
+a5_frags <- "/data1/shahs3/isabl_data_lake/analyses/86/75/28675/TCGA-06-A5U0-01A-31-A615-42-X011-S07_aliquot/outs/fragments.tsv.gz"
+aa_frags <- "/data1/shahs3/isabl_data_lake/analyses/86/67/28667/TCGA-4W-AA9S-01A-22-A617-42-X015-S12_aliquot/outs/fragments.tsv.gz"
+
+cbs1 <- read.csv("/data1/shahs3/isabl_data_lake/analyses/86/75/28675/TCGA-06-A5U0-01A-31-A615-42-X011-S07_aliquot/outs/singlecell.csv")
+
+cbs2 <- read.csv("/data1/shahs3/isabl_data_lake/analyses/86/67/28667/TCGA-4W-AA9S-01A-22-A617-42-X015-S12_aliquot/outs/singlecell.csv")
+
+sample_list <- list(
+  "A5U0" = list(
+    "fragments_file" = a5_frags,
+    "cells" = cbs1$barcode[cbs1$is__cell_barcode == 1]
+  ),
+  "AA9S" = list(
+    "fragments_file" = aa_frags,
+    "cells" = cbs2$barcode[cbs2$is__cell_barcode == 1]
+  )
+)
+```
+
+## Generate bins object
+
+```{r}
+bins <- get_tiled_bins(bs_genome = BSgenome.Hsapiens.UCSC.hg38, tilewidth = 1e7)
+```
+
+## Get blacklist
+
+```{r}
+blacklist <- get_blacklist(genome = "hg38")
+```
+
+## Load WGS derived CNV calls
+
+```{r, eval=FALSE}
+a5u0_wgs <- read.table(file = "/data1/shahs3/junobackup/users/mcphera1/projects/gdan_atac/from_shahab/TCGA-06-A5U0-allelic-CN.tsv", header = T, sep = "\t")
+aa9s_wgs <- read.table(file = "/data1/shahs3/junobackup/users/zatzmanm/repos/scatac_awg/R/eventual_bookdown/pt_vignettes/TCGA-4W-AA9S-allelic-CN.tsv", header = T, sep = "\t")
+
+wgs_ascn <- list(A5U0 = a5u0_wgs, AA9S = aa9s_wgs)
+```
+
+# Process with SCATools
+
+```{r, eval=FALSE}
+sce_list <- lapply(names(sample_list), FUN = function(sample_id) {
+  cli::cli_alert_info("Running {sample_id}")
+  sce <- run_scatools(
+    sample_id = sample_id,
+    fragment_file = sample_list[[sample_id]]$fragments_file,
+    cells = sample_list[[sample_id]]$cells,
+    bins = bins,
+    blacklist = blacklist,
+    outdir = file.path("results", sample_id),
+    verbose = TRUE,
+    overwrite = FALSE,
+    segment = FALSE,
+    ncores = 16,
+    save_h5ad = FALSE
+  )
+
+  # Depth based clustering
+  sce <- cluster_seurat(sce, assay_name = "counts_gc_modal_smoothed_ratios", suffix = "_depth", resolution = 0.4, verbose = FALSE)
+  # Relevel clones
+  if (sample_id == "A5U0") {
+    sce$clusters_depth <- factor(sce$clusters_depth, levels = c(0, 1, 3, 2), labels = c("A", "B", "C", "N"))
+  }
+})
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+# Side load pre-processed objects
+a5u0 <- readRDS("/data1/shahs3/junobackup/users/zatzmanm/repos/scatac_awg/R/eventual_bookdown/pt_vignettes/TCGA-06-A5U0_sce.rds")
+aa9s <- readRDS("/data1/shahs3/junobackup/users/zatzmanm/repos/scatac_awg/R/eventual_bookdown/pt_vignettes/TCGA-4W-AA9S_sce.rds")
+
+sce_list <- list(A5U0 = a5u0, AA9S = aa9s)
+```
+
+Integrate WGS derived CNV data
+
+```{r, eval=FALSE}
+sce_list <- lapply(names(sce_list), FUN = function(sample_id) {
+  sce <- sce_list[[sample_id]]
+  # Integrate WGS derived CNV data
+  df_wgs <- wgs_ascn[[sample_id]] %>%
+    mutate(
+      total = 2 * (CN_MAJOR + CN_MINOR),
+      major = 2 * CN_MAJOR,
+      minor = 2 * CN_MINOR,
+      chr = factor(CONTIG, levels = gtools::mixedsort(unique(CONTIG)))
+    ) %>%
+    dplyr::rename("af" = "ALLELIC_FRACTION") %>%
+    mutate(
+      ai = abs(af - 0.5) / 0.5,
+      ai2 = 0.5 - abs(af - 0.5)
+    )
+
+  df_grange <- df_wgs %>%
+    makeGRangesFromDataFrame(seqnames.field = "chr", keep.extra.columns = T)
+
+  # Integrate with our scATAC data
+  int_granges <- integrate_segments(x = rowRanges(sce), y = df_grange, granges_signal_colname = c("total", "major", "minor", "af", "ai", "ai2"))
+
+  rowRanges(sce) <- int_granges
+  rownames(sce) <- rowData(sce)$ID
+  return(sce)
+})
+
+names(sce_list) <- names(sample_list)
+```
+
+# Plotting
+
+```{r, fig.width = 10, fig.height = 4, include=FALSE, eval=FALSE}
+# Compare scATAC and WGS derived CNV estimates
+plots <- lapply(names(sce_list), FUN = function(sample_id) {
+  sce <- sce_list[[sample_id]]
+
+  # Pseudobulk the sample
+  ps <- pseudo_groups(sce = sce[, sce$clusters_depth != "N"], assay_name = "segment_merged_ratios", group_var = "Sample", na.rm = T)
+
+  # Normalize shahab data in same way
+  x <- rowRanges(ps)$total
+
+  x_mean_scaled <- x / mean(x)
+  x_mean_scaled_log <- log(x_mean_scaled)
+
+  y <- (assay(ps)[, 1])
+
+  df <- data.frame(wgs = x_mean_scaled, atac_pseudobulk = y, bin_id = names(y))
+
+  df <- cbind(scatools:::get_bin_info(df$bin_id), df)
+  df$diff <- df$wgs / df$atac_pseudobulk
+
+  p <- ggplot(df, aes(x = wgs, y = atac_pseudobulk)) +
+    geom_point(aes(color = chr)) +
+    geom_abline() +
+    ggpmisc::stat_poly_eq(formula = y ~ x, aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse = TRUE, label.y = 1) +
+    stat_smooth(method = "lm") +
+    geom_hline(yintercept = 1, linetype = "dashed", alpha = 0.5) +
+    geom_vline(xintercept = 1, linetype = "dashed", alpha = 0.5) +
+    theme(aspect.ratio = 1) +
+    scale_color_viridis_d() +
+    coord_cartesian(xlim = range(c(df$wgs, df$atac_pseudobulk)), ylim = range(c(df$wgs, df$atac_pseudobulk))) +
+    labs(x = "WGS CNV", y = "scATAC Psuedobulk", color = "Chromosome", title = sample_id)
+  return(p)
+})
+
+wrap_plots(plots, guides = "collect")
+```
+
+
+```{r, message=FALSE}
+col_clones <- function(clones) {
+  c(dittoColors()[1:length(unique(clones[clones != "N"]))], "black")
+}
+
+pls <- imap(sce_list, .f = function(sce, sample_id) {
+
+  pl_cols <- col_clones(sce$clusters)
+  names(pl_cols) <- levels(sce$clusters)
+
+  p1 <- dittoDimPlot(sce, var = "clusters", reduction.use = "UMAP") + scale_color_manual(values = pl_cols) +
+    theme(aspect.ratio = 1) +
+    labs(color = "Copy Number Cluster", title = NULL) +
+    theme(legend.position = "none")
+  rowRanges(sce)$WGS <- rowRanges(sce)$total
+
+  ht1 <- cloneCnaHeatmap(sce, assay_name = "segment_merged_logratios", clone_name = "clusters", bulk_cn_col = "WGS", col_clones = col_clones(sce$clusters), legend_name = "logr", col_fun = logr_col_fun(breaks = c(-0.6, -0.1, 0.1, 0.6), colors = c("blue", "white", "white", "red"))) %>%
+    as.ggplot()
+
+  pcomb <- p1 + ht1 + plot_layout(widths = c(3, 10))
+
+  return(pcomb)
+})
+
+names(pls) <- names(sample_list)
+```
+
+## A5U0
+
+```{r a5u0-plot, fig.width = 12, fig.height = 4}
+pls$A5U0
+```
+
+## AA9S
+
+```{r aa9s-plot, fig.width = 12, fig.height = 4}
+pls$AA9S
+```
+
+
+# Session Info
+
+<details>
+  <summary>**Session Info**</summary>
+```{r}
+devtools::session_info()
+```
+</details>
+

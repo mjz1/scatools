@@ -3,6 +3,7 @@
 * Replace `add_gc_cor`, `segment_cnv`, and `merge_segments` parallel backend to use `BiocParallel`
 * Added `segment=FALSE` as default
 * `get_label_centers` works with `Milo` objects
+* Add TCGA sample vignette
 * Minor bugfixes
 
 
