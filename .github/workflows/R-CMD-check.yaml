@@ -54,6 +54,7 @@ jobs:
           needs: check
           pak-version: devel
           cache: always
+          upgrade: TRUE
 
 
       - uses: r-lib/actions/check-r-package@v2
