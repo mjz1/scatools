@@ -26,13 +26,13 @@ jobs:
           - {os: macos-latest, r: 'oldrel'}
           - {os: windows-latest, r: 'release'}
           - {os: windows-latest, r: 'oldrel'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
+          # - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          # - {os: ubuntu-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'oldrel-1'}
-          - {os: ubuntu-20.04, r: 'release'}
-          - {os: ubuntu-20.04, r: 'devel'}
-          - {os: ubuntu-22.04, r: 'release'}
-          - {os: ubuntu-22.04, r: 'devel'}
+          # - {os: ubuntu-20.04, r: 'release'}
+          # - {os: ubuntu-20.04, r: 'devel'}
+          # - {os: ubuntu-22.04, r: 'release'}
+          # - {os: ubuntu-22.04, r: 'devel'}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
@@ -52,10 +52,6 @@ jobs:
         with:
           extra-packages: any::rcmdcheck, local::.
           needs: check
-          pak-version: devel
-          cache: always
-          upgrade: 'TRUE'
-
 
       - uses: r-lib/actions/check-r-package@v2
         with:
