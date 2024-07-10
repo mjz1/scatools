@@ -798,7 +798,7 @@
     },
     "RcppArmadillo": {
       "Package": "RcppArmadillo",
-      "Version": "0.12.8.4.0",
+      "Version": "14.0.0-1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -808,7 +808,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "a535dd90aa8ec9a2e63a8f79b4a1bf43"
+      "Hash": "a711769be34214addf7805278b72d56b"
     },
     "RcppEigen": {
       "Package": "RcppEigen",
@@ -3029,15 +3029,15 @@
       "Version": "1.0.7.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
       "RemoteUsername": "rstudio",
       "RemoteRepo": "renv",
       "RemoteRef": "main",
-      "RemoteSha": "4f911df9c4c5b79d81cbd6be97ef45e29ec9740a",
+      "RemoteSha": "8c2379948cb5667f47047b0e709c889fd2188feb",
+      "RemoteHost": "api.github.com",
       "Requirements": [
         "utils"
       ],
-      "Hash": "a82b9e4240adef32062645135eb76964"
+      "Hash": "73e0d7fbfb3035ae18fa10a9a923a40a"
     },
     "reshape2": {
       "Package": "reshape2",
