@@ -26,18 +26,16 @@ jobs:
           - {os: macos-latest, r: 'oldrel'}
           - {os: windows-latest, r: 'release'}
           - {os: windows-latest, r: 'oldrel'}
-          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/noble/latest"}
-          - {os: ubuntu-latest,   r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/noble/latest"}
-          - {os: ubuntu-latest,   r: 'oldrel-1', rspm: "https://packagemanager.rstudio.com/cran/__linux__/noble/latest"}
-          - {os: ubuntu-20.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          - {os: ubuntu-20.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
-          - {os: ubuntu-22.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest"}
-          - {os: ubuntu-22.04, r: 'devel', rspm: "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest"}
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          - {os: ubuntu-latest,   r: 'release'}
+          - {os: ubuntu-latest,   r: 'oldrel-1'}
+          - {os: ubuntu-20.04, r: 'release'}
+          - {os: ubuntu-20.04, r: 'devel'}
+          - {os: ubuntu-22.04, r: 'release'}
+          - {os: ubuntu-22.04, r: 'devel'}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-      RSPM: ${{ matrix.config.rspm }}
 
     steps:
       - uses: actions/checkout@v4
@@ -52,8 +50,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, local::.
           needs: check
+          pak-version: devel
+          cache: always
+
 
       - uses: r-lib/actions/check-r-package@v2
         with:
