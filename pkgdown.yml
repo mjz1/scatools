@@ -1,10 +1,10 @@
-pandoc: 2.19.2
-pkgdown: 2.0.7
+pandoc: 3.1.11
+pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   scatools: scatools.html
-last_built: 2023-12-18T14:41Z
+  TCGA: TCGA.html
+last_built: 2024-07-10T02:35Z
 urls:
   reference: https://mjz1.github.io/scatools/reference
   article: https://mjz1.github.io/scatools/articles
-
