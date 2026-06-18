@@ -46,7 +46,6 @@ Imports:
     purrr,
     quantreg,
     readr,
-    reshape2,
     rtracklayer,
     S4Vectors,
     scales,
