@@ -151,14 +151,19 @@ bin_frags_chr <- function(fragments_chr,
     )
   )
 
-  # Match Cells
+  # Match Cells (one entry per fragment)
   matchID <- S4Vectors::match(mcols(fragments_chr)$barcode, cells)
 
-  # Create Sparse Matrix
+  # Create Sparse Matrix. Each overlap hit contributes one count to (bin, cell):
+  # i = the overlapped bin (subjectHits), j = the cell of the overlapping
+  # fragment (matchID indexed by queryHits). Cut-sites that fall outside all
+  # bins (e.g. centromeric gaps in arm-aware bins) simply produce no hit, so we
+  # must index by the actual hits rather than assume one hit per fragment.
+  # sparseMatrix sums duplicate (i, j) pairs, giving per-bin per-cell counts.
   mat <- Matrix::sparseMatrix(
     i = c(S4Vectors::to(start_hits), S4Vectors::to(end_hits)),
-    j = as.vector(c(matchID, matchID)),
-    x = rep(1, 2 * length(fragments_chr)),
+    j = c(matchID[S4Vectors::from(start_hits)], matchID[S4Vectors::from(end_hits)]),
+    x = 1,
     dims = c(length(bins_chr), length(cells))
   )
 
