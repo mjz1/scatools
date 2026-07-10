@@ -29,7 +29,7 @@ add_gc_cor <- function(sce,
   # Check if valid bins exists and pass correctly
   if ("valid_bins" %in% names(SummarizedExperiment::assays(sce))) {
     if (verbose) {
-      logger::log_info("Found valid bins in sce object")
+      cli::cli_alert_info("Found valid bins in sce object")
     }
     valid_mat <- SummarizedExperiment::assay(sce, "valid_bins")
   } else {
@@ -95,8 +95,8 @@ perform_gc_cor <- function(
     bpparam,
     verbose = FALSE, ...) {
   if (verbose) {
-    logger::log_info("Performing GC correction on {ncol(mat)} cells using {bpparam$workers} cores")
-    logger::log_info("GC correction method: {method}")
+    cli::cli_alert_info("Performing GC correction on {ncol(mat)} cells using {bpparam$workers} cores")
+    cli::cli_alert_info("GC correction method: {method}")
   }
 
   # Just pass all as true if not provided
@@ -131,7 +131,7 @@ perform_gc_cor <- function(
   )
 
   if (verbose) {
-    logger::log_success("GC correction completed!")
+    cli::cli_alert_success("GC correction completed!")
   }
 
   if (method == "modal") {

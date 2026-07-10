@@ -35,7 +35,7 @@ read_vartrix <- function(dir_path = NULL,
     variants <- dir(dir_path, pattern = "_variants", full.names = TRUE)
   }
 
-  logger::log_info("Loading single cell SNP matrices")
+  cli::cli_alert_info("Loading single cell SNP matrices")
   ref <- as(Matrix::readMM(mtx_ref), "CsparseMatrix")
   alt <- as(Matrix::readMM(mtx_alt), "CsparseMatrix")
   cells <- read.table(barcodes, header = FALSE, col.names = "barcodes")
@@ -44,7 +44,7 @@ read_vartrix <- function(dir_path = NULL,
 
   if (!is.null(keep_barcodes)) {
     keep_barcodes <- intersect(cells$barcodes, keep_barcodes)
-    logger::log_info("Keeping {length(keep_barcodes)} cells intersecting with 'keep_barcodes'")
+    cli::cli_alert_info("Keeping {length(keep_barcodes)} cells intersecting with 'keep_barcodes'")
     ref <- ref[, keep_barcodes]
     alt <- alt[, keep_barcodes]
     cells <- data.frame(barcodes = cells[cells$barcodes %in% keep_barcodes, ])
@@ -63,15 +63,15 @@ read_vartrix <- function(dir_path = NULL,
 
   rownames(ref) <- rownames(alt) <- snps$snp_id
 
-  logger::log_debug("{nrow(snps)} input SNPs from vartrix")
+  cli::cli_alert_info("{nrow(snps)} input SNPs from vartrix")
 
   # Load phasing if provided
   if (!is.null(input_vcf)) {
-    logger::log_info("Reading input vcf: {input_vcf}")
+    cli::cli_alert_info("Reading input vcf: {input_vcf}")
     vcf_df <- vcf_to_df(input_vcf)
 
     if (!is.null(phased_vcf)) {
-      logger::log_info("Reading phased vcf: {phased_vcf}")
+      cli::cli_alert_info("Reading phased vcf: {phased_vcf}")
       phased_vcf_df <- vcf_to_df(phased_vcf)
       phased_vcf_df <- dplyr::rename(phased_vcf_df, "gt_phased" = "gt")
 
@@ -84,7 +84,7 @@ read_vartrix <- function(dir_path = NULL,
       filter(snp_id %in% vcf_df$snp_id) %>%
       dplyr::left_join(vcf_df)
 
-    logger::log_info("VCF data loaded and merged")
+    cli::cli_alert_info("VCF data loaded and merged")
   }
 
   # Reorder
@@ -100,14 +100,14 @@ read_vartrix <- function(dir_path = NULL,
 
   if (!is.null(blacklist)) {
     hits <- GenomicRanges::findOverlaps(SummarizedExperiment::rowRanges(sce), blacklist)
-    logger::log_info("Removing {prettyNum(length(hits), big.mark = ',')} SNPs overlapping with blacklist")
+    cli::cli_alert_info("Removing {prettyNum(length(hits), big.mark = ',')} SNPs overlapping with blacklist")
     sce <- sce[-S4Vectors::queryHits(hits), ]
   }
 
   assay(sce, "total") <- assay(sce, "ref") + assay(sce, "alt")
 
   keep_snps <- names(which(Matrix::rowSums(assay(sce, "total")) >= min_counts))
-  logger::log_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(nrow(sce), big.mark = ',')} hetSNPs remaining after filtering for at least {min_counts} total counts across all cells")
+  cli::cli_alert_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(nrow(sce), big.mark = ',')} hetSNPs remaining after filtering for at least {min_counts} total counts across all cells")
   sce <- sce[keep_snps, ]
 
   # To ensure memory efficiency, we need to encode a sparse binary matrix that
@@ -128,7 +128,7 @@ vcf_to_df <- function(vcf, verbose = FALSE) {
   # Remove indels and non het SNPs
   keeps <- names(which((!vcfR::is.indel(vcf) & vcfR::is_het(as.matrix(gts)))[, 1]))
 
-  logger::log_debug("{length(keeps)} hetSNPs")
+  cli::cli_alert_info("{length(keeps)} hetSNPs")
 
   vcf_df <- cbind.data.frame(gts, alleles)[keeps, ] %>%
     dplyr::mutate(across(where(is.character), as.factor))

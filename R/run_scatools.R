@@ -48,7 +48,7 @@ run_scatools <- function(sample_id,
   dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
   outdir <- normalizePath(outdir)
 
-  logger::log_info("Output directory: {outdir}")
+  cli::cli_alert_info("Output directory: {outdir}")
 
   # sample directories
   # cnv_out <- file.path(outdir)
@@ -59,16 +59,16 @@ run_scatools <- function(sample_id,
   final_out <- file.path(outdir, glue::glue("{bin_name}_processed.sce"))
 
   if (file.exists(final_out) & !overwrite) {
-    logger::log_info("Processed output already exists: {final_out}")
+    cli::cli_alert_info("Processed output already exists: {final_out}")
     return(get(load(final_out)))
   }
 
   if (is.null(fragment_file)) {
-    stop(logger::log_error("Must provide fragments.tsv"), call. = FALSE)
+    cli::cli_abort("Must provide fragments.tsv")
   }
 
   # Scatools processing
-  logger::log_info("BINNING FRAGMENTS")
+  cli::cli_alert_info("BINNING FRAGMENTS")
 
   # Bin the fragments
   bin_atac_frags(
@@ -123,14 +123,14 @@ run_scatools <- function(sample_id,
   }
 
   save_to(object = sce_processed, save_to = final_out)
-  logger::log_success("SCATools run completed!")
+  cli::cli_alert_success("SCATools run completed!")
 
   # Save anndata
   if (save_h5ad == TRUE) {
     if (!requireNamespace("zellkonverter", quietly = T)) {
-      logger::log_error("Package 'zellkonverter' must be installed to save as h5ad")
+      cli::cli_alert_warning("Package 'zellkonverter' must be installed to save as h5ad")
     } else {
-      logger::log_info("Writing output to anndata")
+      cli::cli_alert_info("Writing output to anndata")
       # Save raw anndata
       zellkonverter::writeH5AD(sce, file = file.path(outdir, glue::glue("{bin_name}_raw.h5ad")), compression = "gzip")
       zellkonverter::writeH5AD(sce_processed, file = file.path(outdir, glue::glue("{bin_name}_processed.h5ad")), compression = "gzip")

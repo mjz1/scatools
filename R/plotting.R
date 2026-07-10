@@ -16,7 +16,7 @@ plot_cell_cna <- function(sce,
                           linewidth = 1) {
   if (is.null(cell_id)) {
     if (length(cell_id) > 20) {
-      logger::log_warn("No cell ids provided and plotting many cells. Are you sure you want to do this!?")
+      cli::cli_alert_warning("No cell ids provided and plotting many cells. Are you sure you want to do this!?")
     }
     cell_id <- colnames(sce)
   }
@@ -28,10 +28,10 @@ plot_cell_cna <- function(sce,
   # TODO: Try to intelligently find the start positions from the provided sce
   bindat <- as.data.frame(SummarizedExperiment::rowRanges(sce))
   if (nrow(bindat) == 0) {
-    logger::log_warn("Bin data not found in rowRanges(sce). Checking rowData(sce)")
+    cli::cli_alert_warning("Bin data not found in rowRanges(sce). Checking rowData(sce)")
     bindat <- as.data.frame(SummarizedExperiment::rowData(sce))
     if (nrow(bindat) == 0) {
-      logger::log_error("Bin data not found in rowData(sce).")
+      cli::cli_abort("Bin data not found in rowData(sce).")
     }
   } else {
     # This means we do have rowranges.
@@ -40,7 +40,6 @@ plot_cell_cna <- function(sce,
   }
   if (is.null(rownames(sce))) {
     rownames(sce) <- with(bindat, paste(chr, start, end, sep = "_"))
-    # logger::log_error("rownames(sce) cannot be NULL.")
   }
   bindat$bin_id <- get_bin_ids(rowRanges(sce))
 
@@ -256,7 +255,7 @@ cnaHeatmap <- function(sce,
 
   if (!is.null(clone_name)) {
     if (!clone_name %in% colnames(colData(sce))) {
-      logger::log_error("{clone_name} not found in sce object")
+      cli::cli_abort("{clone_name} not found in sce object")
     }
   }
 
@@ -323,9 +322,9 @@ cnaHeatmap <- function(sce,
     if (is.null(sce@metadata$gene_overlap)) {
       # Attempt to perform the overlaps on the fly
       if (!requireNamespace("EnsDb.Hsapiens.v86")) {
-        logger::log_error("EnsDb.Hsapiens.v86 not installed. No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+        cli::cli_abort("EnsDb.Hsapiens.v86 not installed. No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
       } else {
-        logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
+        cli::cli_alert_warning("No gene overlaps detected in SCE input. Performing overlaps now.")
         sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
       }
     }
@@ -337,7 +336,7 @@ cnaHeatmap <- function(sce,
     na_idx <- which(is.na(match_idx))
     missing_g <- label_genes[na_idx]
     if (length(na_idx) > 0) {
-      logger::log_warn("Genes not found: {paste(missing_g, collapse = '; ')}")
+      cli::cli_alert_warning("Genes not found: {paste(missing_g, collapse = '; ')}")
     }
 
     label_genes <- label_genes[!is.na(match_idx)]
@@ -393,7 +392,7 @@ cnaHeatmap <- function(sce,
   # Add bulk CN annotation
   if (!is.null(bulk_cn_col)) {
     if (!bulk_cn_col %in% colnames(mcols(SummarizedExperiment::rowRanges(sce)))) {
-      logger::log_warn("{bulk_cn_col} not found in provided object. Not plotting...")
+      cli::cli_alert_warning("{bulk_cn_col} not found in provided object. Not plotting...")
       top_annotation <- NULL
     } else {
       cn_dat <- data.frame(mcols(SummarizedExperiment::rowRanges(sce))[, bulk_cn_col])
@@ -569,7 +568,7 @@ plot_clone_comp <- function(sce,
   # TODO: Allow for inversion of the plot to plot chromosomes on the facets by clones?
 
   if (!requireNamespace("GGally")) {
-    logger::log_warn("The GGally package is required for the clone_comp_plot function. Please install")
+    cli::cli_alert_warning("The GGally package is required for the clone_comp_plot function. Please install")
     stop()
   }
 
@@ -686,10 +685,10 @@ plot_gene_cna <- function(sce,
   if (is.null(sce@metadata$gene_overlap)) {
     # Attempt to perform the overlaps on the fly
     if (requireNamespace("EnsDb.Hsapiens.v86")) {
-      logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
+      cli::cli_alert_warning("No gene overlaps detected in SCE input. Performing overlaps now.")
       sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
     } else {
-      logger::log_error("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+      cli::cli_abort("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
     }
   }
 

@@ -32,10 +32,10 @@ get_snp_bidx <- function(snp,
 
   # And other information
   if (!is.null(merge_cols)) {
-    logger::log_info("Merging columns: [{paste(merge_cols, collapse = ', ')}] onto snp object")
+    cli::cli_alert_info("Merging columns: [{paste(merge_cols, collapse = ', ')}] onto snp object")
     for (x in merge_cols) {
       if (!x %in% colnames(mcols(bins))) {
-        logger::log_warn("merge_cols: {x} not found in bins object. Dropping from merge")
+        cli::cli_alert_warning("merge_cols: {x} not found in bins object. Dropping from merge")
         merge_cols <- merge_cols[-which(merge_cols == x)]
       }
     }
@@ -43,7 +43,7 @@ get_snp_bidx <- function(snp,
       new_mcols[, merge_cols] <- NA
       new_mcols[, merge_cols] <- mcols(bins)[mcols(rowRanges(snp))$bin_idx, merge_cols]
     } else {
-      logger::log_warn("No columns left to merge from bins onto snp data")
+      cli::cli_alert_warning("No columns left to merge from bins onto snp data")
     }
   }
 

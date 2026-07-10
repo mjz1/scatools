@@ -40,9 +40,9 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL
     tot_snp_cov <- Matrix::rowSums(assay(snp[S4Vectors::queryHits(olaps), sub_cells], "ref") + assay(snp[S4Vectors::queryHits(olaps), sub_cells], "alt"))
     keep_snps <- names(tot_snp_cov[which(tot_snp_cov >= min_snp_cov)])
 
-    logger::log_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(S4Vectors::queryHits(olaps)), big.mark = ',')} SNPs overlapping bins meet minimum coverage requirements ({min_snp_cov} reads)")
+    cli::cli_alert_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(S4Vectors::queryHits(olaps)), big.mark = ',')} SNPs overlapping bins meet minimum coverage requirements ({min_snp_cov} reads)")
   } else {
-    logger::log_info("Phases provided. Ignoring 'min_snp_cov'")
+    cli::cli_alert_info("Phases provided. Ignoring 'min_snp_cov'")
 
     # Remove any NA I_hats
     phases <- phases[!is.na(phases)]
@@ -53,7 +53,7 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL
     keep_snps <- intersect(atac_snps, names(phases))
 
     phases <- phases[keep_snps]
-    logger::log_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(atac_snps), big.mark = ',')} SNPs overlapping in bins and with provided phasing")
+    cli::cli_alert_info("{prettyNum(length(keep_snps), big.mark = ',')} of {prettyNum(length(atac_snps), big.mark = ',')} SNPs overlapping in bins and with provided phasing")
   }
 
   # Remove bins with no covered SNPs
@@ -64,14 +64,13 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL
   colnames(snps_per_bin) <- c("bin_id", "n_snps")
   keep_bins <- as.character(snps_per_bin[snps_per_bin$n_snps > min_bin_snps, "bin_id"])
 
-  logger::log_info("Keeping {length(keep_bins)} of {length(bins)} input bins with at least {min_bin_snps} SNPs covered in the bin")
+  cli::cli_alert_info("Keeping {length(keep_bins)} of {length(bins)} input bins with at least {min_bin_snps} SNPs covered in the bin")
   bins <- bins[get_bin_ids(bins) %in% keep_bins]
 
-  logger::log_info("Phasing {prettyNum(length(keep_snps), big.mark = ',')} SNPs in {length(bins)} bins across {prettyNum(length(sub_cells), big.mark = ',')} cells using {ncores} cores")
+  cli::cli_alert_info("Phasing {prettyNum(length(keep_snps), big.mark = ',')} SNPs in {length(bins)} bins across {prettyNum(length(sub_cells), big.mark = ',')} cells using {ncores} cores")
 
   em_res_all <- pbmcapply::pbmclapply(X = seq_along(bins), mc.cores = ncores, FUN = function(i) {
     # em_res_all <- lapply(X = seq_along(bins), FUN = function(i) {
-    logger::log_debug("Iteration {i}")
 
     c_bin_id <- get_bin_ids(bins)[i]
 
@@ -128,7 +127,7 @@ phase_snps <- function(snp, bins, max_iter = 50, sub_cells = NULL, phases = NULL
 
   SingleCellExperiment::altExp(snp, "em") <- em
 
-  logger::log_success("Phasing completed!")
+  cli::cli_alert_success("Phasing completed!")
 
   return(snp)
 }
@@ -170,7 +169,7 @@ EM2 <- function(ref_table, alt_table, max_iter = 50, seed = 3, phases = NULL, to
 
 
     if (length(unique(var_vaf)) < 3) {
-      logger::log_warn("Not enough unique data points to initialize kmeans with 3 centers. Defaulting to 0.5 initialization.")
+      cli::cli_alert_warning("Not enough unique data points to initialize kmeans with 3 centers. Defaulting to 0.5 initialization.")
       ind0 <- rep(0.5, length(var_vaf))
     } else {
       # k means clustering to get priors
@@ -195,7 +194,6 @@ EM2 <- function(ref_table, alt_table, max_iter = 50, seed = 3, phases = NULL, to
   ll_old <- -Inf
 
   for (ii in 1:max_iter) {
-    logger::log_debug("Iteration {ii}")
 
     ind_table <- matrix(rep(ind, nn), nrow = nn, byrow = T)
     # maximization step
