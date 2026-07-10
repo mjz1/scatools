@@ -24,7 +24,7 @@ filter_sce <- function(sce,
 
 
   gc_keeps <- rowRanges(sce)$gc > gc_range[1] & rowRanges(sce)$gc < gc_range[2]
-  logger::log_info("Removing bins outside of {paste(gc_range, collapse = ' - ')} gc proportion: {sum(!gc_keeps)} bins removed")
+  cli::cli_alert_info("Removing bins outside of {paste(gc_range, collapse = ' - ')} gc proportion: {sum(!gc_keeps)} bins removed")
 
   sce <- sce[gc_keeps, ]
 
@@ -37,7 +37,7 @@ filter_sce <- function(sce,
       # Flag
       rowData(sce)[[paste0("keep_", f)]] <- bin_bool
 
-      logger::log_info("Keeping {sum(bin_bool)} of {length(bin_bool)} bins with at least {min_bin_counts} counts in {min_bin_prop*100}% of cells")
+      cli::cli_alert_info("Keeping {sum(bin_bool)} of {length(bin_bool)} bins with at least {min_bin_counts} counts in {min_bin_prop*100}% of cells")
 
       if (!flag_only) {
         sce <- sce[bin_bool, ]
@@ -52,7 +52,7 @@ filter_sce <- function(sce,
       # Flag
       colData(sce)[[paste0("keep_", f)]] <- cell_bool
 
-      logger::log_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells with at least {min_cell_counts} counts in {min_cell_prop*100}% of bins")
+      cli::cli_alert_info("Keeping {sum(cell_bool)} of {length(cell_bool)} cells with at least {min_cell_counts} counts in {min_cell_prop*100}% of bins")
 
       if (!flag_only) {
         sce <- sce[, which(cell_bool)]
@@ -130,7 +130,7 @@ gc_modal_qc_filter <- function(sce, assay = "counts_gc_modal", filter_prop = 0.0
 
   sce@metadata$cell_filter_info <- list(cells_in = ncol(sce), cells_kept = length(keep_cells), filter_threshold = filter_prop)
 
-  logger::log_info("Keeping {length(keep_cells)} of {ncol(sce)} cells: {signif(length(keep_cells) / ncol(sce) * 100, 3)}% (filter threshold: {filter_prop})")
+  cli::cli_alert_info("Keeping {length(keep_cells)} of {ncol(sce)} cells: {signif(length(keep_cells) / ncol(sce) * 100, 3)}% (filter threshold: {filter_prop})")
 
   return(sce[, keep_cells])
 }

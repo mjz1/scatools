@@ -47,7 +47,7 @@ cluster_seurat <- function(sce,
   # TODO:
 
   if (!requireNamespace("Seurat")) {
-    logger::log_error("Seurat not installed. Please install Seurat to use this function.")
+    cli::cli_abort("Seurat not installed. Please install Seurat to use this function.")
   }
 
   sce_orig <- sce
@@ -58,7 +58,7 @@ cluster_seurat <- function(sce,
 
   # For joint clustering
   if (length(assay_name) == 2) {
-    logger::log_info("Jointly clustering assays '{assay_name[1]}' and '{assay_name[2]}'")
+    cli::cli_alert_info("Jointly clustering assays '{assay_name[1]}' and '{assay_name[2]}'")
     a1 <- scale(assay(sce, assay_name[1]))
     a2 <- scale(assay(sce, assay_name[2]))
 
@@ -81,8 +81,7 @@ cluster_seurat <- function(sce,
     features.pca <- rownames(srt)
   } else if (features.pca == "variable") {
     if (is.null(nvar.features)) {
-      logger::log_error("Variable features must provide 'nvar.features")
-      stop()
+      cli::cli_abort("Variable features must provide 'nvar.features'")
     }
     srt <- Seurat::FindVariableFeatures(srt)
     # Will use Seurats find variable features
@@ -96,11 +95,11 @@ cluster_seurat <- function(sce,
   )
 
   if (length(features.pca) < npcs.pca) {
-    logger::log_error("{length(features.pca)} features provided for PCA but requesting {npcs.pca} PCA dimensions. Please adjust.")
+    cli::cli_abort("{length(features.pca)} features provided for PCA but requesting {npcs.pca} PCA dimensions. Please adjust.")
   }
 
   if (ncol(srt) < npcs.pca) {
-    logger::log_warn("Not enough cells: {ncol(srt)} for requesting pcs: {npcs.pca}. Reducing to {ncol(srt)-1}")
+    cli::cli_alert_warning("Not enough cells: {ncol(srt)} for requesting pcs: {npcs.pca}. Reducing to {ncol(srt)-1}")
     npcs.pca <- ncol(srt) - 1
   }
 
@@ -118,9 +117,9 @@ cluster_seurat <- function(sce,
   )
 
   if (algorithm %in% c(4, "leiden")) {
-    logger::log_info("Finding clusters using leiden algorithm")
+    cli::cli_alert_info("Finding clusters using leiden algorithm")
     srt$seurat_clusters <- factor(leiden_wrapper(adj_mat = srt@graphs$RNA_snn, resolution = resolution))
-    logger::log_success("Found ", length(unique(srt$seurat_clusters)), " communities")
+    cli::cli_alert_success("Found ", length(unique(srt$seurat_clusters)), " communities")
   } else {
     srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
   }
@@ -154,13 +153,11 @@ cluster_seurat <- function(sce,
 #'
 leiden_wrapper <- function(adj_mat, group_singletons = TRUE, resolution = 1) {
   if (!requireNamespace("igraph")) {
-    logger::log_error("Package 'igraph' required for leiden clustering. Please install.")
-    stop()
+    cli::cli_abort("Package 'igraph' required for leiden clustering. Please install.")
   }
 
   if (!requireNamespace("leidenbase")) {
-    logger::log_error("Package 'leidenbase' required for leiden clustering. Please install.")
-    stop()
+    cli::cli_abort("Package 'leidenbase' required for leiden clustering. Please install.")
   }
 
   # https://github.com/satijalab/seurat/discussions/6754?sort=top

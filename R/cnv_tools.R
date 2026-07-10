@@ -12,7 +12,7 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
   chrs <- as.vector(GenomeInfoDb::seqnames(rowRanges(sce)))
   starts <- GenomicRanges::start(SummarizedExperiment::rowRanges(sce))
   sample_ids <- colnames(sce)
-  logger::log_info("Smoothing {assay_name}")
+  cli::cli_alert_info("Smoothing {assay_name}")
   smoothed_counts <- pbmcapply::pbmclapply(1:ncol(sce), mc.cores = ncores, FUN = function(i) {
     x <- as.vector(assay(x = sce, assay_name)[, i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
@@ -29,7 +29,7 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
   smoothed_counts[smoothed_counts <= 0] <- 1e-4 # negative or zero values post smoothed.
 
   assay(sce, smooth_name) <- smoothed_counts
-  logger::log_success("Smoothing complete! Smoothed counts in assay '{smooth_name}'")
+  cli::cli_alert_success("Smoothing complete! Smoothed counts in assay '{smooth_name}'")
   return(sce)
 }
 
@@ -53,7 +53,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   sample_ids <- colnames(sce)
   # Perform segmentation
   # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
-  logger::log_info("Segmenting CNVs")
+  cli::cli_alert_info("Segmenting CNVs")
   segmented_counts <- BiocParallel::bplapply(X = 1:ncol(sce), BPPARAM = bpparam, FUN = function(i) {
     x <- as.vector(SummarizedExperiment::assay(sce, assay_name)[, i])
     obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
@@ -72,7 +72,7 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
       # Fails if no counts on final segments so we put try
       try(df[res$segRows[j, 1]:res$segRows[j, 2], "seg.mean"] <- res$output[j, "seg.mean"])
     }
-    # logger::log_success("Segmentation completed!")
+    # cli::cli_alert_success("Segmentation completed!")
     return(df$seg.mean)
   })
 
@@ -102,7 +102,7 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
   segment_df[segment_df == 0] <- 1e-4
   segment_df <- log2(segment_df)
 
-  logger::log_info("Merging segments using {bpparam$workers} cores for {ncol(segment_df)} cells")
+  cli::cli_alert_info("Merging segments using {bpparam$workers} cores for {ncol(segment_df)} cells")
 
   seg_ml_list <- BiocParallel::bplapply(X = seq_along(segment_df), BPPARAM = bpparam, function(i) {
     cell_name <- names(segment_df)[i]
@@ -127,9 +127,9 @@ merge_segments <- function(sce, smooth_assay, segment_assay, new_assay = "segmen
 
   sce <- logNorm(sce, assay_name = paste(new_assay, "ratios", sep = "_"), name = paste(new_assay, "logratios", sep = "_"))
 
-  logger::log_info("Merged segments in: {new_assay}")
-  logger::log_info("Merged segments ratios in: {paste(new_assay, 'ratios', sep = '_')}")
-  logger::log_info("Merged segments logratios in: {paste(new_assay, 'logratios', sep = '_')}")
+  cli::cli_alert_info("Merged segments in: {new_assay}")
+  cli::cli_alert_info("Merged segments ratios in: {paste(new_assay, 'ratios', sep = '_')}")
+  cli::cli_alert_info("Merged segments logratios in: {paste(new_assay, 'logratios', sep = '_')}")
 
   return(sce)
 }
@@ -158,13 +158,13 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
   method <- match.arg(method, choices = c("min_sd", "gmm"))
 
   if (length(unique(sce[[group_by]])) == 1) {
-    logger::log_warn("Only one group detected. Cannot identify normal cells")
+    cli::cli_alert_warning("Only one group detected. Cannot identify normal cells")
     sce$tumor_cell <- NA
     return(sce)
   }
 
   if (length(unique(sce[[group_by]])) == 2) {
-    logger::log_warn("Only two groups detected. Defaulting to method = 'min_sd'")
+    cli::cli_alert_warning("Only two groups detected. Defaulting to method = 'min_sd'")
     method <- "min_sd"
     use_cnv_score <- FALSE
     n_normal_clusts <- 1
@@ -205,7 +205,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
       n_normal_clusts <- 1
     }
     if (n_normal_clusts >= length(unique(sce[[group_by]]))) {
-      logger::log_warn("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
+      cli::cli_alert_warning("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
       n_normal_clusts <- length(unique(sce[[group_by]])) - 1
     }
     normal_clust <- names(sort(mus)[1:n_normal_clusts])
@@ -215,7 +215,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
 
   sce$tumor_cell[which(!sce[[group_by]] %in% normal_clust)] <- TRUE
 
-  logger::log_info("{table(sce$tumor_cell)[[1]]} normal cells identified in {length(normal_clust)} clusters using {method} method. Clusters = {paste(normal_clust, collapse =', ')}")
+  cli::cli_alert_info("{table(sce$tumor_cell)[[1]]} normal cells identified in {length(normal_clust)} clusters using {method} method. Clusters = {paste(normal_clust, collapse =', ')}")
 
   if (plot) {
     p1 <- suppressWarnings(qplot(x = sce[[group_by]], y = sce[["seg_sd"]], geom = "boxplot", fill = sce[["tumor_cell"]]) + scale_fill_manual(values = col_tumor_cells()) + labs(x = paste0(group_by), y = paste0(assay_name, " cell sd"), fill = "Tumor cell"))

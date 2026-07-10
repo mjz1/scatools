@@ -19,12 +19,12 @@ add_hmmcopy <- function(sce,
                         slot_suffix = NULL,
                         ...) {
   if (verbose) {
-    logger::log_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")
+    cli::cli_alert_info("Running HMMcopy on ", ncol(sce), " cells. Using ", ncores, " threads")
   }
 
 
   if (verbose) {
-    logger::log_info("Input assay: {assay_name}")
+    cli::cli_alert_info("Input assay: {assay_name}")
   }
 
 
@@ -66,7 +66,7 @@ add_hmmcopy <- function(sce,
   names(hmm_results) <- colnames(sce)
 
   if (verbose) {
-    logger::log_success("HMMcopy completed!")
+    cli::cli_alert_success("HMMcopy completed!")
   }
 
   if (!is.null(save_raw_hmm)) {
@@ -74,23 +74,23 @@ add_hmmcopy <- function(sce,
   }
 
   if (verbose) {
-    logger::log_info("Grabbing best HMMcopy results")
+    cli::cli_alert_info("Grabbing best HMMcopy results")
   }
   hmm_results_best <- grab_hmm_res(hmm_results, ncores = 1)
 
   if (verbose) {
-    logger::log_info("Adding HMMcopy metadata to sce")
+    cli::cli_alert_info("Adding HMMcopy metadata to sce")
   }
   hmm_metadata <- bind_sublist(hmm_results_best, "mstats")
   if (!all(hmm_metadata$cell_id == rownames(SummarizedExperiment::colData(sce)))) {
-    logger::log_warn("Cell ids in HMMcopy metadata do not match the original sce object. Merge may be incomplete")
+    cli::cli_alert_warning("Cell ids in HMMcopy metadata do not match the original sce object. Merge may be incomplete")
   }
 
   # Merge the metadata
   SummarizedExperiment::colData(sce) <- cbind(colData(sce), hmm_metadata[match(hmm_metadata$cell_id, rownames(colData(sce))), ])
 
   if (verbose) {
-    logger::log_info("Adding HMMcopy data to sce")
+    cli::cli_alert_info("Adding HMMcopy data to sce")
   }
 
   copy_mat <- do.call("cbind", lapply(names(hmm_results_best), FUN = function(name) {
@@ -114,14 +114,14 @@ add_hmmcopy <- function(sce,
   }
 
   if (verbose) {
-    logger::log_info("Adding copy and state data as assays: {copy_slot} AND {state_slot}")
+    cli::cli_alert_info("Adding copy and state data as assays: {copy_slot} AND {state_slot}")
   }
 
   assay(sce, copy_slot) <- copy_mat
   assay(sce, state_slot) <- state_mat
 
   if (verbose) {
-    logger::log_success("HMMcopy data added!")
+    cli::cli_alert_success("HMMcopy data added!")
   }
 
   # Store the modal segments as unstructured data
@@ -326,7 +326,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
   # Run the HMM for each multiplier state and compile the results into a list
   hmm_results <- lapply(multipliers, FUN = function(multiplier) {
     if (verbose) {
-      logger::log_info("Running single cell HMMcopy for multiplier: ", multiplier)
+      cli::cli_alert_info("Running single cell HMMcopy for multiplier: ", multiplier)
     }
     res <- hmmcopy_singlecell(
       chr = chr,
@@ -359,7 +359,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
     pick <- "fail"
     hmm_results <- list("fail" = hmm_results[[1]]) # Just to reduce on space usage only need one
     hmm_results["best"] <- pick
-    logger::log_info("Best ploidy: ", pick)
+    cli::cli_alert_info("Best ploidy: ", pick)
     pick_m <- pick
   } else {
     # scaledpenalty from original code is scaled_halfiness
@@ -373,7 +373,7 @@ run_sc_hmmcopy <- function(chr, start, end, counts, reads, ideal = rep(TRUE, len
 
     hmm_results["best"] <- pick
 
-    # logger::log_info("Best ploidy: ", pick)
+    # cli::cli_alert_info("Best ploidy: ", pick)
 
     pick_m <- paste0("m", pick)
   }

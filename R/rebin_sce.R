@@ -13,7 +13,7 @@
 #'
 rebin_sce <- function(sce, assays, new_bins, cell_ids = NULL, ncores = 1) {
   if (is.null(cell_ids)) {
-    logger::log_info("Cell ids not provided. Rebinning all cells")
+    cli::cli_alert_info("Cell ids not provided. Rebinning all cells")
     cell_ids <- colnames(sce)
   }
 
@@ -31,7 +31,6 @@ rebin_sce <- function(sce, assays, new_bins, cell_ids = NULL, ncores = 1) {
     # Loop over the new bins and map the weighted mean values on
     res <- pbmcapply::pbmclapply(unique(bin_map$y_bins), mc.cores = ncores, FUN = function(new_bin_idx) {
       # res <- lapply(unique(bin_map$y_bins), FUN = function(new_bin_idx) {
-      # logger::log_debug("{new_bin_idx}")
       # Original bin indexes and disjoint widths
       orig_bin_idx <- bin_map[bin_map$y_bins == new_bin_idx, "x_bins"]
       orig_bin_widths <- bin_map[bin_map$y_bins == new_bin_idx, "disjoint_width"]
