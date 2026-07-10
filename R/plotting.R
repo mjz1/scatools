@@ -240,6 +240,7 @@ cnaHeatmap <- function(sce,
                        use_raster = TRUE,
                        row_split = NULL,
                        ...) {
+  require_ns("ComplexHeatmap", "copy-number heatmaps")
   # TODO: Enable multiple annotations
   # TODO: Enable multiple plots layered on top
   # if (is.null(rownames(sce))) {
