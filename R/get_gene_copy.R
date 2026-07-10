@@ -31,10 +31,10 @@ get_gene_copy <- function(sce,
   if (is.null(sce@metadata$gene_overlap)) {
     # Attempt to perform the overlaps on the fly
     if (requireNamespace("EnsDb.Hsapiens.v86")) {
-      logger::log_warn("No gene overlaps detected in SCE input. Performing overlaps now.")
+      cli::cli_alert_warning("No gene overlaps detected in SCE input. Performing overlaps now.")
       sce <- overlap_genes(sce = sce, ensDb = EnsDb.Hsapiens.v86::EnsDb.Hsapiens.v86, gene_biotype = "protein_coding")
     } else {
-      logger::log_error("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
+      cli::cli_abort("No gene overlaps detected in SCE input. Please run 'overlap_genes' prior to labelling genes.")
     }
   }
 
@@ -59,9 +59,9 @@ get_gene_copy <- function(sce,
       dplyr::pull(gene_names)
 
     if (length(missing) >= 1) {
-      logger::log_warn("Unable to find genes: {paste(missing, collapse = '; ')}")
+      cli::cli_alert_warning("Unable to find genes: {paste(missing, collapse = '; ')}")
     } else {
-      logger::log_info("Found all genes in 'gene_names'")
+      cli::cli_alert_info("Found all genes in 'gene_names'")
     }
   }
 

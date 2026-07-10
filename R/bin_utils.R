@@ -33,16 +33,16 @@ bin_atac_frags <- function(sample_id,
   # Only bin frags if not done already
   if (!file.exists(file.path(bin_dir, "matrix.mtx.gz")) | overwrite) {
     # Convert to GenomicRanges
-    logger::log_info("{sample_id} -- Loading fragments...")
+    cli::cli_alert_info("{sample_id} -- Loading fragments...")
     fragments <- data.table::fread(fragment_file, header = FALSE)
-    logger::log_success("Fragments loaded!")
+    cli::cli_alert_success("Fragments loaded!")
     colnames(fragments)[1:5] <- c("chr", "start", "end", "barcode", "umi")
 
     # If no cells provided use all barcodes and warn
     if (is.null(cells)) {
       cells <- unique(fragments$barcode)
       if (length(cells) >= 1e5) {
-        logger::log_warn("No cell barcodes specified. {length(cells)} unique cells in fragments file...")
+        cli::cli_alert_warning("No cell barcodes specified. {length(cells)} unique cells in fragments file...")
       }
     }
 
@@ -51,7 +51,7 @@ bin_atac_frags <- function(sample_id,
     fragments <- GenomicRanges::split(fragments, GenomeInfoDb::seqnames(fragments))
 
     # Only keep fragments in called cells
-    logger::log_info("{sample_id} -- Computing fragments in {bin_name} bins using {ncores} cores")
+    cli::cli_alert_info("{sample_id} -- Computing fragments in {bin_name} bins using {ncores} cores")
     count_mat <- BiocParallel::bplapply(
       X = fragments,
       FUN = bin_frags_chr,
@@ -84,7 +84,7 @@ bin_atac_frags <- function(sample_id,
       return(count_mat)
     }
   } else {
-    logger::log_info("Binned counts file already found for {sample_id}")
+    cli::cli_alert_info("Binned counts file already found for {sample_id}")
   }
 }
 
@@ -108,12 +108,12 @@ bin_frags_chr <- function(fragments_chr,
 
   chrom <- GenomeInfoDb::seqlevelsInUse(fragments_chr)
 
-  logger::log_info("Binning {chrom}")
+  cli::cli_alert_info("Binning {chrom}")
 
   # Remove fragments overlapping with blacklist regions
   if (!is.null(blacklist)) {
     if (!class(blacklist) %in% "GRanges") {
-      logger::log_warn("Blacklist must be of class 'GRanges'. Provided: {class(blacklist)}")
+      cli::cli_alert_warning("Blacklist must be of class 'GRanges'. Provided: {class(blacklist)}")
     } else {
       blacklisted <- GenomicRanges::findOverlaps(subject = fragments_chr, query = blacklist)
 
@@ -230,8 +230,7 @@ get_tiled_bins <- function(bs_genome = NULL,
                            select_chrs = NULL,
                            respect_chr_arms = TRUE) {
   if (is.null(bs_genome)) {
-    logger::log_error("Must provide 'bs_genome'")
-    stop()
+    cli::cli_abort("Must provide 'bs_genome'")
   }
 
   stopifnot(class(bs_genome) %in% "BSgenome")
@@ -239,15 +238,14 @@ get_tiled_bins <- function(bs_genome = NULL,
   if (is.null(select_chrs)) {
     select_chrs <- paste("chr", c(1:22, "X"), sep = "")
   }
-  logger::log_info("Creating chromosome bins for {unique(genome(bs_genome))[1]}")
-  logger::log_info("respect_chr_arms = {respect_chr_arms}")
-  logger::log_info("Chromosomes: {paste(select_chrs, collapse = ';')}")
-  logger::log_info("Binwidth = {prettyMb(tilewidth)}")
+  cli::cli_alert_info("Creating chromosome bins for {unique(genome(bs_genome))[1]}")
+  cli::cli_alert_info("respect_chr_arms = {respect_chr_arms}")
+  cli::cli_alert_info("Chromosomes: {paste(select_chrs, collapse = ';')}")
+  cli::cli_alert_info("Binwidth = {prettyMb(tilewidth)}")
 
   if (respect_chr_arms) {
     if (is.null(bs_genome)) {
-      logger::log_error("Option: 'respect_chr_arms' requires specification of 'bs_genome'")
-      stop()
+      cli::cli_abort("Option: 'respect_chr_arms' requires specification of 'bs_genome'")
     }
     # Get arm bins
     arm_bins <- get_chr_arm_bins(genome = unique(GenomeInfoDb::genome(bs_genome))[1])
@@ -312,7 +310,7 @@ get_cytobands <- function(genome = "hg38") {
 #' @return GRanges bin object with GC and N frequency per bin
 add_gc_freq <- function(bs_genome, bins) {
   stopifnot(class(bs_genome) %in% "BSgenome")
-  logger::log_info("Computing GC content for {prettyMb(getmode(width(bins)))} size bins")
+  cli::cli_alert_info("Computing GC content for {prettyMb(getmode(width(bins)))} size bins")
   freqs <- BSgenome::alphabetFrequency(BSgenome::getSeq(bs_genome, bins))
   bins$gc <- (freqs[, "C"] + freqs[, "G"]) / rowSums(freqs)
 
@@ -336,7 +334,7 @@ add_gc_freq <- function(bs_genome, bins) {
 #' @return Boolean matrices of ideal and valid bins
 get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05, reads_outlier = 0.01, gc_outlier = 0.001, min_map = 0.9, ncores = 1, verbose = FALSE) {
   if (verbose) {
-    logger::log_info("Computing ideal bins in {ncol(mat)} cells using {ncores} threads")
+    cli::cli_alert_info("Computing ideal bins in {ncol(mat)} cells using {ncores} threads")
   }
   if (requireNamespace("pbmcapply")) {
     res <- do.call(
@@ -356,7 +354,7 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
       })
     )
   } else {
-    logger::log_warn("No parallel backend detected. Ideal mat computation may be slow", call. = FALSE)
+    cli::cli_alert_warning("No parallel backend detected. Ideal mat computation may be slow", call. = FALSE)
     res <- do.call(
       "cbind",
       lapply(X = seq_len(ncol(mat)), FUN = function(i) {
@@ -376,7 +374,7 @@ get_ideal_mat <- function(mat, gc, n_freq, map, min_reads = 1, max_N_freq = 0.05
   }
 
   if (verbose) {
-    logger::log_success("Computing ideal bins completed!")
+    cli::cli_alert_success("Computing ideal bins completed!")
   }
 
   # Sort of silly but works for now to return both matrices
@@ -410,7 +408,7 @@ length_normalize <- function(sce,
                              by_factor = getmode(binwidths),
                              verbose = FALSE) {
   if (verbose) {
-    logger::log_info("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
+    cli::cli_alert_info("Performing bin-length normalization. Storing as assay(sce, '", assay_to, "')")
   }
 
   # Bin length normalize upfront
@@ -570,7 +568,7 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
   g <- GenomeInfoDb::keepSeqlevels(x = g, value = GenomeInfoDb::seqlevels(bin_ranges), pruning.mode = "coarse")
 
   if (gene_biotype != "all") {
-    logger::log_info("Filtering for gene_biotypes: {paste(gene_biotype, collapse = '; ')}")
+    cli::cli_alert_info("Filtering for gene_biotypes: {paste(gene_biotype, collapse = '; ')}")
     g <- g[which(mcols(g)$gene_biotype %in% gene_biotype)]
   }
 
@@ -596,7 +594,7 @@ overlap_genes <- function(sce, ensDb, gene_biotype = "all") {
   # Log oncogenes which are missing from the match
   missing_g <- oncokb_df[is.na(oncokb_df$match_idx), "hugo_symbol"]
   if (length(missing_g > 0)) {
-    logger::log_warn("Cancer genes missing from overlap: {paste(missing_g, collapse = '; ')}")
+    cli::cli_alert_warning("Cancer genes missing from overlap: {paste(missing_g, collapse = '; ')}")
   }
 
   # Filter down to non-na to facilate merging

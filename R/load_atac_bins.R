@@ -32,7 +32,7 @@ load_atac_bins <- function(bin_dir,
   }
 
   if (verbose) {
-    logger::log_info("Adding cellwise and binwise QC metrics")
+    cli::cli_alert_info("Adding cellwise and binwise QC metrics")
   }
 
   sce <- scuttle::addPerCellQCMetrics(sce)
@@ -43,7 +43,7 @@ load_atac_bins <- function(bin_dir,
   }
 
   if (verbose) {
-    logger::log_success("Fragments loaded successfully!")
+    cli::cli_alert_success("Fragments loaded successfully!")
     print(sce)
   }
 

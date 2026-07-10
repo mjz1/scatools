@@ -145,7 +145,7 @@ scale_sub <- function(sce, assay_name = "counts", log2 = FALSE, scale = "none", 
 
   assay(sce, new_assay) <- scaled_mat
   if (verbose) {
-    logger::log_info("Scaled assay: {new_assay}")
+    cli::cli_alert_info("Scaled assay: {new_assay}")
   }
 
   return(sce)
@@ -159,7 +159,7 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
 
   # TODO: separate out cleaning of the matrix from this function
 
-  logger::log_debug("Scaling: {scale}")
+  cli::cli_alert_info("Scaling: {scale}")
 
   # if (scale == "none") {
   #   scale <- FALSE
@@ -167,8 +167,6 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
 
   # Remove fully NA or 0 columns
   # keep_bins <- apply(mat, 1, FUN = function(x) !all(is.na(x)) & !all(x == 0))
-
-  # logger::log_debug("Keeping {sum(keep_bins)} of {nrow(mat)} bins")
 
   mat_names <- colnames(mat)
 
@@ -229,7 +227,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
     # Check that all assays are present
     if (!all(target_assays %in% names(assays(sce)))) {
       missing_assays <- target_assays[which(!target_assays %in% names(assays(sce)))]
-      logger::log_warn("Missing assay(", missing_assays, ") from input sce.")
+      cli::cli_alert_warning("Missing assay(", missing_assays, ") from input sce.")
       target_assays <- target_assays[which(target_assays %in% names(assays(sce)))]
     }
   } else {
@@ -242,7 +240,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
     # If variable is not 'all' and also missing, warn and skip
     if (!is.null(variable)) {
       if (is.null(sce[[variable]]) & (variable != "all")) {
-        logger::log_warn("Missing variable '", variable, "' from input colData.")
+        cli::cli_alert_warning("Missing variable '", variable, "' from input colData.")
         next
       }
     }
@@ -269,7 +267,7 @@ get_snp_counts <- function(sce, variables = "all", target_assays = c("ref", "alt
 save_to <- function(object, save_to = "./", verbose = TRUE) {
   dir.create(dirname(save_to), recursive = TRUE, showWarnings = FALSE)
   if (verbose) {
-    logger::log_info("Saving {deparse(substitute(object))} to \"{save_to}\"")
+    cli::cli_alert_info("Saving {deparse(substitute(object))} to \"{save_to}\"")
   }
   saveRDS(object, file = save_to)
 }
