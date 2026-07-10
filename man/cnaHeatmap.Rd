@@ -23,6 +23,7 @@ cnaHeatmap(
   top_annotation = NULL,
   bulk_cn_col = NULL,
   raster_quality = 10,
+  use_raster = TRUE,
   row_split = NULL,
   ...
 )
@@ -74,6 +75,8 @@ cloneCnaHeatmap(
 \item{bulk_cn_col}{Name of column in \code{rowRanges(sce)} that contains bulk copy number data to plot on top of heatmap}
 
 \item{raster_quality}{Quality of raster (default: 10)}
+
+\item{use_raster}{Logical: rasterize the heatmap body via \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}} (default: \code{TRUE}). Set to \code{FALSE} on systems without a working raster device (e.g. some headless CI runners).}
 
 \item{row_split}{Row split for \code{\link[ComplexHeatmap:Heatmap]{ComplexHeatmap::Heatmap()}}}
 

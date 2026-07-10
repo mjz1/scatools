@@ -1,6 +1,6 @@
-^renv$
-^renv\.lock$
 ^scatools\.Rproj$
+^CLAUDE\.md$
+^\.claude$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$

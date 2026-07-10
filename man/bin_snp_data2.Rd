@@ -4,7 +4,7 @@
 \alias{bin_snp_data2}
 \title{Bin SNP Data}
 \usage{
-bin_snp_data2(snp_sce, binsize = 5e+05, select_chrs = NULL, bins = NULL)
+bin_snp_data2(snp_sce, binsize = 500000, select_chrs = NULL, bins = NULL)
 }
 \arguments{
 \item{snp_sce}{SCE with snp data}
