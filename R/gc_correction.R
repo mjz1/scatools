@@ -232,9 +232,10 @@ gc_cor_modal <- function(counts,
     gc_max <- quantile(df_regression$gc, g[2])
 
     poly2_quantile_integration <- c(0, apply(X = poly2_quantile_params, MARGIN = 2, FUN = function(params) {
-      poly2 <- polynom::polynomial(params)
-      integ <- polynom::integral(poly2)
-      integrand <- predict(integ, gc_max) - predict(integ, gc_min)
+      # Closed-form definite integral of the 2nd-order polynomial
+      # c0 + c1*x + c2*x^2 over [gc_min, gc_max].
+      antideriv <- function(x) params[1] * x + params[2] * x^2 / 2 + params[3] * x^3 / 3
+      antideriv(gc_max) - antideriv(gc_min)
     }))
 
     # find the modal quantile

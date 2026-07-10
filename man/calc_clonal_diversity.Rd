@@ -13,7 +13,8 @@ calc_clonal_diversity(sce, sample_column, clone_name, index = "shannon")
 
 \item{clone_name}{clone}
 
-\item{index}{diversity index to use. See \link[vegan:diversity]{vegan::diversity}}
+\item{index}{diversity index to use. One of \code{"shannon"}, \code{"simpson"}, or
+\code{"invsimpson"}.}
 }
 \value{
 named list

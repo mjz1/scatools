@@ -400,8 +400,10 @@ stack_params <- function(data, paramname) {
   data <- data.frame(data)
   colnames(data) <- 1:length(data) - 1
   data$state <- as.numeric(row.names(data)) - 1
-  # TODO: Replace reshape2::melt with tidyr::pivot_longer here
-  data <- reshape2::melt(data, id.vars = "state", value.name = "value", variable.name = "iteration")
+  data <- as.data.frame(tidyr::pivot_longer(data,
+    cols = !dplyr::all_of("state"),
+    names_to = "iteration", values_to = "value"
+  ))
   data$parameter <- paramname
   return(data)
 }

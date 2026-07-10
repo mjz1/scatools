@@ -1,184 +1,208 @@
-#' Cluster using Seurat
+#' Cluster cells in a SingleCellExperiment
+#'
+#' SCE-native clustering workflow: PCA ([irlba::prcomp_irlba()]) ->
+#' shared-nearest-neighbour graph ([BiocNeighbors::findKNN()] + Jaccard
+#' weighting) -> Leiden community detection ([igraph::cluster_leiden()]) ->
+#' UMAP embedding ([uwot::umap()]). This replaces the former Seurat-based
+#' implementation and carries no Seurat dependency.
 #'
 #' @param sce SingleCellExperiment object
-#' @param assay_name Assay name. Can provide two assay names to perform joint clustering across both
-#' @param do.scale scale
-#' @param do.center center
-#' @param algorithm clustering algorithm
-#' @param resolution clustering resolution
-#' @param n.neighbors neighbors for umap
-#' @param npcs.pca Total Number of PCs to compute and store (50 by default)
-#' @param features.pca One of 'all', 'variable', or a vector of features to include in dimensionality reduction. Defaults to 'all'.
-#' @param nvar.features Number of variable features if `features.pca='variable'`
-#' @param dims Number of reduced dimensions to use for FindNeighbors and UMAP
-#' @param k.param Defines k for the k-nearest neighbor algorithm
-#' @param annoy.metric Metric for [Seurat::FindNeighbors]
-#' @param umap.metric Metric for [Seurat::RunUMAP]
-#' @param suffix Suffix name to add to the PCA, UMAP, and clusters
-#' @param PCA_name Name to store PCA dimred
-#' @param UMAP_name Name to store UMAP dimred
-#' @param cluster_name Name to store seurat clusters
+#' @param assay_name Assay name. Provide two names to jointly cluster across both.
+#' @param do.scale,do.center Scale/center features before PCA
+#' @param resolution Leiden resolution parameter
+#' @param n.neighbors Neighbours for UMAP
+#' @param npcs.pca Number of principal components to compute
+#' @param features.pca One of `'all'`, `'variable'`, or a vector of features
+#' @param nvar.features Number of variable features when `features.pca = 'variable'`
+#' @param dims PCs to use for the graph and UMAP (default: all computed)
+#' @param k.param k for the nearest-neighbour graph
+#' @param suffix Suffix appended to the output PCA/UMAP/cluster names
+#' @param PCA_name,UMAP_name,cluster_name Output names
+#' @param umap.metric UMAP distance metric
+#' @param run_umap Logical; compute a UMAP embedding (requires `uwot`)
 #' @param verbose Message verbosity
+#' @param ... (For the deprecated `cluster_seurat()` alias) further arguments
+#'   passed to `cluster_sce()`.
 #'
-#' @return SingleCellExperiment obj
+#' @return SingleCellExperiment with PCA/UMAP in `reducedDims` and cluster
+#'   assignments in `colData`.
 #' @export
-#'
-cluster_seurat <- function(sce,
-                           assay_name,
-                           do.scale = FALSE,
-                           do.center = FALSE,
-                           algorithm = 1,
-                           resolution = 0.8,
-                           n.neighbors = 10,
-                           npcs.pca = 50,
-                           features.pca = "all",
-                           nvar.features = NULL,
-                           dims = 1:npcs.pca,
-                           k.param = 20,
-                           suffix = "",
-                           PCA_name = paste0("PCA", suffix),
-                           UMAP_name = paste0("UMAP", suffix),
-                           cluster_name = paste0("clusters", suffix),
-                           umap.metric = "correlation",
-                           annoy.metric = "cosine",
-                           verbose = TRUE) {
-  # TODO: Improve documentation of this function.
-  # TODO: Return neighbors object if possible to allow future umap projection
-  # TODO:
+cluster_sce <- function(sce,
+                        assay_name,
+                        do.scale = FALSE,
+                        do.center = FALSE,
+                        resolution = 0.8,
+                        n.neighbors = 10,
+                        npcs.pca = 50,
+                        features.pca = "all",
+                        nvar.features = NULL,
+                        dims = NULL,
+                        k.param = 20,
+                        suffix = "",
+                        PCA_name = paste0("PCA", suffix),
+                        UMAP_name = paste0("UMAP", suffix),
+                        cluster_name = paste0("clusters", suffix),
+                        umap.metric = "cosine",
+                        run_umap = TRUE,
+                        verbose = TRUE) {
+  # Clear any existing reduced dims
+  for (dn in reducedDimNames(sce)) reducedDim(sce, dn) <- NULL
 
-  if (!requireNamespace("Seurat")) {
-    cli::cli_abort("Seurat not installed. Please install Seurat to use this function.")
-  }
-
-  sce_orig <- sce
-  # For safety, clear any reduced dims present before we process
-  for (dim_name in reducedDimNames(sce)) {
-    reducedDim(sce, dim_name) <- NULL
-  }
-
-  # For joint clustering
+  # Build a feature x cell data matrix (optionally joint across two assays)
   if (length(assay_name) == 2) {
-    cli::cli_alert_info("Jointly clustering assays '{assay_name[1]}' and '{assay_name[2]}'")
-    a1 <- scale(assay(sce, assay_name[1]))
-    a2 <- scale(assay(sce, assay_name[2]))
-
-    joint_data <- rbind(a1, a2)
-
-    idx_1 <- 1:nrow(assay(sce, assay_name[1]))
-    idx_2 <- (nrow(assay(sce, assay_name[1])) + 1):nrow(joint_data)
-
-    rownames(joint_data)[idx_1] <- paste0(assay_name[1], "_", rownames(joint_data)[idx_1])
-    rownames(joint_data)[idx_2] <- paste0(assay_name[2], "_", rownames(joint_data)[idx_2])
-
-    srt <- Seurat::CreateSeuratObject(counts = joint_data)
-    srt[["RNA"]]$data <- srt[["RNA"]]$counts
+    if (verbose) cli::cli_alert_info("Jointly clustering assays '{assay_name[1]}' and '{assay_name[2]}'")
+    a1 <- scale(as.matrix(assay(sce, assay_name[1])))
+    a2 <- scale(as.matrix(assay(sce, assay_name[2])))
+    mat <- rbind(a1, a2)
+    rownames(mat) <- c(
+      paste0(assay_name[1], "_", rownames(a1)),
+      paste0(assay_name[2], "_", rownames(a2))
+    )
   } else {
-    srt <- Seurat::CreateSeuratObject(counts = assay(sce, assay_name))
-    srt[["RNA"]]$data <- srt[["RNA"]]$counts
+    mat <- as.matrix(assay(sce, assay_name))
   }
 
-  if (features.pca == "all") {
-    features.pca <- rownames(srt)
-  } else if (features.pca == "variable") {
+  # Feature selection
+  if (identical(features.pca, "all")) {
+    feats <- rownames(mat)
+  } else if (identical(features.pca, "variable")) {
     if (is.null(nvar.features)) {
-      cli::cli_abort("Variable features must provide 'nvar.features'")
+      cli::cli_abort("Provide 'nvar.features' when features.pca = 'variable'")
     }
-    srt <- Seurat::FindVariableFeatures(srt)
-    # Will use Seurats find variable features
-    features.pca <- NULL
-  }
-
-  srt <- Seurat::ScaleData(srt,
-    do.scale = do.scale,
-    do.center = do.center,
-    verbose = verbose
-  )
-
-  if (length(features.pca) < npcs.pca) {
-    cli::cli_abort("{length(features.pca)} features provided for PCA but requesting {npcs.pca} PCA dimensions. Please adjust.")
-  }
-
-  if (ncol(srt) < npcs.pca) {
-    cli::cli_alert_warning("Not enough cells: {ncol(srt)} for requesting pcs: {npcs.pca}. Reducing to {ncol(srt)-1}")
-    npcs.pca <- ncol(srt) - 1
-  }
-
-  srt <- Seurat::RunPCA(srt,
-    features = features.pca,
-    npcs = npcs.pca,
-    verbose = FALSE
-  )
-
-  srt <- Seurat::FindNeighbors(srt,
-    dims = dims,
-    verbose = verbose,
-    annoy.metric = annoy.metric,
-    k.param = k.param
-  )
-
-  if (algorithm %in% c(4, "leiden")) {
-    cli::cli_alert_info("Finding clusters using leiden algorithm")
-    srt$seurat_clusters <- factor(leiden_wrapper(adj_mat = srt@graphs$RNA_snn, resolution = resolution))
-    cli::cli_alert_success("Found ", length(unique(srt$seurat_clusters)), " communities")
+    v <- apply(mat, 1, stats::var, na.rm = TRUE)
+    feats <- rownames(mat)[order(v, decreasing = TRUE)][seq_len(min(nvar.features, nrow(mat)))]
   } else {
-    srt <- Seurat::FindClusters(srt, resolution = resolution, algorithm = algorithm, verbose = verbose)
+    feats <- features.pca
+  }
+  mat <- mat[feats, , drop = FALSE]
+  mat[is.na(mat)] <- 0
+
+  if (do.scale || do.center) {
+    mat <- t(scale(t(mat), center = do.center, scale = do.scale))
+    mat[is.na(mat)] <- 0
   }
 
-  if (requireNamespace("HGC", quietly = TRUE)) {
-    srt <- HGC::FindClusteringTree(srt, graph.type = "SNN")
+  # PCA (cells as observations)
+  npcs <- min(npcs.pca, nrow(mat) - 1, ncol(mat) - 1)
+  if (npcs < 2) cli::cli_abort("Too few features/cells for PCA ({nrow(mat)} features, {ncol(mat)} cells)")
+  emb <- withr::with_seed(3, irlba::prcomp_irlba(t(mat), n = npcs, center = TRUE, scale. = FALSE)$x)
+  rownames(emb) <- colnames(sce)
+  colnames(emb) <- paste0("PC_", seq_len(ncol(emb)))
+
+  if (is.null(dims)) dims <- seq_len(ncol(emb))
+  dims <- dims[dims <= ncol(emb)]
+  emb_use <- emb[, dims, drop = FALSE]
+
+  # SNN graph + Leiden clustering
+  g <- build_snn_graph(emb_use, k = min(k.param, nrow(emb_use) - 1))
+  memb <- cluster_leiden_graph(g, resolution = resolution)
+  if (verbose) cli::cli_alert_success("Found {length(unique(memb))} clusters")
+
+  # UMAP (optional)
+  if (run_umap) {
+    if (requireNamespace("uwot", quietly = TRUE)) {
+      um <- withr::with_seed(3, uwot::umap(emb_use,
+        n_neighbors = min(n.neighbors, nrow(emb_use) - 1),
+        metric = umap.metric
+      ))
+      rownames(um) <- colnames(sce)
+      colnames(um) <- c("UMAP_1", "UMAP_2")
+      reducedDim(sce, UMAP_name) <- um
+    } else {
+      cli::cli_alert_warning("Package 'uwot' not installed; skipping UMAP")
+    }
   }
 
-  srt <- Seurat::RunUMAP(srt, dims = dims, n.neighbors = n.neighbors, metric = umap.metric, verbose = verbose, seed.use = 3)
+  reducedDim(sce, PCA_name) <- emb
+  sce[[cluster_name]] <- factor(memb)
+  sce@metadata[[paste("snn_graph", suffix, sep = "_")]] <- g
 
-  # Put the PCA, UMAP, and clustering results into the original SCE
-  reducedDim(sce_orig, PCA_name) <- srt@reductions$pca@cell.embeddings
-  reducedDim(sce_orig, UMAP_name) <- srt@reductions$umap@cell.embeddings
-  sce_orig[[cluster_name]] <- srt$seurat_clusters
-
-  # Keep the graphs stored in the metadata
-  sce_orig@metadata[[paste("graphs", suffix, sep = "_")]] <- srt@graphs
-
-  return(sce_orig)
+  return(sce)
 }
 
+#' @rdname cluster_sce
+#' @description `cluster_seurat()` is a deprecated alias for `cluster_sce()`.
+#' @export
+cluster_seurat <- function(sce, assay_name, ...) {
+  .Deprecated("cluster_sce")
+  cluster_sce(sce = sce, assay_name = assay_name, ...)
+}
 
-#' Wrapper for the Leiden Algorithm
+#' Build a shared-nearest-neighbour graph from a low-dimensional embedding
 #'
-#' @param adj_mat Adjacency matrix
-#' @param group_singletons Group singletons into nearest cluster. If FALSE, assign all singletons to a "singleton" group
-#' @param resolution Resolution paramter
+#' @param emb Cell x dimension embedding matrix
+#' @param k Number of nearest neighbours
+#' @param prune Minimum Jaccard weight to keep an edge
+#' @return An undirected weighted `igraph` graph
+#' @noRd
+build_snn_graph <- function(emb, k = 20, prune = 1 / 15) {
+  knn <- BiocNeighbors::findKNN(emb, k = k, warn.ties = FALSE)$index
+  n <- nrow(emb)
+  nbr <- cbind(seq_len(n), knn) # include self
+  kk <- ncol(nbr)
+  A <- Matrix::sparseMatrix(
+    i = rep(seq_len(n), times = kk),
+    j = as.vector(nbr), x = 1, dims = c(n, n)
+  )
+  shared <- Matrix::tcrossprod(A) # shared-neighbour counts
+  jac <- shared / (2 * kk - shared) # Jaccard weighting
+  Matrix::diag(jac) <- 0
+  jac <- methods::as(jac, "CsparseMatrix")
+  jac@x[jac@x < prune] <- 0
+  jac <- Matrix::drop0(jac)
+  g <- igraph::graph_from_adjacency_matrix(jac, mode = "undirected", weighted = TRUE, diag = FALSE)
+  igraph::V(g)$name <- rownames(emb)
+  g
+}
+
+#' Leiden community detection on a weighted igraph
+#' @noRd
+cluster_leiden_graph <- function(g, resolution = 0.8, n_iterations = 10) {
+  cl <- withr::with_seed(3, igraph::cluster_leiden(g,
+    objective_function = "modularity",
+    weights = igraph::E(g)$weight,
+    resolution_parameter = resolution,
+    n_iterations = n_iterations
+  ))
+  memb <- igraph::membership(cl)
+  names(memb) <- igraph::V(g)$name
+  memb
+}
+
+#' Wrapper for the Leiden Algorithm on an adjacency matrix
 #'
-#' @return cluster memberships
+#' @param adj_mat Adjacency (SNN) matrix
+#' @param group_singletons Reassign singleton clusters to their most connected
+#'   neighbouring cluster. If `FALSE`, singletons are left as-is.
+#' @param resolution Resolution parameter
+#'
+#' @return Named vector of cluster memberships
 #' @export
 #'
 leiden_wrapper <- function(adj_mat, group_singletons = TRUE, resolution = 1) {
-  if (!requireNamespace("igraph")) {
-    cli::cli_abort("Package 'igraph' required for leiden clustering. Please install.")
-  }
-
-  if (!requireNamespace("leidenbase")) {
-    cli::cli_abort("Package 'leidenbase' required for leiden clustering. Please install.")
-  }
-
-  # https://github.com/satijalab/seurat/discussions/6754?sort=top
-
-  # Requires igraph, leidenbase
-  graph_obj <- igraph::graph_from_adjacency_matrix(adj_mat, weighted = TRUE)
-
-  res <- leidenbase::leiden_find_partition(
-    graph_obj,
-    partition_type = "RBConfigurationVertexPartition",
-    resolution_parameter = resolution,
-    num_iter = 10,
-    seed = 3
-  )
-
-  ids <- res$membership
-  names(ids) <- colnames(adj_mat)
-
+  g <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "undirected", weighted = TRUE, diag = FALSE)
+  memb <- cluster_leiden_graph(g, resolution = resolution)
   if (group_singletons) {
-    ids <- Seurat:::GroupSingletons(ids, SNN = adj_mat, group.singletons = group_singletons, verbose = TRUE)
+    memb <- group_singleton_clusters(memb, adj_mat)
   }
+  memb
+}
 
-  return(ids)
+#' Reassign singleton clusters to their most strongly connected neighbour cluster
+#' @noRd
+group_singleton_clusters <- function(ids, snn) {
+  tab <- table(ids)
+  singletons <- names(tab)[tab == 1]
+  if (length(singletons) == 0) {
+    return(ids)
+  }
+  snn <- as.matrix(snn)
+  for (s in singletons) {
+    cell <- which(ids == s)
+    conn <- tapply(snn[cell, ], ids, sum)
+    conn[as.character(s)] <- 0
+    best <- names(which.max(conn))
+    if (length(best) == 1 && conn[[best]] > 0) ids[cell] <- best
+  }
+  ids
 }
