@@ -121,7 +121,7 @@ left_annot <- ComplexHeatmap::HeatmapAnnotation(
 )
 
 
-p_ht_cna <- cnaHeatmap(sce, assay_name = "segment_merged_logratios", clust_annot = left_annot, col_fun = logr_col_fun())
+p_ht_cna <- cnaHeatmap(sce, assay_name = "segment_merged_logratios", clust_annot = left_annot, col_fun = logr_col_fun(), use_raster = FALSE)
 p_ht_cna
 ```
 
