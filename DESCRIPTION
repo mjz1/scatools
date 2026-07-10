@@ -14,17 +14,13 @@ Imports:
     BiocGenerics,
     BiocNeighbors,
     BiocParallel,
-    circlize,
     cli,
-    ComplexHeatmap,
     data.table,
     DNAcopy,
     dplyr,
-    EnsDb.Hsapiens.v86,
     GenomeInfoDb,
     GenomicFeatures,
     GenomicRanges,
-    GGally,
     ggplot2,
     glue,
     HMMcopy,
@@ -54,16 +50,20 @@ Imports:
     tidyr,
     utils,
     uwot,
-    vcfR,
     withr
-Suggests: 
+Suggests:
     anndata,
     BSgenome,
     BSgenome.Hsapiens.UCSC.hg38,
+    circlize,
+    ComplexHeatmap,
     dittoSeq,
+    EnsDb.Hsapiens.v86,
+    GGally,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
+    vcfR,
     zellkonverter
 VignetteBuilder:
     knitr

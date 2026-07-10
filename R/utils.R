@@ -392,3 +392,18 @@ mixed_sort <- function(x) x[mixed_order(x)]
 chr_reorder <- function(chrs) {
   mixed_sort(chrs)
 }
+
+#' Require a Suggested package or abort with an actionable message
+#'
+#' @param pkg Package name
+#' @param purpose Short description of what it is needed for
+#' @noRd
+require_ns <- function(pkg, purpose = NULL) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    cli::cli_abort(c(
+      "Package {.pkg {pkg}} is required{if (!is.null(purpose)) paste0(' for ', purpose) else ''} but is not installed.",
+      i = "Install it with {.code BiocManager::install(\"{pkg}\")} or {.code install.packages(\"{pkg}\")}."
+    ))
+  }
+  invisible(TRUE)
+}
