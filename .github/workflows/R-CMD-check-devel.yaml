@@ -1,19 +1,22 @@
-# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+# R-devel checks, kept OFF the per-PR path.
+#
+# R-devel has no PPM/CRAN Linux binaries, so setup-r-dependencies must compile
+# the whole (Bioconductor-heavy) dependency stack from source (~1h). Running
+# that on every PR is wasteful, so devel coverage runs weekly instead, plus
+# on-demand via "Run workflow" (workflow_dispatch). Scheduled runs execute on
+# the default branch; use the manual dispatch to check another branch.
 on:
-  push:
-    branches: [main, master, dev]
-  pull_request:
-    branches: [main, master, dev]
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
   workflow_dispatch:
 
 
-name: R-CMD-check
+name: R-CMD-check (devel)
 
 permissions: read-all
 
 jobs:
-  R-CMD-check:
+  R-CMD-check-devel:
     runs-on: ${{ matrix.config.os }}
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
@@ -21,16 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Per-PR matrix uses only R versions with reliable PPM/CRAN binaries
-        # (fast). R-devel is source-only on Linux (~1h) -> weekly schedule
-        # (R-CMD-check-devel.yaml). R 4.3 (oldrel-2) is omitted: PPM's
-        # Bioconductor binary pairing for it is flaky (Rhtslib version
-        # mismatch), and R 4.3 is the primary local dev environment anyway.
         config:
-          - {os: ubuntu-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'oldrel-1'}
-          - {os: macos-latest,    r: 'release'}
-          - {os: windows-latest,  r: 'release'}
+          - {os: ubuntu-latest,   r: 'devel', http-user-agent: 'release'}
+          - {os: macos-latest,    r: 'devel'}
+          - {os: windows-latest,  r: 'devel'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
