@@ -1,0 +1,10 @@
+# Benchmark data lives outside git (SCATOOLS_BENCH_DATA); never commit it.
+data/
+results/
+*.tsv.gz
+*.mtx
+*.mtx.gz
+*.rds
+*.h5ad
+*.bam
+*.bai
