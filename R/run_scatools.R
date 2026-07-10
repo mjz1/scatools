@@ -114,7 +114,7 @@ run_scatools <- function(sample_id,
     smooth_counts(assay_name = "counts_gc_modal", ncores = ncores) %>%
     calc_ratios(assay_name = "counts_gc_modal_smoothed") %>%
     logNorm(assay_name = "counts_gc_modal_smoothed_ratios", name = "logr_modal") %>%
-    cluster_seurat(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE)
+    cluster_sce(assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.5, verbose = FALSE)
 
   if (segment) {
     sce_processed <- segment_cnv(assay_name = "counts_gc_modal_smoothed", bpparam = bpparam) %>%

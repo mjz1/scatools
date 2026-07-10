@@ -365,6 +365,30 @@ prettyMb <- function(x, places = 3) {
 }
 
 
+#' Natural ("mixed" alphanumeric) ordering
+#'
+#' Base-R equivalent of `gtools::mixedsort()`/`mixedorder()`: sorts strings so
+#' that embedded numbers order numerically (e.g. chr2 before chr10). Each run of
+#' digits is zero-padded to a fixed width so a plain lexical sort yields natural
+#' order; handles multiple numeric groups (e.g. "chr1_1_1000000").
+#'
+#' @param x A character vector
+#' @return Integer order (`mixed_order`) or the sorted vector (`mixed_sort`)
+#' @noRd
+mixed_order <- function(x) {
+  key <- vapply(as.character(x), function(s) {
+    m <- gregexpr("[0-9]+", s)
+    regmatches(s, m) <- lapply(regmatches(s, m), function(nums) {
+      vapply(nums, function(n) paste0(strrep("0", max(0, 20 - nchar(n))), n), character(1))
+    })
+    s
+  }, character(1), USE.NAMES = FALSE)
+  order(key)
+}
+
+#' @noRd
+mixed_sort <- function(x) x[mixed_order(x)]
+
 chr_reorder <- function(chrs) {
-  gtools::mixedsort(chrs)
+  mixed_sort(chrs)
 }

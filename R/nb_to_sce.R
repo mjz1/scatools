@@ -22,7 +22,9 @@ get_counts <- function(df_allele, column, ncores = 1) {
       dt_chr <- dt_split[[i]]
       dt_chr_cast <- data.table::dcast(dt_chr, snp_id ~ cell, value.var = column, fill = 0, drop = FALSE)
 
-      dt_res <- mltools::sparsify(dt_chr_cast, sparsifyNAs = TRUE)
+      m <- as.matrix(dt_chr_cast[, -1, with = FALSE])
+      m[is.na(m)] <- 0
+      dt_res <- Matrix::Matrix(m, sparse = TRUE)
       rownames(dt_res) <- dt_chr_cast$snp_id
 
       rm(dt_chr_cast)
@@ -36,7 +38,9 @@ get_counts <- function(df_allele, column, ncores = 1) {
       dt_chr <- dt_split[[i]]
       dt_chr_cast <- dcast(dt_chr, snp_id ~ cell, value.var = column, fill = 0, drop = FALSE)
 
-      dt_res <- mltools::sparsify(dt_chr_cast, sparsifyNAs = TRUE)
+      m <- as.matrix(dt_chr_cast[, -1, with = FALSE])
+      m[is.na(m)] <- 0
+      dt_res <- Matrix::Matrix(m, sparse = TRUE)
       rownames(dt_res) <- dt_chr_cast$snp_id
 
       rm(dt_chr_cast)

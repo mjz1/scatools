@@ -68,15 +68,14 @@ bin_atac_frags <- function(sample_id,
       cat("Writing to", bin_dir, "\n")
       dir.create(bin_dir, showWarnings = FALSE, recursive = TRUE)
 
-      # Write output using dropletutils
-      DropletUtils::write10xCounts(
+      # Write output in 10x MatrixMarket format
+      write_10x_counts(
         path = bin_dir,
         x = count_mat,
         barcodes = colnames(count_mat),
         gene.id = rownames(count_mat),
-        version = "3",
-        overwrite = TRUE,
-        gene.type = "Bin Counts"
+        gene.type = "Bin Counts",
+        overwrite = TRUE
       )
     }
 
@@ -534,7 +533,7 @@ get_bin_info <- function(bin_ids) {
   # get the bin_ids
   bin_info <- data.frame(stringr::str_split_fixed(bin_ids, pattern = "_", n = 3))
   colnames(bin_info) <- c("chr", "start", "end")
-  bin_info$chr <- factor(bin_info$chr, levels = gtools::mixedsort(unique(bin_info$chr)))
+  bin_info$chr <- factor(bin_info$chr, levels = mixed_sort(unique(bin_info$chr)))
   bin_info$start <- as.numeric(bin_info$start)
   bin_info$end <- as.numeric(bin_info$end)
   return(bin_info)
@@ -615,7 +614,12 @@ get_oncokb_genelist <- function(link = "https://www.oncokb.org/api/v1/utils/canc
     file = link, header = F, sep = "\t",
     check.names = TRUE, nrows = 1, comment.char = ""
   )
-  colnames_cleaned <- janitor::make_clean_names(colnames_cleaned[1, ])
+  # snake_case, lowercased, de-duplicated column names (base equivalent of
+  # janitor::make_clean_names)
+  cn <- tolower(as.character(colnames_cleaned[1, ]))
+  cn <- gsub("[^a-z0-9]+", "_", cn)
+  cn <- gsub("^_+|_+$", "", cn)
+  colnames_cleaned <- make.unique(cn, sep = "_")
 
   df <- read.table(
     file = link, header = FALSE, sep = "\t",
