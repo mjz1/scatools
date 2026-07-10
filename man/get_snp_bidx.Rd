@@ -6,7 +6,7 @@
 \usage{
 get_snp_bidx(
   snp,
-  tilewidth = 1e+07,
+  tilewidth = 10000000,
   respect_chr_arms = FALSE,
   select_chrs = NULL,
   bs_genome = NULL,

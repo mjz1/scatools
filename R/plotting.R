@@ -213,6 +213,7 @@ plot_segs <- function(sce, seg_assay, input_assay, cell_id) {
 #' @param top_annotation Top annotation as per [ComplexHeatmap::columnAnnotation()]
 #' @param row_split Row split for [ComplexHeatmap::Heatmap()]
 #' @param raster_quality Quality of raster (default: 10)
+#' @param use_raster Logical: rasterize the heatmap body via [ComplexHeatmap::Heatmap()] (default: `TRUE`). Set to `FALSE` on systems without a working raster device (e.g. some headless CI runners).
 #' @param verbose Logical: Message verbosity
 #' @param ... Additional parameters that can be passed to [ComplexHeatmap::Heatmap()]
 #'
@@ -237,6 +238,7 @@ cnaHeatmap <- function(sce,
                        top_annotation = NULL,
                        bulk_cn_col = NULL,
                        raster_quality = 10,
+                       use_raster = TRUE,
                        row_split = NULL,
                        ...) {
   # TODO: Enable multiple annotations
@@ -410,7 +412,7 @@ cnaHeatmap <- function(sce,
     cluster_rows = cluster_cells,
     show_column_names = FALSE,
     na_col = "white",
-    use_raster = TRUE,
+    use_raster = use_raster,
     raster_quality = raster_quality,
     column_split = col_split,
     left_annotation = left_annot,
