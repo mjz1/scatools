@@ -63,8 +63,9 @@ Suggests:
     dittoSeq,
     knitr,
     rmarkdown,
+    testthat (>= 3.0.0),
     zellkonverter
-VignetteBuilder: 
+VignetteBuilder:
     knitr
 biocViews:
 Config/testthat/edition: 3
