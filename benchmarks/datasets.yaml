@@ -25,8 +25,28 @@ datasets:
     truth:
       type: karyotype
       value: diploid
-    notes: turnkey; the primary specificity test
-    status: pending
+    notes: turnkey; the primary specificity test. Full run_scatools completes in
+      ~3.6 min (4585 cells, 10Mb bins).
+    status: downloaded
+
+  # Fast dev/CI fixture: a random 300-cell subset of pbmc_5k_normal (real
+  # fragments, NOT pre-filtered to bins, so it exercises the full binning path).
+  # Regenerate with: benchmarks/scripts/make_mini.sh pbmc_5k_normal 300
+  - id: pbmc_5k_normal_mini
+    name: PBMC 5k mini (300-cell subset) — fast dev fixture
+    cancer_type: none
+    assay: scATAC
+    aneuploidy: normal
+    n_cells: 300
+    genome: hg38
+    role: dev_fixture              # full run_scatools in ~27s; for quick checks
+    atac:
+      source: derived             # make_mini.sh pbmc_5k_normal 300
+      format: fragments           # ~40 MB
+    truth:
+      type: karyotype
+      value: diploid
+    status: downloaded
 
   - id: snu601
     name: SNU601 gastric carcinoma (highly aneuploid) — primary benchmark
