@@ -22,10 +22,12 @@ state_cn_colors <- function() {
 #' @export
 #'
 logr_col_fun <- function(breaks = c(-2, 0, 2), colors = c("blue", "white", "red")) {
+  require_ns("circlize", "heatmap colour scales")
   circlize::colorRamp2(breaks = breaks, colors = colors)
 }
 
 counts_col_fun <- function(breaks = c(0, 2, 8), colors = c("blue", "white", "red")) {
+  require_ns("circlize", "heatmap colour scales")
   circlize::colorRamp2(breaks = breaks, colors = colors)
 }
 
