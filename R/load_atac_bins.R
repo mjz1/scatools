@@ -1,3 +1,68 @@
+#' Write a sparse count matrix in 10x (v3) MatrixMarket format
+#'
+#' Base-R replacement for `DropletUtils::write10xCounts()` writing
+#' `matrix.mtx.gz`, `barcodes.tsv.gz`, and `features.tsv.gz`.
+#'
+#' @noRd
+write_10x_counts <- function(path, x, barcodes = colnames(x), gene.id = rownames(x),
+                             gene.symbol = gene.id, gene.type = "Gene Expression",
+                             overwrite = FALSE) {
+  if (file.exists(file.path(path, "matrix.mtx.gz")) && !overwrite) {
+    return(invisible(NULL))
+  }
+  dir.create(path, showWarnings = FALSE, recursive = TRUE)
+  x <- methods::as(x, "CsparseMatrix")
+
+  # matrix.mtx.gz (writeMM has no gzip option; write then gzip-copy)
+  tmp <- tempfile(fileext = ".mtx")
+  Matrix::writeMM(x, tmp)
+  con <- gzfile(file.path(path, "matrix.mtx.gz"), "wb")
+  writeBin(readBin(tmp, what = "raw", n = file.size(tmp)), con)
+  close(con)
+  unlink(tmp)
+
+  bc <- gzfile(file.path(path, "barcodes.tsv.gz"), "wt")
+  writeLines(as.character(barcodes), bc)
+  close(bc)
+
+  feats <- data.frame(gene.id, gene.symbol, gene.type, stringsAsFactors = FALSE)
+  ft <- gzfile(file.path(path, "features.tsv.gz"), "wt")
+  utils::write.table(feats, ft, sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+  close(ft)
+  invisible(NULL)
+}
+
+#' Read a 10x (v3) MatrixMarket count directory into a SingleCellExperiment
+#'
+#' Base-R replacement for `DropletUtils::read10xCounts()`.
+#'
+#' @noRd
+read_10x_counts <- function(path, sample.id = basename(path)) {
+  pick <- function(stem) {
+    gz <- file.path(path, paste0(stem, ".gz"))
+    if (file.exists(gz)) gz else file.path(path, stem)
+  }
+  mfile <- pick("matrix.mtx")
+  con <- if (grepl("\\.gz$", mfile)) gzfile(mfile) else mfile
+  mat <- methods::as(Matrix::readMM(con), "CsparseMatrix")
+
+  barcodes <- readLines(pick("barcodes.tsv")) # file() auto-decompresses .gz
+  feats <- utils::read.delim(pick("features.tsv"), header = FALSE, stringsAsFactors = FALSE)
+  while (ncol(feats) < 3) feats[[ncol(feats) + 1]] <- feats[[1]]
+
+  rownames(mat) <- feats[[1]]
+  colnames(mat) <- barcodes
+
+  sce <- SingleCellExperiment::SingleCellExperiment(
+    assays = list(counts = mat),
+    rowData = S4Vectors::DataFrame(ID = feats[[1]], Symbol = feats[[2]], Type = feats[[3]]),
+    colData = S4Vectors::DataFrame(Sample = sample.id, Barcode = barcodes)
+  )
+  rownames(sce) <- feats[[1]]
+  colnames(sce) <- barcodes
+  sce
+}
+
 #' Load atac binned depth data
 #'
 #' Loads binned atac reads, merges cell-wise and bin-wise metadata, and performs QC.
@@ -16,7 +81,7 @@ load_atac_bins <- function(bin_dir,
                            bins = NULL,
                            save_to = NULL,
                            verbose = TRUE) {
-  sce <- DropletUtils::read10xCounts(samples = bin_dir, sample.names = sample_id, col.names = TRUE)
+  sce <- read_10x_counts(path = bin_dir, sample.id = sample_id)
 
   # Save raw counts in a seperate slot
   assay(sce, "raw_counts") <- assay(sce, "counts")

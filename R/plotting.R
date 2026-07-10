@@ -364,7 +364,7 @@ cnaHeatmap <- function(sce,
 
   # Split columns by chromosome
   chrs <- as.vector(gsub("chr", "", GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce))))
-  col_split <- factor(chrs, levels = unique(gtools::mixedsort(chrs)))
+  col_split <- factor(chrs, levels = unique(mixed_sort(chrs)))
 
   if (class(cluster_cells) %in% c("dendrogram", "hclust") || cluster_cells == TRUE) {
     # Revert to original ordering
@@ -645,19 +645,10 @@ my_dens <- function(data, mapping, center_point = 0, ...) {
 get_label_centers <- function(obj, group_var = "clusters", reduced_dim = "UMAP") {
   # To any scatter of a umap can add + geom_label_repel(data = get_label_centers(sce), aes(x = x, y = y, label = clusters))
 
-  if (class(obj) %in% c("SingleCellExperiment", "Milo")) {
-    x_means <- lapply(split(reducedDim(obj, reduced_dim)[, 1], obj[[group_var]]), median) %>% unlist()
-    y_means <- lapply(split(reducedDim(obj, reduced_dim)[, 2], obj[[group_var]]), median) %>% unlist()
-    centers <- data.frame(x = x_means, y = y_means)
-    centers[[group_var]] <- rownames(centers)
-  }
-
-  if ("Seurat" %in% class(obj)) {
-    x_means <- lapply(split(Seurat::Embeddings(obj, reduced_dim)[, 1], obj[[group_var]]), median) %>% unlist()
-    y_means <- lapply(split(Seurat::Embeddings(obj, reduced_dim)[, 2], obj[[group_var]]), median) %>% unlist()
-    centers <- data.frame(x = x_means, y = y_means)
-    centers[[group_var]] <- rownames(centers)
-  }
+  x_means <- lapply(split(reducedDim(obj, reduced_dim)[, 1], obj[[group_var]]), median) %>% unlist()
+  y_means <- lapply(split(reducedDim(obj, reduced_dim)[, 2], obj[[group_var]]), median) %>% unlist()
+  centers <- data.frame(x = x_means, y = y_means)
+  centers[[group_var]] <- rownames(centers)
 
   return(centers)
 }
@@ -702,8 +693,10 @@ plot_gene_cna <- function(sce,
 
   bin_id <- as.data.frame(sce@metadata$gene_overlap[which(sce@metadata$gene_overlap$gene_name == gene), ])[, "bin_id"]
 
-  # Create plots
-  plot_df <- scater::makePerCellDF(sce, assay.type = assay_type, use.coldata = TRUE, features = bin_id) %>%
+  # Create plots: per-cell data frame of colData + the target bin's assay values
+  plot_df <- as.data.frame(SummarizedExperiment::colData(sce))
+  plot_df[[bin_id]] <- as.numeric(SummarizedExperiment::assay(sce, assay_type)[bin_id, ])
+  plot_df <- plot_df %>%
     add_count(group) %>%
     mutate(sample_lab = glue("{group} n=({n})"))
   plot_df[[gene]] <- plot_df[[bin_id]]

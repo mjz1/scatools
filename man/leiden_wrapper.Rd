@@ -2,20 +2,21 @@
 % Please edit documentation in R/clustering.R
 \name{leiden_wrapper}
 \alias{leiden_wrapper}
-\title{Wrapper for the Leiden Algorithm}
+\title{Wrapper for the Leiden Algorithm on an adjacency matrix}
 \usage{
 leiden_wrapper(adj_mat, group_singletons = TRUE, resolution = 1)
 }
 \arguments{
-\item{adj_mat}{Adjacency matrix}
+\item{adj_mat}{Adjacency (SNN) matrix}
 
-\item{group_singletons}{Group singletons into nearest cluster. If FALSE, assign all singletons to a "singleton" group}
+\item{group_singletons}{Reassign singleton clusters to their most connected
+neighbouring cluster. If \code{FALSE}, singletons are left as-is.}
 
-\item{resolution}{Resolution paramter}
+\item{resolution}{Resolution parameter}
 }
 \value{
-cluster memberships
+Named vector of cluster memberships
 }
 \description{
-Wrapper for the Leiden Algorithm
+Wrapper for the Leiden Algorithm on an adjacency matrix
 }
