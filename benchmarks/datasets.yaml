@@ -1,0 +1,116 @@
+# scatools benchmark dataset registry.
+#
+# Ordered roughly along the aneuploidy spectrum: normal -> quiet -> moderate -> high.
+# aneuploidy: normal | quiet | moderate | high
+# atac.format: fragments | peak_matrix | bin_matrix | fastq
+# truth.type:  scDNA_DLP | scWGS | bulk_wgs | multiome_gex | snp_array | karyotype
+# status:      pending | downloaded | processed | benchmarked
+#
+# Accessions marked (VERIFY) are pending confirmation of exact IDs / download format.
+
+datasets:
+
+  - id: pbmc_10k_normal
+    name: 10x PBMC (healthy) scATAC — negative control
+    cancer_type: none
+    assay: scATAC
+    aneuploidy: normal
+    n_cells: ~10000
+    genome: hg38
+    role: specificity_control      # method must return a FLAT, no-CNV profile
+    atac:
+      source: 10x
+      url: https://www.10xgenomics.com/datasets   # (VERIFY exact PBMC ATAC page)
+      format: fragments
+    truth:
+      type: karyotype
+      value: diploid
+    status: pending
+
+  - id: hct116
+    name: HCT116 colorectal (MSI, near-diploid)
+    cancer_type: colorectal
+    assay: scATAC
+    aneuploidy: quiet
+    n_cells: ~1000
+    genome: hg38
+    atac:
+      source: sra
+      accession: SRP167062          # (VERIFY format: fragments vs fastq)
+      format: fastq
+    truth:
+      type: scWGS
+      accession: PRJEB27084
+    notes: near-diploid MSI line; tests low-false-positive behavior
+    status: pending
+
+  - id: bcc_su008
+    name: Basal cell carcinoma SU008 (Satpathy/Granja 2019)
+    cancer_type: BCC
+    assay: scATAC
+    aneuploidy: moderate
+    n_cells: ~500
+    genome: hg38
+    atac:
+      source: geo
+      accession: GSE129785
+      format: fragments             # (VERIFY: fragments provided in supplement)
+    truth:
+      type: bulk_wgs
+      notes: allele-specific reference from Alleloscope on BCC samples
+    status: pending
+
+  - id: snu601
+    name: SNU601 gastric carcinoma (highly aneuploid)
+    cancer_type: gastric
+    assay: scATAC
+    aneuploidy: high
+    n_cells: ~3500
+    genome: hg38
+    role: primary_benchmark        # shared benchmark of epiAneufinder + Alleloscope
+    atac:
+      source: alleloscope_github    # (VERIFY: processed matrix vs SRA fastq)
+      accession: PRJNA674903
+      url: https://github.com/seasoncloud/Alleloscope
+      format: bin_matrix
+    truth:
+      type: scWGS
+      accession: PRJNA498809
+      notes: allele-specific + copy-neutral-LOH events pre-characterized
+    status: pending
+
+  - id: colo320hsr
+    name: COLO320HSR colorectal (MYC ecDNA, extreme focal amp)
+    cancer_type: colorectal
+    assay: scATAC
+    aneuploidy: high
+    n_cells: ~1000
+    genome: hg38
+    atac:
+      source: sra
+      accession: PRJNA672109        # (VERIFY)
+      format: fastq
+    truth:
+      type: scWGS
+      accession: PRJNA506071
+    notes: massive MYC ecDNA amplification — extreme focal-amplification test case
+    status: pending
+
+  # ---- In-house (Shah lab) — gold-standard matched DLP+ scWGS + scATAC ----
+  # One entry per specimen once available. Truth = per-cell integer CN from DLP+
+  # (SIGNALS/HMMcopy). These are the strongest concordance references.
+  - id: inhouse_TEMPLATE
+    name: In-house specimen (matched DLP+ / scATAC)
+    cancer_type: TBD
+    assay: scATAC
+    aneuploidy: TBD
+    genome: hg38
+    role: gold_standard
+    atac:
+      source: inhouse
+      path: TBD                      # local fragments path
+      format: fragments
+    truth:
+      type: scDNA_DLP
+      path: TBD                      # SIGNALS/HMMcopy per-cell CN
+    status: template

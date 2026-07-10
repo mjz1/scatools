@@ -12,6 +12,7 @@
 ^\.vscode$
 ^example$
 ^results$
+^benchmarks$
 Dockerfile
 ^docker*
 ^dev$
