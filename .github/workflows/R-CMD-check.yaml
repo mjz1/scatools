@@ -21,13 +21,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Per-PR matrix uses only R versions with PPM/CRAN binaries (fast).
-        # R-devel is source-only on Linux (~1h), so it runs on a weekly
-        # schedule instead — see R-CMD-check-devel.yaml.
+        # Per-PR matrix uses only R versions with reliable PPM/CRAN binaries
+        # (fast). R-devel is source-only on Linux (~1h) -> weekly schedule
+        # (R-CMD-check-devel.yaml). R 4.3 (oldrel-2) is omitted: PPM's
+        # Bioconductor binary pairing for it is flaky (Rhtslib version
+        # mismatch), and R 4.3 is the primary local dev environment anyway.
         config:
           - {os: ubuntu-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'oldrel-1'}
-          - {os: ubuntu-latest,   r: 'oldrel-2'}
           - {os: macos-latest,    r: 'release'}
           - {os: windows-latest,  r: 'release'}
 
