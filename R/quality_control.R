@@ -60,25 +60,53 @@ filter_sce <- function(sce,
     }
   }
 
+  # Record filter provenance so per-sample bin/cell drops are traceable
+  # (which bins were dropped is also flagged in rowData(sce)$keep_bins).
+  sce@metadata$filter_info <- list(
+    gc_range = gc_range, gc_removed = sum(!gc_keeps),
+    min_bin_counts = min_bin_counts, min_bin_prop = min_bin_prop,
+    min_cell_counts = min_cell_counts, min_cell_prop = min_cell_prop,
+    n_bins = nrow(sce), n_cells = ncol(sce)
+  )
+
   return(sce)
 }
 
 
-#' Basic QC
+#' Bin and cell data-quality metrics
 #'
-#' @param sce sce
-#' @param assay_name assay
-#' @param plot logical plot
+#' Computes per-cell and per-bin QC metrics (counts, median counts, mean
+#' coverage, fraction of zero bins) from a count assay, stores a summary in
+#' `metadata(sce)$qc_summary`, and optionally plots diagnostic histograms.
 #'
-#' @return sce
+#' @param sce SingleCellExperiment object
+#' @param assay_name Name of the count assay to summarise
+#' @param plot Logical: draw diagnostic histograms
+#'
+#' @return The `sce` with QC metrics added to `colData`/`rowRanges` and a
+#'   summary in `metadata(sce)$qc_summary`.
 #' @export
 #'
 do_qc <- function(sce, assay_name = "counts", plot = TRUE) {
-  sce$counts_per_cell <- Matrix::colSums(assay(sce, "counts"))
-  rowRanges(sce)$counts_per_bin <- Matrix::rowSums(assay(sce, "counts"))
+  m <- assay(sce, assay_name)
 
-  sce$median_percell_counts <- MatrixGenerics::colMedians(assay(sce, "counts"))
-  rowRanges(sce)$median_perbin_counts <- MatrixGenerics::rowMedians(assay(sce, "counts"))
+  sce$counts_per_cell <- Matrix::colSums(m)
+  sce$median_percell_counts <- MatrixGenerics::colMedians(m)
+  rowRanges(sce)$counts_per_bin <- Matrix::rowSums(m)
+  rowRanges(sce)$median_perbin_counts <- MatrixGenerics::rowMedians(m)
+  rowRanges(sce)$mean_perbin_counts <- Matrix::rowMeans(m)
+  # fraction of cells with zero counts in each bin (efficient on sparse input)
+  rowRanges(sce)$frac_zero_perbin <- 1 - (Matrix::rowSums(m != 0) / ncol(sce))
+
+  sce@metadata$qc_summary <- list(
+    assay = assay_name,
+    n_cells = ncol(sce),
+    n_bins = nrow(sce),
+    median_counts_per_cell = stats::median(sce$counts_per_cell),
+    median_counts_per_bin = stats::median(rowRanges(sce)$counts_per_bin),
+    mean_coverage_per_bin = mean(rowRanges(sce)$mean_perbin_counts),
+    median_frac_zero_per_bin = stats::median(rowRanges(sce)$frac_zero_perbin)
+  )
 
   if (plot) {
     p1 <- colData(sce) %>%
@@ -101,7 +129,22 @@ do_qc <- function(sce, assay_name = "counts", plot = TRUE) {
       ggplot(aes(x = median_perbin_counts)) +
       geom_histogram(bins = 50)
 
-    pcomb <- patchwork::wrap_plots(list(p1, p2, p3, p4), ncol = 2) + patchwork::plot_annotation(title = unique(sce$Sample), subtitle = glue::glue("{prettyMb(getmode(rowRanges(sce)$binwidth))} bins"))
+    p5 <- rowData(sce) %>%
+      as.data.frame() %>%
+      ggplot(aes(x = mean_perbin_counts)) +
+      geom_histogram(bins = 50)
+
+    p6 <- rowData(sce) %>%
+      as.data.frame() %>%
+      ggplot(aes(x = frac_zero_perbin)) +
+      geom_histogram(bins = 50)
+
+    title <- if (!is.null(sce$Sample)) paste(unique(sce$Sample), collapse = ", ") else NULL
+    bw <- rowRanges(sce)$binwidth
+    subtitle <- if (!is.null(bw)) glue::glue("{prettyMb(getmode(bw))} bins") else glue::glue("{nrow(sce)} bins")
+
+    pcomb <- patchwork::wrap_plots(list(p1, p2, p3, p4, p5, p6), ncol = 2) +
+      patchwork::plot_annotation(title = title, subtitle = subtitle)
     print(pcomb)
   }
 

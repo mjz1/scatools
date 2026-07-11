@@ -38,6 +38,9 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
 #' @param sce A `SingleCellExperiment` object
 #' @param assay_name Name of the assay to segment
 #' @param new_assay Name of the new assay
+#' @param arm_aware Logical. Segment within chromosome arms rather than whole
+#'   chromosomes when an `arm` annotation is present in `rowRanges(sce)`
+#'   (default `TRUE`).
 #' @param verbose Verbosity
 #' @param ... Additional parameters to pass to [DNAcopy::segment]
 #'
@@ -47,12 +50,21 @@ smooth_counts <- function(sce, assay_name, ncores = 1, smooth_name = paste(assay
 #' @return A `SingleCellExperiment` object
 #' @export
 #'
-segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", verbose = 0, bpparam = BiocParallel::SerialParam(), ...) {
+segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment", sep = "_"), alpha = 0.2, nperm = 10, min.width = 2, undo.splits = "none", arm_aware = TRUE, verbose = 0, bpparam = BiocParallel::SerialParam(), ...) {
   chrs <- as.vector(GenomeInfoDb::seqnames(SummarizedExperiment::rowRanges(sce)))
   starts <- GenomicRanges::start(SummarizedExperiment::rowRanges(sce))
   sample_ids <- colnames(sce)
-  # Perform segmentation
-  # TODO: Make this function chromosome arm aware (ie segment within arms rather than chrs)
+
+  # Segment within chromosome arms rather than whole chromosomes when arm
+  # annotation is available (bins from get_tiled_bins() carry an `arm` column).
+  # This prevents segments spanning the centromere.
+  arm <- SummarizedExperiment::rowRanges(sce)$arm
+  if (arm_aware && !is.null(arm)) {
+    chrs <- paste0(chrs, arm)
+  } else if (arm_aware && is.null(arm)) {
+    cli::cli_alert_warning("arm_aware = TRUE but no 'arm' annotation in rowRanges(sce); segmenting by chromosome")
+  }
+
   cli::cli_alert_info("Segmenting CNVs")
   segmented_counts <- BiocParallel::bplapply(X = 1:ncol(sce), BPPARAM = bpparam, FUN = function(i) {
     x <- as.vector(SummarizedExperiment::assay(sce, assay_name)[, i])

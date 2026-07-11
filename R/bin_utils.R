@@ -325,6 +325,50 @@ add_gc_freq <- function(bs_genome, bins) {
 }
 
 
+#' Add per-bin mappability
+#'
+#' Computes the mean mappability of each bin from a mappability bigWig track and
+#' attaches it as a `map` column (range 0-1) for use in [is_ideal_bin()] /
+#' [add_ideal_mat()]. Use a track matched to your read length — for scATAC the
+#' Hoffman-lab Umap k50 track for hg38 is a reasonable default
+#' (<https://bismap.hoffmanlab.org/>;
+#' <http://hgdownload.soe.ucsc.edu/gbdb/hg38/hoffmanMappability/>).
+#'
+#' Bins on sequences absent from the track receive `map = NA`.
+#'
+#' @param bins A `GRanges` bins object
+#' @param map_bigwig Path or URL to a mappability bigWig file
+#' @param type Per-bin summary statistic (default `"mean"`)
+#'
+#' @return `bins` with a numeric `map` column
+#' @export
+add_map_freq <- function(bins, map_bigwig, type = "mean") {
+  if (!requireNamespace("rtracklayer", quietly = TRUE)) {
+    cli::cli_abort("Package {.pkg rtracklayer} is required to read mappability tracks.")
+  }
+  cli::cli_alert_info("Computing per-bin mappability from {basename(map_bigwig)}")
+  bwf <- rtracklayer::BigWigFile(map_bigwig)
+
+  # Only summarise bins on sequences present in the track; others -> NA
+  track_seqs <- names(GenomeInfoDb::seqinfo(bwf))
+  on_track <- as.vector(GenomeInfoDb::seqnames(bins)) %in% track_seqs
+
+  map <- rep(NA_real_, length(bins))
+  if (any(on_track)) {
+    # bins with no coverage in the track (e.g. acrocentric p-arms) warn and
+    # yield NA; that is the intended "unmappable / no data" result.
+    s <- suppressWarnings(rtracklayer::summary(bwf, bins[on_track], size = 1L, type = type))
+    # summary() returns one element (a small GRanges/Rle) per query bin
+    map[on_track] <- vapply(s, function(x) {
+      v <- if (methods::is(x, "GRanges")) GenomicRanges::score(x) else as.numeric(unlist(x))
+      if (length(v) == 0) NA_real_ else as.numeric(v[1])
+    }, numeric(1))
+  }
+  bins$map <- map
+  bins
+}
+
+
 #' Get ideal bin matrix
 #'
 #' Given a matrix of bin counts, bin gc and N frequency, and filtering parameters, return a boolean matrix flagging ideal bins
