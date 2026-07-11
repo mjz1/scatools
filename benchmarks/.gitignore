@@ -8,3 +8,7 @@ results/
 *.h5ad
 *.bam
 *.bai
+
+# Rendered notebook artifacts (keep .qmd source)
+notebooks/*.html
+notebooks/*_files/
