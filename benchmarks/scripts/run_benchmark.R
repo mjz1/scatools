@@ -43,9 +43,9 @@ query_gr <- pseudobulk_profile(sce[, sce$tumor_cell %in% TRUE], assay_name = ass
 
 # 3) Load ground truth (adapter per truth type) ---------------------------
 #    TODO: implement load_truth_cn(ds, paths$truth) dispatching on ds$truth$type:
-#      scDNA_DLP -> per-cell integer CN (SIGNALS/HMMcopy) -> clone consensus GRanges
-#      bulk_wgs  -> segment GRanges
-#      multiome_gex -> inferCNV/Numbat profile
+#      scDNA    -> per-cell integer CN -> clone consensus GRanges
+#      bulk_wgs -> segment GRanges
+#      multiome_gex -> paired-GEX-derived profile
 truth_gr <- NULL
 if (is.null(truth_gr)) {
   cli::cli_alert_warning("No truth adapter wired for '{ds$truth$type}' yet — skipping evaluation.")
