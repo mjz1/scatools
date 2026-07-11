@@ -2,20 +2,23 @@
 % Please edit documentation in R/quality_control.R
 \name{do_qc}
 \alias{do_qc}
-\title{Basic QC}
+\title{Bin and cell data-quality metrics}
 \usage{
 do_qc(sce, assay_name = "counts", plot = TRUE)
 }
 \arguments{
-\item{sce}{sce}
+\item{sce}{SingleCellExperiment object}
 
-\item{assay_name}{assay}
+\item{assay_name}{Name of the count assay to summarise}
 
-\item{plot}{logical plot}
+\item{plot}{Logical: draw diagnostic histograms}
 }
 \value{
-sce
+The \code{sce} with QC metrics added to \code{colData}/\code{rowRanges} and a
+summary in \code{metadata(sce)$qc_summary}.
 }
 \description{
-Basic QC
+Computes per-cell and per-bin QC metrics (counts, median counts, mean
+coverage, fraction of zero bins) from a count assay, stores a summary in
+\code{metadata(sce)$qc_summary}, and optionally plots diagnostic histograms.
 }

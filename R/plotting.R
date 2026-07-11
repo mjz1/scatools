@@ -346,8 +346,26 @@ cnaHeatmap <- function(sce,
     gene_bins <- mcols(sce@metadata$gene_overlap[match_idx])[["bin_id"]]
     gene_bins_idx <- match(gene_bins, get_bin_ids(SummarizedExperiment::rowRanges(sce)))
 
-    # Label genes
-    bottom_ha_genes <- ComplexHeatmap::HeatmapAnnotation(genes = ComplexHeatmap::anno_mark(at = c(gene_bins_idx), labels = label_genes, which = "column", side = "bottom", link_width = unit(3, "mm")))
+    # Drop genes whose bin is not among the plotted bins (e.g. filtered out)
+    present <- !is.na(gene_bins_idx)
+    if (any(!present)) {
+      cli::cli_alert_warning("Genes not in plotted bins: {paste(label_genes[!present], collapse = '; ')}")
+    }
+    label_genes <- label_genes[present]
+    gene_bins_idx <- gene_bins_idx[present]
+
+    if (length(gene_bins_idx) == 0) {
+      bottom_ha_genes <- NULL
+    } else {
+      # Collapse genes that share a bin into one multi-line label so anno_mark
+      # gets a single mark per bin (unique `at`) rather than overlapping labels.
+      by_bin <- split(label_genes, gene_bins_idx)
+      at <- as.integer(names(by_bin))
+      labs <- vapply(by_bin, function(g) paste(unique(g), collapse = "\n"), character(1))
+      bottom_ha_genes <- ComplexHeatmap::HeatmapAnnotation(
+        genes = ComplexHeatmap::anno_mark(at = at, labels = labs, which = "column", side = "bottom", link_width = unit(3, "mm"))
+      )
+    }
   } else {
     # Make null so we can pass to heatmap function regardless
     bottom_ha_genes <- NULL

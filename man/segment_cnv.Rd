@@ -12,6 +12,7 @@ segment_cnv(
   nperm = 10,
   min.width = 2,
   undo.splits = "none",
+  arm_aware = TRUE,
   verbose = 0,
   bpparam = BiocParallel::SerialParam(),
   ...
@@ -37,6 +38,10 @@ segment_cnv(
     to be undone, if at all.  Default is "none".  Other choices are
     "prune", which uses a sum of squares criterion, and "sdundo", which 
     undoes splits that are not at least this many SDs apart.}
+
+\item{arm_aware}{Logical. Segment within chromosome arms rather than whole
+chromosomes when an \code{arm} annotation is present in \code{rowRanges(sce)}
+(default \code{TRUE}).}
 
 \item{verbose}{Verbosity}
 
