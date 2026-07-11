@@ -104,6 +104,67 @@ datasets:
       notes: modal chromosome # 45; MLH1-deficient MSI, chromosomally stable
     status: blocked                # needs accession verification before use
 
+  # ---- Competitor-paper benchmark datasets (AtaCNV / epiAneufinder / Alleloscope) ----
+  # IMPORTANT: turnkey fragments.tsv.gz for tumor scATAC is rare. These are
+  # distributed as PEAK/BIN MATRICES (GEO) or raw BAM/FASTQ (SRA/dbGaP). To use
+  # the matrix versions directly, scatools needs a pre-binned/peak-matrix entry
+  # point (see ROADMAP priority 8) — the same route used for snu601.
+  - id: bcc_greenleaf
+    name: Basal cell carcinoma (Satpathy/Granja 2019) — AtaCNV/Alleloscope benchmark
+    cancer_type: BCC
+    assay: scATAC
+    aneuploidy: moderate
+    n_cells: ~37000 tumor (of >200k total)
+    genome: hg38
+    atac:
+      source: geo
+      accession: GSE129785         # peak MTX + barcodes; 66.7GB TSV tar may hold fragments
+      url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE129785
+      format: peak_matrix          # RDS objects also at GreenleafLab/10x-scATAC-2019
+    truth:
+      type: bulk_wgs
+      accession: PRJNA533341       # matched WES (BCC)
+    status: pending
+
+  - id: pgbm_scatac
+    name: Pediatric high-grade glioma scATAC — AtaCNV benchmark
+    cancer_type: glioblastoma
+    assay: scATAC
+    aneuploidy: high
+    n_cells: 2 samples
+    genome: hg38
+    atac:
+      source: geo
+      accession: GSE163655         # GSE163655_RAW.tar (136MB, BED/MTX/TSV); raw SRP299314
+      url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE163655
+      format: matrix               # check BED members for fragment-like data
+    truth:
+      type: bulk_wgs
+    status: pending
+
+  - id: pdac_scatac
+    name: Pancreatic ductal adenocarcinoma scATAC — AtaCNV benchmark
+    cancer_type: PDAC
+    assay: scATAC
+    aneuploidy: high
+    n_cells: 4 samples (tumor/para-tumor/normal)
+    genome: hg38
+    atac:
+      source: sra
+      accession: SRP254548         # GSE147726; raw FASTQ -> needs cellranger-atac
+      url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE147726
+      format: fastq
+    truth:
+      type: bulk_wgs
+    status: blocked                # FASTQ only; cellranger required
+
+  # OC/EC (GSE173682, 11 gyn tumors, >150k cells) — raw data in dbGaP (controlled
+  # access); processed matrices in a 15.8GB tar. Deferred (access friction).
+
+  # Normal fragments (extra negative controls) available turnkey from the
+  # Human-scATAC-Corpus (health.tsinghua.edu.cn/human-scatac-corpus) — 68 samples
+  # as fragments.tsv.gz, but CANCER EXCLUDED (healthy tissues only).
+
   # ---- In-house (Shah lab) — gold-standard matched DLP+ scWGS + scATAC ----
   # One entry per specimen once available. Truth = per-cell integer CN from DLP+
   # (SIGNALS/HMMcopy). These are the strongest concordance references.

@@ -21,3 +21,4 @@ Dockerfile
 ^vignettes/*_files$
 ^vignettes/articles$
 ^vignettes/figure/
+^ROADMAP\.md$
