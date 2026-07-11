@@ -1,7 +1,7 @@
 # scatools benchmarks
 
-Reproducible copy-number benchmarking for `scatools` against public and
-in-house tumor scATAC datasets with orthogonal ground-truth copy number.
+Reproducible copy-number benchmarking for `scatools` against scATAC datasets
+with orthogonal ground-truth copy number.
 
 This directory holds **only** the registry, scripts, and evaluation harness.
 The actual data (fragments, matrices, truth CN, results) lives **outside git**
@@ -9,13 +9,12 @@ under a data root, because the files are large.
 
 ## Design goals
 
-- **Span the aneuploidy spectrum.** Datasets are tagged `normal` → `quiet` →
-  `moderate` → `high` so we test both *specificity* (don't hallucinate CNVs in
-  near-diploid genomes) and *sensitivity* (resolve complex aneuploidy).
+- **Range of copy-number states.** Datasets are tagged `normal` → `quiet` →
+  `moderate` → `high` so we test both *specificity* (near-diploid genomes) and
+  *sensitivity* (complex copy-number states).
 - **Multiple ground-truth modalities.** Concordance is computed against whatever
-  truth a dataset has: matched single-cell DNA (**DLP+**, the strongest — per-cell
-  integer CN), bulk WGS/WES segments, multiome GEX-derived CN, SNP array, or a
-  known karyotype.
+  truth a dataset has: matched single-cell DNA, bulk WGS/WES segments, multiome
+  GEX-derived CN, SNP array, or a known karyotype.
 - **One registry, many datasets.** Every dataset is a row in
   [`datasets.yaml`](datasets.yaml). Adding a dataset = adding an entry + a prep
   script; the harness is dataset-agnostic.
@@ -40,7 +39,7 @@ Data root (NOT in git), set via `SCATOOLS_BENCH_DATA`
 ```
 $SCATOOLS_BENCH_DATA/<dataset_id>/
   atac/        # fragments.tsv.gz / peak or bin matrix
-  truth/       # ground-truth CN (DLP, WGS segments, ...)
+  truth/       # ground-truth CN (scDNA, WGS segments, ...)
   results/     # scatools output + evaluation
 ```
 
@@ -48,8 +47,8 @@ $SCATOOLS_BENCH_DATA/<dataset_id>/
 
 | type          | source                              | resolution      |
 |---------------|-------------------------------------|-----------------|
-| `scDNA_DLP`   | Shah lab DLP+ (SIGNALS/HMMcopy)     | per-cell integer CN |
-| `scWGS`       | single-cell WGS (non-DLP)           | per-cell / consensus |
+| `scDNA`       | matched single-cell DNA             | per-cell integer CN |
+| `scWGS`       | single-cell WGS                     | per-cell / consensus |
 | `bulk_wgs`    | matched bulk WGS/WES segments       | segment-level   |
 | `multiome_gex`| paired GEX (inferCNV/Numbat)        | in-cell, coarse |
 | `snp_array`   | SNP array CN                        | segment-level   |
@@ -66,5 +65,5 @@ $SCATOOLS_BENCH_DATA/<dataset_id>/
 
 ## Status
 
-Bootstrapping. See `datasets.yaml` for the current spectrum and per-dataset
+Bootstrapping. See `datasets.yaml` for the current datasets and per-dataset
 `status` (`pending` → `downloaded` → `processed` → `benchmarked`).

@@ -1,6 +1,5 @@
 ---
 title: "SNU601 gastric carcinoma — scatools depth CNV"
-subtitle: "Highly aneuploid tumor benchmark (contrast to the flat PBMC normal)"
 author: "scatools benchmark"
 date: today
 format:
@@ -19,14 +18,12 @@ execute:
 
 ## Overview
 
-Runs the `scatools` **depth-based** copy-number pipeline on real SNU601 gastric
-carcinoma scATAC-seq — the shared benchmark of epiAneufinder and Alleloscope,
-with matched single-cell DNA truth (Andor 2020). Unlike the PBMC negative
-control (which should be ~flat), SNU601 is highly aneuploid, so this exercises
-the method on genuine CNV signal.
+Runs the `scatools` **depth-based** copy-number pipeline on SNU601 gastric
+carcinoma scATAC-seq (a highly aneuploid cell line), with matched single-cell
+DNA available as ground truth (Andor 2020).
 
-Input is a pre-binned **200 kb bin × cell** depth matrix from the Alleloscope
-repository (`data-raw/SNU601/scATAC/chr200k_fragments_sub.txt`), so we bypass
+Input is a pre-binned **200 kb bin × cell** depth matrix (public processed data;
+`data-raw/SNU601/scATAC/chr200k_fragments_sub.txt`), so we bypass
 `bin_atac_frags()` and enter the pipeline at the SingleCellExperiment stage.
 
 ```{r setup}
