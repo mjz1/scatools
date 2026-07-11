@@ -1,0 +1,150 @@
+---
+title: "SNU601 gastric carcinoma — scatools depth CNV"
+subtitle: "Highly aneuploid tumor benchmark (contrast to the flat PBMC normal)"
+author: "scatools benchmark"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    embed-resources: true
+    fig-width: 10
+    fig-height: 5
+execute:
+  warning: false
+  message: false
+  cache: false
+---
+
+## Overview
+
+Runs the `scatools` **depth-based** copy-number pipeline on real SNU601 gastric
+carcinoma scATAC-seq — the shared benchmark of epiAneufinder and Alleloscope,
+with matched single-cell DNA truth (Andor 2020). Unlike the PBMC negative
+control (which should be ~flat), SNU601 is highly aneuploid, so this exercises
+the method on genuine CNV signal.
+
+Input is a pre-binned **200 kb bin × cell** depth matrix from the Alleloscope
+repository (`data-raw/SNU601/scATAC/chr200k_fragments_sub.txt`), so we bypass
+`bin_atac_frags()` and enter the pipeline at the SingleCellExperiment stage.
+
+```{r setup}
+library(scatools)
+library(SingleCellExperiment)
+library(Matrix)
+library(BiocParallel)
+
+bp <- MulticoreParam(workers = 8)
+
+root <- file.path(
+  Sys.getenv("SCATOOLS_BENCH_DATA", "~/work/scatools_benchmark_data"),
+  "snu601", "Alleloscope", "data-raw", "SNU601", "scATAC"
+)
+stopifnot(dir.exists(root))
+```
+
+## Load the pre-binned tumor matrix
+
+```{r load}
+barcodes <- readLines(file.path(root, "barcodes.tsv"))
+
+dt <- data.table::fread(file.path(root, "chr200k_fragments_sub.txt"),
+  header = FALSE, skip = 1
+)
+bin_ids <- dt[[1]]
+counts <- as(as.matrix(dt[, -1, with = FALSE]), "CsparseMatrix")
+colnames(counts) <- barcodes
+rownames(counts) <- bin_ids
+
+# Parse "chr1-218200001-218400000" -> GRanges
+parts <- do.call(rbind, strsplit(bin_ids, "-", fixed = TRUE))
+gr <- GenomicRanges::GRanges(
+  seqnames = parts[, 1],
+  ranges = IRanges::IRanges(start = as.numeric(parts[, 2]), end = as.numeric(parts[, 3]))
+)
+names(gr) <- bin_ids
+
+# Keep standard chromosomes and clip bins to chromosome lengths (the terminal
+# 200 kb bin of each chromosome overshoots the sequence boundary).
+bsg <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
+keep <- as.character(GenomicRanges::seqnames(gr)) %in% GenomeInfoDb::seqnames(bsg)
+gr <- gr[keep]
+counts <- counts[keep, , drop = FALSE]
+GenomeInfoDb::seqlevels(gr) <- GenomeInfoDb::seqlevelsInUse(gr)
+GenomeInfoDb::seqlengths(gr) <- GenomeInfoDb::seqlengths(bsg)[GenomeInfoDb::seqlevels(gr)]
+gr <- GenomicRanges::trim(gr)
+
+dim(counts)
+```
+
+## Per-bin GC content (hg38)
+
+```{r gc}
+gseq <- BSgenome::getSeq(bsg, gr)
+freqs <- Biostrings::alphabetFrequency(gseq)
+gr$gc <- (freqs[, "C"] + freqs[, "G"]) / rowSums(freqs)
+gr$n_freq <- freqs[, "N"] / rowSums(freqs)
+gr$bin_id <- bin_ids
+
+sce <- SingleCellExperiment(assays = list(counts = counts), rowRanges = gr)
+sce <- sort(sce)
+sce
+```
+
+## scatools depth-CNV pipeline
+
+Bins are uniform 200 kb, so length normalization is a no-op and is skipped.
+
+```{r pipeline}
+sce <- filter_sce(sce,
+  gc_range = c(0.3, 0.8),
+  min_bin_counts = 1, min_bin_prop = 0.9,
+  min_cell_counts = 1, min_cell_prop = 0.9
+)
+sce <- scatools:::add_ideal_mat(sce, ncores = 8)
+sce <- add_gc_cor(sce, method = "modal", bpparam = bp)
+sce <- smooth_counts(sce, assay_name = "counts_gc_modal", ncores = 8)
+sce <- scatools:::calc_ratios(sce, assay_name = "counts_gc_modal_smoothed")
+sce <- logNorm(sce, assay_name = "counts_gc_modal_smoothed_ratios", name = "logr_modal")
+sce <- cluster_sce(sce, assay_name = "counts_gc_modal_smoothed_ratios", resolution = 0.3, verbose = FALSE)
+
+# Segmentation + merge + normal-cell identification
+sce <- segment_cnv(sce, assay_name = "counts_gc_modal_smoothed", bpparam = bp)
+sce <- merge_segments(sce,
+  smooth_assay = "counts_gc_modal_smoothed",
+  segment_assay = "counts_gc_modal_smoothed_segment", bpparam = bp
+)
+sce <- identify_normal(sce, assay_name = "segment_merged_logratios", group_by = "clusters", method = "gmm", plot = FALSE)
+
+cat("cells:", ncol(sce), "| bins:", nrow(sce), "| clusters:", length(unique(sce$clusters)), "\n")
+```
+
+## Aneuploidy signal
+
+For a highly aneuploid tumor we expect strong, chromosome-scale gains/losses —
+the opposite of the flat PBMC normal.
+
+```{r signal}
+lr <- as.matrix(assay(sce, "segment_merged_logratios"))
+cat("median per-cell mean|logr|:", round(median(colMeans(abs(lr), na.rm = TRUE)), 3), "\n")
+cat("fraction of bins with |mean logr| > 0.3:",
+  round(mean(abs(rowMeans(lr, na.rm = TRUE)) > 0.3, na.rm = TRUE), 3), "\n")
+```
+
+## Copy-number heatmap
+
+```{r heatmap, fig.height = 7}
+sce <- sce[, order(sce$clusters)]
+cnaHeatmap(sce,
+  assay_name = "segment_merged_logratios",
+  col_fun = logr_col_fun(),
+  use_raster = FALSE
+)
+```
+
+## Session info
+
+```{r session}
+sessionInfo()
+```
