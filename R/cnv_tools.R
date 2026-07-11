@@ -56,24 +56,40 @@ segment_cnv <- function(sce, assay_name, new_assay = paste(assay_name, "segment"
   cli::cli_alert_info("Segmenting CNVs")
   segmented_counts <- BiocParallel::bplapply(X = 1:ncol(sce), BPPARAM = bpparam, FUN = function(i) {
     x <- as.vector(SummarizedExperiment::assay(sce, assay_name)[, i])
-    obj <- DNAcopy::CNA(genomdat = x, chrom = chrs, maploc = starts, data.type = "logratio", sampleid = sample_ids[i], presorted = T)
-    res <- withr::with_seed(3, smoothed_CNA_counts <- DNAcopy::segment(obj,
-      alpha = alpha,
-      nperm = nperm,
-      min.width = min.width,
-      undo.splits = undo.splits,
-      verbose = verbose,
-      ...
-    ))
+    out <- rep(NA_real_, length(x))
 
-    df <- data.frame(idx = 1:length(x), seg.mean = NA)
-
-    for (j in 1:nrow(res$segRows)) {
-      # Fails if no counts on final segments so we put try
-      try(df[res$segRows[j, 1]:res$segRows[j, 2], "seg.mean"] <- res$output[j, "seg.mean"])
+    # Segment only finite bins. Passing NAs to DNAcopy leaves per-chromosome
+    # structures inconsistent (segment drops NAs internally), which errors for
+    # some cells; instead we drop them here, segment the valid bins, and map
+    # segment means back to their original positions (NA bins stay NA). A
+    # tryCatch guards against any residual per-cell failure so one pathological
+    # cell cannot abort the whole run.
+    ok <- is.finite(x)
+    if (sum(ok) < 2 * min.width) {
+      return(out)
     }
-    # cli::cli_alert_success("Segmentation completed!")
-    return(df$seg.mean)
+
+    seg <- tryCatch(
+      {
+        obj <- DNAcopy::CNA(
+          genomdat = x[ok], chrom = chrs[ok], maploc = starts[ok],
+          data.type = "logratio", sampleid = sample_ids[i], presorted = TRUE
+        )
+        res <- withr::with_seed(3, DNAcopy::segment(obj,
+          alpha = alpha, nperm = nperm, min.width = min.width,
+          undo.splits = undo.splits, verbose = verbose, ...
+        ))
+        sm <- rep(NA_real_, sum(ok))
+        for (j in seq_len(nrow(res$segRows))) {
+          sm[res$segRows[j, 1]:res$segRows[j, 2]] <- res$output[j, "seg.mean"]
+        }
+        sm
+      },
+      error = function(e) rep(NA_real_, sum(ok))
+    )
+
+    out[ok] <- seg
+    return(out)
   })
 
   names(segmented_counts) <- sample_ids
