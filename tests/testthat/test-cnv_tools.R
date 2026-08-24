@@ -33,3 +33,36 @@ test_that("logNorm replaces zeros before logging (no -Inf)", {
   # 0 -> 1e-3 -> log2(1e-3)
   expect_equal(out[1, 1], round(log2(1e-3), 2))
 })
+
+test_that("identify_normal warns rather than errors when n_normal_clusts is too large", {
+  # Regression test: the warning string interpolated an unbalanced `{}`
+  # expression, so cli failed to parse it and this branch raised
+  # "Could not parse cli `{}` expression" instead of warning. See #9.
+  sce <- make_toy_sce()
+  sce$clusters <- c("c1", "c2", "c3")
+
+  # cli_alert_warning signals a message condition, not a warning.
+  expect_message(
+    res <- identify_normal(
+      sce,
+      assay_name = "counts",
+      group_by = "clusters",
+      method = "min_sd",
+      n_normal_clusts = 3,
+      plot = FALSE
+    ),
+    "Setting n_normal_clusts to 2"
+  )
+
+  # n_normal_clusts is clamped to one fewer than the number of clusters.
+  expect_equal(sum(!res$tumor_cell), 2)
+  expect_equal(sum(res$tumor_cell), 1)
+})
+
+test_that("log_debug is silent unless scatools.debug is enabled", {
+  withr::local_options(scatools.debug = NULL)
+  expect_silent(log_debug("should not appear"))
+
+  withr::local_options(scatools.debug = TRUE)
+  expect_message(log_debug("should appear"), "should appear")
+})

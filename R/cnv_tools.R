@@ -233,7 +233,7 @@ identify_normal <- function(sce, assay_name, group_by = "clusters", method = c("
       n_normal_clusts <- 1
     }
     if (n_normal_clusts >= length(unique(sce[[group_by]]))) {
-      cli::cli_alert_warning("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]])} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
+      cli::cli_alert_warning("Provided n_normal_clusts = {n_normal_clusts} with {length(unique(sce[[group_by]]))} clusters. Setting n_normal_clusts to {length(unique(sce[[group_by]])) - 1}.")
       n_normal_clusts <- length(unique(sce[[group_by]])) - 1
     }
     normal_clust <- names(sort(mus)[1:n_normal_clusts])
