@@ -63,7 +63,7 @@ read_vartrix <- function(dir_path = NULL,
 
   rownames(ref) <- rownames(alt) <- snps$snp_id
 
-  cli::cli_alert_info("{nrow(snps)} input SNPs from vartrix")
+  log_debug("{nrow(snps)} input SNPs from vartrix")
 
   # Load phasing if provided
   if (!is.null(input_vcf)) {
@@ -129,7 +129,7 @@ vcf_to_df <- function(vcf, verbose = FALSE) {
   # Remove indels and non het SNPs
   keeps <- names(which((!vcfR::is.indel(vcf) & vcfR::is_het(as.matrix(gts)))[, 1]))
 
-  cli::cli_alert_info("{length(keeps)} hetSNPs")
+  log_debug("{length(keeps)} hetSNPs")
 
   vcf_df <- cbind.data.frame(gts, alleles)[keeps, ] %>%
     dplyr::mutate(across(where(is.character), as.factor))

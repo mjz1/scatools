@@ -159,7 +159,7 @@ scale_mat <- function(mat, log2 = FALSE, scale = c("none", "cells", "bins", "bot
 
   # TODO: separate out cleaning of the matrix from this function
 
-  cli::cli_alert_info("Scaling: {scale}")
+  log_debug("Scaling: {scale}")
 
   # if (scale == "none") {
   #   scale <- FALSE
